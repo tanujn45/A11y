@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">A11y</string>
+    <string name="connect">CONNECT</string>
+    <string name="welcomeConnectText">Connect to your Movesense Sensor</string>
 </resources>

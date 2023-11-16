@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="ButtonStyle">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginHorizontal" tools:ignore="NewApi">@dimen/margin_left</item>
+        <item name="android:paddingVertical" tools:ignore="NewApi">15dp</item>
+        <item name="cornerRadius">10dp</item>
+        <item name="textAllCaps">true</item>
+        <item name="fontFamily">@font/roboto_medium</item>
+        <item name="android:textSize">17sp</item>
+    </style>
+
+    <style name="HeaderFont">
+        <item name="android:fontFamily">@font/roboto_bold</item>
+        <item name="android:textSize">30sp</item>
+    </style>
+
+    <style name="SubHeaderFont">
+        <item name="android:fontFamily">@font/roboto_bold</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+</resources>

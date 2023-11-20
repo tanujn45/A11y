@@ -6,26 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
     <TextView
         android:id="@+id/homeWelcomeText"
+        style="@style/HeaderFont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_left"
-        android:layout_marginTop="56dp"
+        android:layout_marginStart="@dimen/margin"
         android:text="Welcome"
-        style="@style/HeaderFont"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/homeConnectText"
+        style="@style/SubHeaderFont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_left"
+        android:layout_marginStart="@dimen/margin"
         android:layout_marginTop="4dp"
+        android:textColor="@color/grey"
         android:text="@string/welcomeConnectText"
-        style="@style/SubHeaderFont"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
 
@@ -33,22 +32,21 @@
         android:id="@+id/bluetoothListView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/margin_left"
+        android:layout_marginHorizontal="@dimen/margin"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintBottom_toTopOf="@+id/connectButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/homeConnectText"
-         />
+        app:layout_constraintTop_toBottomOf="@+id/homeConnectText" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/connectButton"
         style="@style/ButtonStyle"
-
         android:layout_marginBottom="50dp"
         android:paddingVertical="15dp"
         android:text="@string/connect"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

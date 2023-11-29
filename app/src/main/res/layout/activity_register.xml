@@ -31,10 +31,10 @@
         android:id="@+id/nameEntry"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="Enter name..."
         android:layout_marginTop="10dp"
+        android:ems="10"
+        android:hint="Enter name..."
+        android:inputType="text"
         android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -53,9 +53,9 @@
 
     <LinearLayout
         android:id="@+id/ttsGroup"
-        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -69,18 +69,44 @@
             android:layout_marginEnd="@dimen/marginInside"
             android:layout_weight="1"
             android:ems="10"
-            android:inputType="text"
             android:hint="Enter text..."
+            android:inputType="text"
             android:textColor="@color/white" />
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/playButton"
             style="@style/ImageButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="playButtonClicked"
             app:srcCompat="@drawable/play" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/description"
+        style="@style/SubHeaderFont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Description"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ttsGroup" />
+
+    <EditText
+        android:id="@+id/descriptionEntry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:ems="10"
+        android:hint="Enter description..."
+        android:lines="4"
+        android:inputType="text"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/description" />
 
     <TextView
         android:id="@+id/gestures"
@@ -91,17 +117,44 @@
         android:text="Gestures"
         android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ttsGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/descriptionEntry" />
 
     <Button
         android:id="@+id/recordButton"
         style="@style/ButtonStyle"
-        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Record"
+        android:layout_marginTop="10dp"
         android:backgroundTint="@color/theme2"
+        android:onClick="recordGestureButtonClicked"
+        android:text="Record"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/gestures" />
+
+    <TextView
+        android:id="@+id/recordNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recordButton"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/roboto_medium"
+        android:textSize="17sp"
+        android:textColor="@color/grey"
+        android:text="Number of records: 0"
+        />
+
+    <Button
+        android:id="@+id/saveButton"
+        style="@style/ButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
+        android:backgroundTint="@color/theme"
+        android:onClick="saveButtonClicked"
+        android:text="Save"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

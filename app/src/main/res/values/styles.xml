@@ -32,4 +32,9 @@
         <item name="android:textSize">20sp</item>
     </style>
 
+    <style name="WindowAnimationStyle">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
+    </style>
+
 </resources>

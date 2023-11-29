@@ -25,6 +25,7 @@
             style="@style/ImageButtonStyle"
             android:layout_marginTop="@dimen/marginTopButton"
             android:contentDescription="@string/app_name"
+            android:onClick="settingsButtonClicked"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@+id/homeWelcomeText"
@@ -36,22 +37,37 @@
             android:id="@+id/addGestureButton"
             style="@style/ButtonStyle"
             android:layout_marginTop="28dp"
-            android:backgroundTint="@color/theme2"
+            android:backgroundTint="@color/theme"
+            android:fontFamily="@font/roboto_black"
+            android:onClick="addGestureButtonClicked"
             android:text="add gesture"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
 
+        <TextView
+            android:id="@+id/sensorMsg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@color/theme2"
+            android:padding="18dp"
+            android:text="Subscribing to sensor"
+            android:textAlignment="center"
+            android:textSize="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/addGestureButton" />
+
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
             android:layout_marginTop="20dp"
             android:backgroundTint="@color/theme2"
             app:cardCornerRadius="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/addGestureButton">
+            app:layout_constraintTop_toBottomOf="@+id/sensorMsg">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"

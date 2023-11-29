@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingHorizontal="@dimen/margin"
     tools:context=".MainActivity">
 
     <TextView
@@ -11,7 +12,6 @@
         style="@style/HeaderFont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin"
         android:text="Welcome"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -21,10 +21,9 @@
         style="@style/SubHeaderFont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin"
         android:layout_marginTop="4dp"
-        android:textColor="@color/grey"
         android:text="@string/welcomeConnectText"
+        android:textColor="@color/grey"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
 
@@ -32,9 +31,7 @@
         android:id="@+id/bluetoothListView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/margin"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/connectButton"
+        android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/homeConnectText" />
@@ -43,8 +40,8 @@
         android:id="@+id/connectButton"
         style="@style/ButtonStyle"
         android:layout_marginBottom="50dp"
-        android:paddingVertical="15dp"
-        android:text="@string/connect"
+        android:onClick="connectButtonClicked"
+        android:text="Home"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

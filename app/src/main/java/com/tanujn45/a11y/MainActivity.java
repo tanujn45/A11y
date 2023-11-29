@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -35,18 +34,11 @@ import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-
-    // MDS
     static Mds mMds;
     String connectedSerial;
-
-    // BleClient singleton
     static private RxBleClient mBleClient;
-
     private final ArrayList<MyScanResult> mScanResArrayList = new ArrayList<>();
     ArrayAdapter<MyScanResult> mScanResArrayAdapter;
-
-    // Sensor subscription
     Button connectButton;
 
     @Override
@@ -108,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int PERMISSION_ALL = 1;
         String[] PERMISSIONS = new String[0];
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            PERMISSIONS = new String[]{Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_NETWORK_STATE};
+            PERMISSIONS = new String[]{Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
         }
 
         if (!hasPermissions(this, PERMISSIONS)) {
@@ -215,10 +207,5 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Intent intent = new Intent(MainActivity.this, GestureActivity.class);
         intent.putExtra(GestureActivity.SERIAL, connectedSerial);
         startActivity(intent);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        return true;
     }
 }

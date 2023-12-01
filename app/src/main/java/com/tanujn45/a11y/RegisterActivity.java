@@ -2,13 +2,12 @@ package com.tanujn45.a11y;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.speech.tts.TextToSpeech;
-import android.text.TextUtils;
-import android.view.MotionEvent;
-import android.view.View;
 import android.os.Bundle;
 import android.os.Environment;
+import android.speech.tts.TextToSpeech;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -141,40 +140,6 @@ public class RegisterActivity extends AppCompatActivity implements TextToSpeech.
         }
     }
 
-    public void saveButtonClicked(View view) throws IOException {
-        String name = nameEntry.getText().toString();
-        if (TextUtils.isEmpty(name)) {
-            nameEntry.setError("This field cannot be empty!");
-            return;
-        }
-
-        String ttsStr = ttsEntry.getText().toString();
-        if (TextUtils.isEmpty(ttsStr)) {
-            ttsEntry.setError("This field cannot be empty!");
-            return;
-        }
-
-        String description = descriptionEntry.getText().toString();
-        if (TextUtils.isEmpty(description)) {
-            descriptionEntry.setError("This field cannot be empty!");
-            return;
-        }
-
-        if (gestureNumber <= 1) {
-            Toast.makeText(getApplicationContext(), "Please record gestures!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String fileName = name.replaceAll("[^a-zA-Z]", "").replaceAll("\\s", "") + ".txt";
-
-        createDataFile(fileName);
-        createInfoFile(fileName, name, ttsStr, description, gestureNumber);
-
-        Intent intent = new Intent(RegisterActivity.this, GestureActivity.class);
-        intent.putExtra(SERIAL, connectedSerial);
-        startActivity(intent);
-    }
-
     public void createDataFile(String fileName) throws IOException {
         String dataFileName = "data_" + fileName;
         File rfile = new File(directory, dataFileName);
@@ -220,10 +185,63 @@ public class RegisterActivity extends AppCompatActivity implements TextToSpeech.
         tts.speak(ttsStr, TextToSpeech.QUEUE_FLUSH, null, null);
     }
 
+    public void cancelButtonClicked(View view) throws IOException {
+        writer.flush();
+        writer.close();
+        fos.close();
+
+        file.delete();
+
+        Intent intent = new Intent(RegisterActivity.this, GestureActivity.class);
+        intent.putExtra(SERIAL, connectedSerial);
+        startActivity(intent);
+    }
+
+    public void saveButtonClicked(View view) throws IOException {
+        String name = nameEntry.getText().toString();
+        if (TextUtils.isEmpty(name)) {
+            nameEntry.setError("This field cannot be empty!");
+            return;
+        }
+
+        String ttsStr = ttsEntry.getText().toString();
+        if (TextUtils.isEmpty(ttsStr)) {
+            ttsEntry.setError("This field cannot be empty!");
+            return;
+        }
+
+        String description = descriptionEntry.getText().toString();
+        if (TextUtils.isEmpty(description)) {
+            descriptionEntry.setError("This field cannot be empty!");
+            return;
+        }
+
+        if (gestureNumber <= 1) {
+            Toast.makeText(getApplicationContext(), "Please record gestures!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String fileName = name.replaceAll("[^a-zA-Z]", "").replaceAll("\\s", "") + ".txt";
+
+        createDataFile(fileName);
+        createInfoFile(fileName, name, ttsStr, description, gestureNumber);
+
+        Intent intent = new Intent(RegisterActivity.this, GestureActivity.class);
+        intent.putExtra(SERIAL, connectedSerial);
+        startActivity(intent);
+    }
+
+
     @Override
     public void onInit(int status) {
         if (status != TextToSpeech.SUCCESS) {
             Toast.makeText(this, "Text-to-Speech initialization failed", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void deleteButtonClicked(View view) throws IOException {
+        gestureNumber = 0;
+        fos.getChannel().truncate(0);
+
     }
 }

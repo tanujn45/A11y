@@ -77,7 +77,7 @@
             android:id="@+id/playButton"
             style="@style/ImageButtonStyle"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:onClick="playButtonClicked"
             app:srcCompat="@drawable/play" />
 
@@ -101,8 +101,8 @@
         android:layout_marginTop="10dp"
         android:ems="10"
         android:hint="Enter description..."
-        android:lines="4"
         android:inputType="text"
+        android:lines="4"
         android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -119,42 +119,80 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/descriptionEntry" />
 
-    <Button
-        android:id="@+id/recordButton"
-        style="@style/ButtonStyle"
+    <LinearLayout
+        android:id="@+id/recordGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:backgroundTint="@color/theme2"
-        android:onClick="recordGestureButtonClicked"
-        android:text="Record"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gestures" />
+        app:layout_constraintTop_toBottomOf="@+id/gestures">
+
+        <Button
+            android:id="@+id/recordButton"
+            style="@style/ButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="15dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/theme"
+            android:onClick="recordGestureButtonClicked"
+            android:text="Record"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageButton
+            android:id="@+id/deleteButton"
+            style="@style/ImageButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:onClick="deleteButtonClicked"
+            app:srcCompat="@drawable/delete" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/recordNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recordButton"
         android:layout_marginTop="10dp"
         android:fontFamily="@font/roboto_medium"
-        android:textSize="17sp"
-        android:textColor="@color/grey"
         android:text="Number of records: 0"
-        />
+        android:textColor="@color/grey"
+        android:textSize="17sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recordGroup" />
 
-    <Button
-        android:id="@+id/saveButton"
-        style="@style/ButtonStyle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="50dp"
-        android:backgroundTint="@color/theme"
-        android:onClick="saveButtonClicked"
-        android:text="Save"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/cancelButton"
+            style="@style/ButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="7dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/theme2"
+            android:onClick="cancelButtonClicked"
+            android:text="Cancel" />
+
+        <Button
+            android:id="@+id/saveButton"
+            style="@style/ButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/theme"
+            android:onClick="saveButtonClicked"
+            android:text="Save" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

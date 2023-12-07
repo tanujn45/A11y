@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -36,6 +37,7 @@ dependencies {
     implementation("com.polidea.rxandroidble2:rxandroidble:1.17.2")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation(files("./libs/mdslib-3.15.0(1)-release.aar"))
+    implementation("androidx.core:core-ktx:+")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

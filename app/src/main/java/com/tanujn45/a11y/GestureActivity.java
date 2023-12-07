@@ -25,19 +25,25 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class GestureActivity extends AppCompatActivity {
     private static final String LOG_TAG = GestureActivity.class.getSimpleName();
     public static final String URI_EVENTLISTENER = "suunto://MDS/EventListener";
-    static private final String URI_MEAS_ACC_13 = "/Meas/Acc/13";
-    public static final String SERIAL = "serial";
+    private static final String PATH = "/Meas/IMU6/";
+    private static final String RATE = "104";
     String connectedSerial;
     private List<CardData> cardDataList;
     private RecyclerView recyclerView;
     private CardAdapter adapter;
     private MdsSubscription mdsSubscription;
+
     private Mds getMds() {
         return MainActivity.mMds;
+    }
+
+    private String getConnectedSerial() {
+        return MainActivity.connectedSerial;
     }
 
     ImageButton settingsButton;
@@ -49,8 +55,8 @@ public class GestureActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gesture);
 
-        Intent intent = getIntent();
-        connectedSerial = intent.getStringExtra(SERIAL);
+
+        connectedSerial = getConnectedSerial();
 
         settingsButton = findViewById(R.id.settingsButton);
         gestureButton = findViewById(R.id.addGestureButton);
@@ -73,7 +79,7 @@ public class GestureActivity extends AppCompatActivity {
     }
 
     private void fetchDataFromFiles() throws IOException {
-        File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);;
+        File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
 
         File[] files = directory.listFiles();
         if (files != null) {
@@ -102,7 +108,6 @@ public class GestureActivity extends AppCompatActivity {
                     }
                     reader.close();
 
-
                     CardData cardData = new CardData();
                     cardData.setName(name);
                     cardData.setTextToSpeak(textToSpeak);
@@ -121,21 +126,21 @@ public class GestureActivity extends AppCompatActivity {
             unsubscribe();
         }
 
-        String strContract = "{\"Uri\": \"" + connectedSerial + URI_MEAS_ACC_13 + "\"}";
-        //Log.d(LOG_TAG, strContract);
+        String strContract = "{\"Uri\": \"" + connectedSerial + PATH + RATE + "\"}";
+        Log.d(LOG_TAG, strContract);
 
         mdsSubscription = getMds().builder().build(this).subscribe(URI_EVENTLISTENER, strContract, new MdsNotificationListener() {
             @Override
             public void onNotification(String data) {
-                //Log.d(LOG_TAG, "onNotification(): " + data);
+                Log.d(LOG_TAG, "onNotification(): " + data);
 
+                ImuModel imuModel = new Gson().fromJson(data, ImuModel.class);
 
-                AccDataResponse accResponse = new Gson().fromJson(data, AccDataResponse.class);
-                if (accResponse != null && accResponse.body.array.length > 0) {
+                if (imuModel != null && imuModel.getBody().getArrayAcc().length > 0 && imuModel.getBody().getArrayGyro().length > 0) {
 
-                    String accStr = String.format("%.02f, %.02f, %.02f", accResponse.body.array[0].x, accResponse.body.array[0].y, accResponse.body.array[0].z);
+                    String resultStr = String.format(Locale.getDefault(), "%.2f %.2f %.2f\n%.2f %.2f %.2f", imuModel.getBody().getArrayAcc()[0].getX(), imuModel.getBody().getArrayAcc()[0].getY(), imuModel.getBody().getArrayAcc()[0].getZ(), imuModel.getBody().getArrayGyro()[0].getX(), imuModel.getBody().getArrayGyro()[0].getY(), imuModel.getBody().getArrayGyro()[0].getZ());
 
-                    sensorMsg.setText(accStr);
+                    sensorMsg.setText(resultStr);
                 }
             }
 
@@ -162,7 +167,6 @@ public class GestureActivity extends AppCompatActivity {
     public void addGestureButtonClicked(View view) {
         unsubscribe();
         Intent intent = new Intent(GestureActivity.this, RegisterActivity.class);
-        intent.putExtra(RegisterActivity.SERIAL, connectedSerial);
         startActivity(intent);
     }
 }

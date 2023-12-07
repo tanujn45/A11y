@@ -35,7 +35,7 @@ import io.reactivex.disposables.Disposable;
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     static Mds mMds;
-    String connectedSerial;
+    static String connectedSerial;
     static private RxBleClient mBleClient;
     private final ArrayList<MyScanResult> mScanResArrayList = new ArrayList<>();
     ArrayAdapter<MyScanResult> mScanResArrayAdapter;
@@ -205,7 +205,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     public void connectButtonClicked(View view) {
         Intent intent = new Intent(MainActivity.this, GestureActivity.class);
-        intent.putExtra(GestureActivity.SERIAL, connectedSerial);
         startActivity(intent);
     }
 }

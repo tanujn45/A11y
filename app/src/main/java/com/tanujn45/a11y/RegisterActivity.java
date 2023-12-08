@@ -49,6 +49,7 @@ public class RegisterActivity extends AppCompatActivity implements TextToSpeech.
     OutputStreamWriter writer;
     boolean isRecording = false;
     private TextToSpeech tts;
+    boolean isSetRecordingMessage;
 
     private Mds getMds() {
         return MainActivity.mMds;
@@ -97,6 +98,7 @@ public class RegisterActivity extends AppCompatActivity implements TextToSpeech.
         String strContract = "{\"Uri\": \"" + connectedSerial + PATH + RATE + "\"}";
         Log.d(LOG_TAG, strContract);
         writer.append("Timestamp,AccX,AccY,AccZ,GyroX,GyroY,GyroZ\n");
+        isSetRecordingMessage = true;
 
         mdsSubscription = getMds().builder().build(this).subscribe(URI_EVENTLISTENER, strContract, new MdsNotificationListener() {
             @Override
@@ -104,6 +106,10 @@ public class RegisterActivity extends AppCompatActivity implements TextToSpeech.
                 Log.d(LOG_TAG, "onNotification(): " + data);
 
                 ImuModel imuModel = new Gson().fromJson(data, ImuModel.class);
+                if(isSetRecordingMessage) {
+                    recordButton.setText(RECORDING);
+                    isSetRecordingMessage = false;
+                }
 
                 if (imuModel != null && imuModel.getBody().getArrayAcc().length > 0 && imuModel.getBody().getArrayGyro().length > 0) {
 
@@ -153,11 +159,12 @@ public class RegisterActivity extends AppCompatActivity implements TextToSpeech.
             file = new File(directory, fileName);
             fos = new FileOutputStream(file);
             writer = new OutputStreamWriter(fos);
-            recordButton.setText(RECORDING);
+
             // writer.append("########## Gesture ").append(String.valueOf(gestureNumber + 1)).append(" ##########\n");
             subscribeToSensor(connectedSerial);
         } else {
             unsubscribe();
+            isSetRecordingMessage = false;
             writer.flush();
             writer.close();
             fos.close();

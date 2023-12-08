@@ -3,10 +3,6 @@ package com.tanujn45.a11y;
 import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.scan.ScanResult;
 
-/**
- * Created by Lipponep on 26.9.2017.
- */
-
 class MyScanResult {
     public int rssi;
     public String macAddress;

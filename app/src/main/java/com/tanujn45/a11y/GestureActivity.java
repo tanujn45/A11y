@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,10 +26,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-public class GestureActivity extends AppCompatActivity {
+public class GestureActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
     private static final String LOG_TAG = GestureActivity.class.getSimpleName();
     public static final String URI_EVENTLISTENER = "suunto://MDS/EventListener";
     private static final String PATH = "/Meas/IMU6/";
@@ -40,6 +42,8 @@ public class GestureActivity extends AppCompatActivity {
     private MdsSubscription mdsSubscription;
     private double currentTimeSeconds = System.currentTimeMillis() / 1000.0;
     private double previousTime = System.currentTimeMillis() / 1000.0;
+    private TextToSpeech tts;
+    File directory;
 
     private Mds getMds() {
         return MainActivity.mMds;
@@ -67,9 +71,11 @@ public class GestureActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         cardDataList = new ArrayList<>();
+        tts = new TextToSpeech(this, this);
 
         adapter = new CardAdapter(cardDataList);
         recyclerView.setAdapter(adapter);
+        directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
 
         try {
             fetchDataFromFiles();
@@ -81,7 +87,7 @@ public class GestureActivity extends AppCompatActivity {
     }
 
     private void fetchDataFromFiles() throws IOException {
-        File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+
 
         File[] files = directory.listFiles();
         if (files != null) {
@@ -129,7 +135,7 @@ public class GestureActivity extends AppCompatActivity {
         }
 
         String strContract = "{\"Uri\": \"" + connectedSerial + PATH + RATE + "\"}";
-        Log.d(LOG_TAG, strContract);
+        //Log.d(LOG_TAG, strContract);
 
         List<Float> accX = new ArrayList<>();
         List<Float> accY = new ArrayList<>();
@@ -138,7 +144,7 @@ public class GestureActivity extends AppCompatActivity {
         mdsSubscription = getMds().builder().build(this).subscribe(URI_EVENTLISTENER, strContract, new MdsNotificationListener() {
             @Override
             public void onNotification(String data) {
-                Log.d(LOG_TAG, "onNotification(): " + data);
+                //Log.d(LOG_TAG, "onNotification(): " + data);
 
                 ImuModel imuModel = new Gson().fromJson(data, ImuModel.class);
 
@@ -147,14 +153,15 @@ public class GestureActivity extends AppCompatActivity {
                     String resultStr = String.format(Locale.getDefault(), "%.2f %.2f %.2f\n%.2f %.2f %.2f", imuModel.getBody().getArrayAcc()[0].getX(), imuModel.getBody().getArrayAcc()[0].getY(), imuModel.getBody().getArrayAcc()[0].getZ(), imuModel.getBody().getArrayGyro()[0].getX(), imuModel.getBody().getArrayGyro()[0].getY(), imuModel.getBody().getArrayGyro()[0].getZ());
 
                     currentTimeSeconds = System.currentTimeMillis() / 1000.0;
+
                     accX.add((float) imuModel.getBody().getArrayAcc()[0].getX());
                     accY.add((float) imuModel.getBody().getArrayAcc()[0].getY());
                     accZ.add((float) imuModel.getBody().getArrayAcc()[0].getZ());
 
                     double elapsedTime = currentTimeSeconds - previousTime;
                     if (elapsedTime >= 1.0) {
+                        previousTime = currentTimeSeconds;
                         float[][] acc = new float[3][accX.size()];
-
 
                         for (int i = 0; i < accX.size(); i++) {
                             acc[0][i] = accX.get(i);
@@ -162,7 +169,6 @@ public class GestureActivity extends AppCompatActivity {
                             acc[2][i] = accZ.get(i);
                         }
                         checkForGesture(acc);
-                        previousTime = currentTimeSeconds;
                     }
 
                     sensorMsg.setText(resultStr);
@@ -171,29 +177,49 @@ public class GestureActivity extends AppCompatActivity {
 
             @Override
             public void onError(MdsException error) {
-                Log.e(LOG_TAG, "subscription onError(): ", error);
+                //Log.e(LOG_TAG, "subscription onError(): ", error);
                 unsubscribe();
             }
         });
     }
 
     private void checkForGesture(float[][] acc) {
-        String circleClockwise = "";
-        String circleAnticlockwise = "";
+        String circleClockwise = "gesture_clockwise_4.csv";
+        String circleAnticlockwise = "gesture_anticlockwise_4.csv";
 
         double clockwiseDistance = getAvgDistance(circleClockwise, acc);
         double anticlockwiseDistance = getAvgDistance(circleAnticlockwise, acc);
+        Log.i(LOG_TAG, "Clockwise Distance: " + clockwiseDistance + "\nAnticlockwise Distance: " + anticlockwiseDistance);
 
-
-        if (true) {
-            String textToSpeak = "Gesture detected!";
-            tts.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, null);
+        String textToSpeak;
+        /*
+        if (clockwiseDistance > 2 && anticlockwiseDistance > 2) {
+            return;
+        }*/
+        if (clockwiseDistance > anticlockwiseDistance) {
+            textToSpeak = "Circle Clockwise!";
+        } else {
+            textToSpeak = "Circle Anticlockwise";
         }
+
+        //tts.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, null);
     }
 
     public double getAvgDistance(String fileToCompare, float[][] dataRecorded) {
         double avgDistance = 0;
+        System.out.println(Arrays.toString(dataRecorded[0]));
 
+        DTW dtw = new DTW();
+
+        DTW.Result result = dtw.compute(getDatafromCSV(fileToCompare, 2), dataRecorded[1]);
+
+        int[][] warpingPath = result.getWarpingPath();
+        double distance = result.getDistance();
+        System.out.println(distance);
+
+        return distance;
+
+        /*
         for (int i = 1; i < 4; i++) {
             DTW dtw = new DTW();
 
@@ -201,17 +227,20 @@ public class GestureActivity extends AppCompatActivity {
 
             int[][] warpingPath = result.getWarpingPath();
             double distance = result.getDistance();
+            System.out.println(distance);
 
             avgDistance += (distance * distance);
         }
+        */
 
-        return avgDistance;
+        //return avgDistance;
     }
 
     public float[] getDatafromCSV(String fileName, int dataType) {
         List<Float> accL = new ArrayList<>();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+        File file = new File(directory, fileName);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             boolean skipFirstLine = true;
             while ((line = br.readLine()) != null) {
@@ -241,7 +270,6 @@ public class GestureActivity extends AppCompatActivity {
         return acc;
     }
 
-
     private void unsubscribe() {
         if (mdsSubscription != null) {
             mdsSubscription.unsubscribe();
@@ -258,5 +286,12 @@ public class GestureActivity extends AppCompatActivity {
         unsubscribe();
         Intent intent = new Intent(GestureActivity.this, RegisterActivity.class);
         startActivity(intent);
+    }
+
+    @Override
+    public void onInit(int status) {
+        if (status != TextToSpeech.SUCCESS) {
+            Toast.makeText(this, "Text-to-Speech initialization failed", Toast.LENGTH_SHORT).show();
+        }
     }
 }

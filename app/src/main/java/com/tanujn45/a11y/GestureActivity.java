@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -43,7 +42,12 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
     private double currentTimeSeconds = System.currentTimeMillis() / 1000.0;
     private double previousTime = System.currentTimeMillis() / 1000.0;
     private TextToSpeech tts;
+    String circleClockwise = "gesture_shake_0.csv";
+    String circleAnticlockwise = "gesture_zigzag_0.csv";
+    double clockwiseDistance;
+    double anticlockwiseDistance;
     File directory;
+    float[] accTemplate1, accTemplate2;
 
     private Mds getMds() {
         return MainActivity.mMds;
@@ -76,6 +80,9 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         adapter = new CardAdapter(cardDataList);
         recyclerView.setAdapter(adapter);
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+
+        accTemplate1 = getDatafromCSV("gesture_clockwise_4.csv", 0);
+        accTemplate2 = getDatafromCSV("gesture_anticlockwise_4.csv", 0);
 
         try {
             fetchDataFromFiles();
@@ -159,16 +166,26 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
                     accZ.add((float) imuModel.getBody().getArrayAcc()[0].getZ());
 
                     double elapsedTime = currentTimeSeconds - previousTime;
-                    if (elapsedTime >= 1.0) {
-                        previousTime = currentTimeSeconds;
-                        float[][] acc = new float[3][accX.size()];
+                    if (elapsedTime >= 2.0) {
+
+                        //float[][] acc = new float[3][accX.size()];
+
+                        float[] accM = new float[accX.size()];
 
                         for (int i = 0; i < accX.size(); i++) {
+                            accM[i] = (float) Math.sqrt(
+                                    accX.get(i) * accX.get(i) +
+                                            accY.get(i) * accY.get(i) +
+                                            accZ.get(i) * accZ.get(i)
+                            );
+                            /*
                             acc[0][i] = accX.get(i);
                             acc[1][i] = accY.get(i);
                             acc[2][i] = accZ.get(i);
+                             */
                         }
-                        checkForGesture(acc);
+                        checkForGesture(accM);
+                        previousTime = currentTimeSeconds;
                     }
 
                     sensorMsg.setText(resultStr);
@@ -183,37 +200,35 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         });
     }
 
-    private void checkForGesture(float[][] acc) {
-        String circleClockwise = "gesture_clockwise_4.csv";
-        String circleAnticlockwise = "gesture_anticlockwise_4.csv";
+    private void checkForGesture(float[] acc) {
+        clockwiseDistance = getAvgDistance(accTemplate1, acc);
+        anticlockwiseDistance = getAvgDistance(accTemplate2, acc);
 
-        double clockwiseDistance = getAvgDistance(circleClockwise, acc);
-        double anticlockwiseDistance = getAvgDistance(circleAnticlockwise, acc);
-        Log.i(LOG_TAG, "Clockwise Distance: " + clockwiseDistance + "\nAnticlockwise Distance: " + anticlockwiseDistance);
 
         String textToSpeak;
         /*
         if (clockwiseDistance > 2 && anticlockwiseDistance > 2) {
             return;
         }*/
-        if (clockwiseDistance > anticlockwiseDistance) {
-            textToSpeak = "Circle Clockwise!";
+        if (clockwiseDistance < anticlockwiseDistance) {
+            textToSpeak = "zigzag!";
         } else {
-            textToSpeak = "Circle Anticlockwise";
+            textToSpeak = "shake!";
         }
+        Log.i(LOG_TAG, "zigzag Distance: " + clockwiseDistance + "\nshake Distance: " + anticlockwiseDistance +"\nDecision: :" + textToSpeak);
 
-        //tts.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, null);
+        tts.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, null);
     }
 
-    public double getAvgDistance(String fileToCompare, float[][] dataRecorded) {
+    public double getAvgDistance(float[] preRecordedData, float[] dataRecorded) {
         double avgDistance = 0;
-        System.out.println(Arrays.toString(dataRecorded[0]));
+        //System.out.println(Arrays.toString(dataRecorded[0]));
 
         DTW dtw = new DTW();
 
-        DTW.Result result = dtw.compute(getDatafromCSV(fileToCompare, 2), dataRecorded[1]);
+        DTW.Result result = dtw.compute(preRecordedData, dataRecorded);
 
-        int[][] warpingPath = result.getWarpingPath();
+        //int[][] warpingPath = result.getWarpingPath();
         double distance = result.getDistance();
         System.out.println(distance);
 
@@ -237,7 +252,9 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
     }
 
     public float[] getDatafromCSV(String fileName, int dataType) {
-        List<Float> accL = new ArrayList<>();
+        List<Float> accX = new ArrayList<>();
+        List<Float> accY = new ArrayList<>();
+        List<Float> accZ = new ArrayList<>();
 
         File file = new File(directory, fileName);
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -250,8 +267,11 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
                 }
                 String[] data = line.split(",");
                 if (data.length >= 7) {
+
                     try {
-                        accL.add(Float.parseFloat(data[dataType]));
+                        accX.add(Float.parseFloat(data[1]));
+                        accY.add(Float.parseFloat(data[2]));
+                        accZ.add(Float.parseFloat(data[3]));
                     } catch (Exception e) {
                         System.out.println(e);
                     }
@@ -261,10 +281,14 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
             e.printStackTrace();
         }
 
-        float[] acc = new float[accL.size()];
+        float[] acc = new float[accX.size()];
 
-        for (int i = 0; i < accL.size(); i++) {
-            acc[i] = accL.get(i);
+        for (int i = 0; i < accX.size(); i++) {
+            acc[i] = (float) Math.sqrt(
+                    Math.pow(accX.get(i), 2) +
+                    Math.pow(accY.get(i), 2) +
+                    Math.pow(accZ.get(i), 2)
+            );
         }
 
         return acc;

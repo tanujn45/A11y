@@ -30,11 +30,11 @@ android {
 }
 
 dependencies {
-
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.10.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("com.google.android.material:material:1.10.0")
     implementation("com.polidea.rxandroidble2:rxandroidble:1.17.2")
+    implementation("com.jjoe64:graphview:4.2.2")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation(files("./libs/mdslib-3.15.0(1)-release.aar"))
     implementation("androidx.core:core-ktx:+")

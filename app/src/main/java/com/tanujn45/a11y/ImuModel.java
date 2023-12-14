@@ -34,7 +34,7 @@ public class ImuModel {
         private ArrayGyro mArrayGyro[];
 
         @SerializedName("ArrayMagn")
-        private ArrayMagn mArrayMagnl[];
+        private ArrayMag mArrayMag[];
 
         public long getTimestamp() {
             return timestamp;
@@ -48,13 +48,13 @@ public class ImuModel {
             return mArrayGyro;
         }
 
-        public ArrayMagn[] getArrayMagnl() {
-            return mArrayMagnl;
+        public ArrayMag[] getArrayMag() {
+            return mArrayMag;
         }
 
         @Override
         public String toString() {
-            return "Body{" + "timestamp=" + timestamp + ", mArrayAcc=" + Arrays.toString(mArrayAcc) + ", mArrayGyro=" + Arrays.toString(mArrayGyro) + ", mArrayMagnl=" + Arrays.toString(mArrayMagnl) + '}';
+            return "Body{" + "timestamp=" + timestamp + ", mArrayAcc=" + Arrays.toString(mArrayAcc) + ", mArrayGyro=" + Arrays.toString(mArrayGyro) + ", mArrayMag=" + Arrays.toString(mArrayMag) + '}';
         }
     }
 
@@ -124,7 +124,7 @@ public class ImuModel {
         }
     }
 
-    public class ArrayMagn {
+    public class ArrayMag {
 
         @SerializedName("x")
         public final double x;
@@ -133,7 +133,7 @@ public class ImuModel {
         @SerializedName("z")
         public final double z;
 
-        public ArrayMagn(double x, double y, double z) {
+        public ArrayMag(double x, double y, double z) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -153,7 +153,7 @@ public class ImuModel {
 
         @Override
         public String toString() {
-            return "ArrayMagn{" + "x=" + x + ", y=" + y + ", z=" + z + '}';
+            return "ArrayMag{" + "x=" + x + ", y=" + y + ", z=" + z + '}';
         }
     }
 }

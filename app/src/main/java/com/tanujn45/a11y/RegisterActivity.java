@@ -247,9 +247,12 @@ public class RegisterActivity extends AppCompatActivity implements TextToSpeech.
     }
 
     public void cancelButtonClicked(View view) throws IOException {
-        writer.flush();
-        writer.close();
-        fos.close();
+        if (writer != null) {
+            writer.flush();
+            writer.close();
+        }
+        if (fos != null)
+            fos.close();
         fileDelete("temp");
 
         Intent intent = new Intent(RegisterActivity.this, GestureActivity.class);

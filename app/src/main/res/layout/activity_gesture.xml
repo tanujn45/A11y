@@ -1,71 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingHorizontal="@dimen/margin"
     tools:context=".GestureActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <TextView
+        android:id="@+id/homeWelcomeText"
+        style="@style/HeaderFont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="28dp"
+        android:text="Gestures"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/settingsButton"
+        style="@style/ImageButtonStyle"
+        android:layout_marginTop="@dimen/marginTopButton"
+        android:contentDescription="@string/app_name"
+        android:onClick="settingsButtonClicked"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/homeWelcomeText"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/settings"
+        tools:ignore="TouchTargetSizeCheck" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/body"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="@dimen/margin">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText">
 
-        <TextView
-            android:id="@+id/homeWelcomeText"
-            style="@style/HeaderFont"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Gestures"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageButton
-            android:id="@+id/settingsButton"
-            style="@style/ImageButtonStyle"
-            android:layout_marginTop="@dimen/marginTopButton"
-            android:contentDescription="@string/app_name"
-            android:onClick="settingsButtonClicked"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@+id/homeWelcomeText"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/settings"
-            tools:ignore="TouchTargetSizeCheck" />
-
-        <Button
-            android:id="@+id/addGestureButton"
-            style="@style/ButtonStyle"
-            android:layout_marginTop="28dp"
-            android:backgroundTint="@color/theme"
-            android:fontFamily="@font/roboto_black"
-            android:onClick="addGestureButtonClicked"
-            android:text="add gesture"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
-
-        <TextView
-            android:id="@+id/sensorMsg"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:background="@color/theme2"
-            android:padding="18dp"
-            android:text="Subscribing to sensor"
-            android:textAlignment="center"
-            android:textSize="20dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/addGestureButton" />
+            android:orientation="vertical"
+            android:paddingBottom="150dp">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sensorMsg" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText">
+
+                <Button
+                    android:id="@+id/addGestureButton"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme"
+                    android:fontFamily="@font/roboto_black"
+                    android:onClick="addGestureButtonClicked"
+                    android:text="add gesture" />
+
+                <Button
+                    android:id="@+id/recordWholeButton"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_marginLeft="7dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme"
+                    android:fontFamily="@font/roboto_black"
+                    android:onClick="recordGestureButtonClicked"
+                    android:text="Record" />
+            </LinearLayout>
+
+
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/sensorMsg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/rounded_corner"
+                android:padding="18dp"
+                android:text="Subscribing to sensor"
+                android:textAlignment="center"
+                android:textSize="20dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/addGestureButton" />
+
+            <LinearLayout
+                android:id="@+id/accBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/rounded_corner"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/sensorMsg">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="15dp"
+                    android:paddingVertical="4dp">
+
+                    <TextView
+                        android:id="@+id/accText"
+                        style="@style/SubHeaderFont"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Linear Accelerometer"
+                        android:textColor="@color/white" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/accSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintEnd_toEndOf="parent" />
+                </LinearLayout>
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/imuChartAcc"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@drawable/rounded_corner_white"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/accText" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/rounded_corner"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/accBox">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="15dp"
+                    android:paddingVertical="4dp">
+
+                    <TextView
+                        android:id="@+id/gyroText"
+                        style="@style/SubHeaderFont"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Gyroscope"
+                        android:textColor="@color/white" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/gyroSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintEnd_toEndOf="parent" />
+                </LinearLayout>
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/imuChartGyro"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@drawable/rounded_corner_white"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/gyroText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/rounded_corner"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/accBox">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="15dp"
+                    android:paddingVertical="4dp">
+
+                    <TextView
+                        android:id="@+id/magText"
+                        style="@style/SubHeaderFont"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Magnetometer"
+                        android:textColor="@color/white" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/magSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintEnd_toEndOf="parent" />
+                </LinearLayout>
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/imuChartMag"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:background="@drawable/rounded_corner_white"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/magText" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:nestedScrollingEnabled="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/body" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

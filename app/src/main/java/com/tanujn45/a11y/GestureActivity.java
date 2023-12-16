@@ -7,10 +7,12 @@ import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,15 +40,18 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class GestureActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
+public class GestureActivity extends AppCompatActivity implements TextToSpeech.OnInitListener, AdapterView.OnItemSelectedListener {
     private static final String LOG_TAG = GestureActivity.class.getSimpleName();
     public static final String URI_EVENTLISTENER = "suunto://MDS/EventListener";
     private static final String PATH = "/Meas/IMU9/";
-    private static final String RATE = "104";
+    private static String RATE = "104";
+    private static int currentRate = 3;
     private static final String RECORDING = "Recording";
     private static final String RECORD = "Record";
     public static final String FILE_TYPE = ".csv";
@@ -83,6 +88,7 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
     TextView sensorMsg;
     LineChart accChart, gyroChart, magChart;
     SwitchCompat accSwitch, gyroSwitch, magSwitch;
+    Spinner refreshRate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +103,9 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recordButton = findViewById(R.id.recordWholeButton);
+        refreshRate = findViewById(R.id.refreshRate);
+        refreshRate.setOnItemSelectedListener(this);
+        refreshRate.setSelection(currentRate);
 
         accChart = findViewById(R.id.imuChartAcc);
         accChart.setData(new LineData());
@@ -164,8 +173,11 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
 
         isRecording = false;
 
+        /*
         accTemplate1 = getDatafromCSV("gesture_clockwise_4.csv", 0);
         accTemplate2 = getDatafromCSV("gesture_anticlockwise_4.csv", 0);
+
+        */
 
         try {
             fetchDataFromFiles();
@@ -173,6 +185,8 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
             throw new RuntimeException(e);
         }
 
+        subscribeToSensor(connectedSerial);
+        unsubscribe();
         subscribeToSensor(connectedSerial);
     }
 
@@ -225,13 +239,15 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         isRecording = !isRecording;
         if (isRecording) {
             recordButton.setText(RECORDING);
-            String fileName = "temp" + FILE_TYPE;
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault());
+            String currentDateTime = sdf.format(new Date());
+            String fileName = currentDateTime + FILE_TYPE;
             file = new File(directory, fileName);
             fos = new FileOutputStream(file);
             writer = new OutputStreamWriter(fos);
             writer.append("Timestamp,AccX,AccY,AccZ,GyroX,GyroY,GyroZ,MagX,MagY,MagZ\n");
         } else {
-            showFileNameDialog();
+            //showFileNameDialog();
             writer.flush();
             writer.close();
             fos.close();
@@ -332,11 +348,12 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
 
         String strContract = "{\"Uri\": \"" + connectedSerial + PATH + RATE + "\"}";
         //Log.d(LOG_TAG, strContract);
-
+        System.out.println("Test");
+        /*
         List<Float> accX = new ArrayList<>();
         List<Float> accY = new ArrayList<>();
         List<Float> accZ = new ArrayList<>();
-
+        */
         mdsSubscription = getMds().builder().build(this).subscribe(URI_EVENTLISTENER, strContract, new MdsNotificationListener() {
             @Override
             public void onNotification(String data) {
@@ -370,9 +387,12 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
 
                     currentTimeSeconds = System.currentTimeMillis() / 1000.0;
 
+                    /*
                     accX.add((float) imuModel.getBody().getArrayAcc()[0].getX());
                     accY.add((float) imuModel.getBody().getArrayAcc()[0].getY());
                     accZ.add((float) imuModel.getBody().getArrayAcc()[0].getZ());
+
+                     */
 
                     mLineDataAcc.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayAcc()[0].getX()), 0);
                     mLineDataAcc.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayAcc()[0].getY()), 1);
@@ -403,6 +423,7 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
                         magChart.moveViewToX(imuModel.getBody().getTimestamp() / 100);
                     }
 
+                    /*
                     double elapsedTime = currentTimeSeconds - previousTime;
                     if (elapsedTime >= 2.0) {
 
@@ -420,13 +441,15 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
                             acc[0][i] = accX.get(i);
                             acc[1][i] = accY.get(i);
                             acc[2][i] = accZ.get(i);
-                             */
+
                         }
                         checkForGesture(accM);
                         previousTime = currentTimeSeconds;
                     }
 
                     //sensorMsg.setText(resultStr);
+
+                    */
                 }
             }
 
@@ -569,5 +592,24 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         if (status != TextToSpeech.SUCCESS) {
             Toast.makeText(this, "Text-to-Speech initialization failed", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        if (!isRecording) {
+            RATE = parent.getItemAtPosition(position).toString();
+            //System.out.println(RATE);
+            unsubscribe();
+            currentRate = position;
+            subscribeToSensor(connectedSerial);
+        } else {
+            refreshRate.setSelection(currentRate);
+            Toast.makeText(GestureActivity.this, "Cannot change refresh rate while recording!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 }

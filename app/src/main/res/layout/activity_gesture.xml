@@ -44,7 +44,6 @@
             android:orientation="vertical"
             android:paddingBottom="150dp">
 
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -75,7 +74,6 @@
                     android:text="Record" />
             </LinearLayout>
 
-
             <TextView
                 android:visibility="gone"
                 android:id="@+id/sensorMsg"
@@ -91,6 +89,115 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/addGestureButton" />
 
+            <!--
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/rate13"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme"
+                    android:fontFamily="@font/roboto_black"
+                    android:onClick="addGestureButtonClicked"
+                    android:text="13" />
+
+                <Button
+                    android:id="@+id/rate26"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme"
+                    android:fontFamily="@font/roboto_black"
+                    android:onClick="addGestureButtonClicked"
+                    android:text="26" />
+
+                <Button
+                    android:id="@+id/rate52"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme"
+                    android:fontFamily="@font/roboto_black"
+                    android:onClick="addGestureButtonClicked"
+                    android:text="52" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/rate104"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme"
+                    android:fontFamily="@font/roboto_black"
+                    android:onClick="addGestureButtonClicked"
+                    android:text="104" />
+
+                <Button
+                    android:id="@+id/rate208"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme"
+                    android:fontFamily="@font/roboto_black"
+                    android:onClick="addGestureButtonClicked"
+                    android:text="208" />
+
+                <Button
+                    android:id="@+id/rate416"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme"
+                    android:fontFamily="@font/roboto_black"
+                    android:onClick="addGestureButtonClicked"
+                    android:text="416" />
+            </LinearLayout>
+            -->
+
+            <LinearLayout
+                android:id="@+id/refreshRateBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/rounded_corner"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="15dp"
+                android:paddingVertical="16dp">
+
+                <TextView
+                    android:id="@+id/refreshRateText"
+                    style="@style/SubHeaderFont"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Refresh Rate"
+                    android:textColor="@color/white" />
+
+                <Spinner
+                    android:id="@+id/refreshRate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:entries="@array/refresh_rate"
+                    android:spinnerMode="dropdown"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/sensorMsg" />
+            </LinearLayout>
+
+
             <LinearLayout
                 android:id="@+id/accBox"
                 android:layout_width="match_parent"
@@ -99,7 +206,7 @@
                 android:background="@drawable/rounded_corner"
                 android:orientation="vertical"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/sensorMsg">
+                app:layout_constraintTop_toBottomOf="@+id/refreshRate">
 
                 <LinearLayout
                     android:layout_width="match_parent"

@@ -2,4 +2,12 @@
     <string name="app_name">A11y</string>
     <string name="connect">CONNECT</string>
     <string name="welcomeConnectText">Connect to your Movesense Sensor</string>
+    <string-array name="refresh_rate">
+        <item>13</item>
+        <item>26</item>
+        <item>52</item>
+        <item>104</item>
+        <item>208</item>
+        <item>416</item>
+    </string-array>
 </resources>

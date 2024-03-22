@@ -2,10 +2,13 @@ package com.tanujn45.a11y;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -16,6 +19,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -24,14 +28,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.gson.Gson;
 import com.movesense.mds.Mds;
 import com.movesense.mds.MdsException;
+import com.movesense.mds.MdsHeader;
 import com.movesense.mds.MdsNotificationListener;
+import com.movesense.mds.MdsResponseListener;
 import com.movesense.mds.MdsSubscription;
 
 import java.io.BufferedReader;
@@ -40,35 +44,34 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class GestureActivity extends AppCompatActivity implements TextToSpeech.OnInitListener, AdapterView.OnItemSelectedListener {
+public class GestureActivity extends AppCompatActivity implements TextToSpeech.OnInitListener, AdapterView.OnItemSelectedListener, SurfaceHolder.Callback {
     private static final String LOG_TAG = GestureActivity.class.getSimpleName();
     public static final String URI_EVENTLISTENER = "suunto://MDS/EventListener";
+    private static final String URI_TIME = "suunto://{0}/Time";
     private static final String PATH = "/Meas/IMU9/";
-    private static String RATE = "104";
-    private static int currentRate = 3;
+    private static String RATE = "52";
+    private static int currentRate = 2;
     private static final String RECORDING = "Recording";
     private static final String RECORD = "Record";
     public static final String FILE_TYPE = ".csv";
     String connectedSerial;
+    private String fileNameSave;
     private List<CardData> cardDataList;
     private RecyclerView recyclerView;
     private CardAdapter adapter;
     private MdsSubscription mdsSubscription;
-    private double currentTimeSeconds = System.currentTimeMillis() / 1000.0;
-    private double previousTime = System.currentTimeMillis() / 1000.0;
     private TextToSpeech tts;
-    String circleClockwise = "gesture_shake_0.csv";
-    String circleAnticlockwise = "gesture_zigzag_0.csv";
-    double clockwiseDistance;
-    double anticlockwiseDistance;
+    private MediaRecorder mMediaRecorder;
+    private SurfaceHolder mSurfaceHolder;
+
     File directory;
-    float[] accTemplate1, accTemplate2;
     boolean isRecording;
     File file;
     FileOutputStream fos;
@@ -170,23 +173,16 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         adapter = new CardAdapter(cardDataList);
         recyclerView.setAdapter(adapter);
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-
+        fileNameSave = "";
         isRecording = false;
+        setCurrentTimeToSensor(connectedSerial);
 
-        /*
-        accTemplate1 = getDatafromCSV("gesture_clockwise_4.csv", 0);
-        accTemplate2 = getDatafromCSV("gesture_anticlockwise_4.csv", 0);
+//        try {
+//            fetchDataFromFiles();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
 
-        */
-
-        try {
-            fetchDataFromFiles();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        subscribeToSensor(connectedSerial);
-        unsubscribe();
         subscribeToSensor(connectedSerial);
     }
 
@@ -241,16 +237,16 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
             recordButton.setText(RECORDING);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault());
             String currentDateTime = sdf.format(new Date());
-            String fileName = currentDateTime + FILE_TYPE;
-            file = new File(directory, fileName);
+            fileNameSave = currentDateTime + FILE_TYPE;
+            file = new File(directory, fileNameSave);
             fos = new FileOutputStream(file);
             writer = new OutputStreamWriter(fos);
-            writer.append("Timestamp,AccX,AccY,AccZ,GyroX,GyroY,GyroZ,MagX,MagY,MagZ\n");
+            writer.append("Timestamp,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,magn_x,magn_y,magn_z").append("\n");
         } else {
-            //showFileNameDialog();
             writer.flush();
             writer.close();
             fos.close();
+            Toast.makeText(GestureActivity.this, "File saved as " + fileNameSave, Toast.LENGTH_SHORT).show();
             recordButton.setText(RECORD);
         }
     }
@@ -296,11 +292,40 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         }
     }
 
+    private void startRecording() {
+        mMediaRecorder = new MediaRecorder();
+        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+        mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
+        mMediaRecorder.setOutputFile(getOutputMediaFile().getPath());
+        mMediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
+
+        try {
+            mMediaRecorder.prepare();
+            mMediaRecorder.start();
+            isRecording = true;
+            Toast.makeText(this, "Recording started", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stopRecording() {
+        if (isRecording) {
+            mMediaRecorder.stop();
+            mMediaRecorder.release();
+            mMediaRecorder = null;
+            isRecording = false;
+            Toast.makeText(this, "Recording stopped", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void subscribeToSensor(String connectedSerial) {
         if (mdsSubscription != null) {
             unsubscribe();
         }
 
+        /*
         final LineData mLineDataAcc = accChart.getData();
 
         ILineDataSet xSetAcc = mLineDataAcc.getDataSetByIndex(0);
@@ -345,111 +370,58 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
             mLineDataMag.addDataSet(ySetMag);
             mLineDataMag.addDataSet(zSetMag);
         }
+        */
 
         String strContract = "{\"Uri\": \"" + connectedSerial + PATH + RATE + "\"}";
-        //Log.d(LOG_TAG, strContract);
-        System.out.println("Test");
-        /*
-        List<Float> accX = new ArrayList<>();
-        List<Float> accY = new ArrayList<>();
-        List<Float> accZ = new ArrayList<>();
-        */
+
         mdsSubscription = getMds().builder().build(this).subscribe(URI_EVENTLISTENER, strContract, new MdsNotificationListener() {
             @Override
             public void onNotification(String data) {
-                //Log.d(LOG_TAG, "onNotification(): " + data);
-
                 ImuModel imuModel = new Gson().fromJson(data, ImuModel.class);
 
                 if (imuModel != null && imuModel.getBody().getArrayAcc().length > 0 && imuModel.getBody().getArrayGyro().length > 0) {
-
-                    //String resultStr = String.format(Locale.getDefault(), "%.2f %.2f %.2f\n%.2f %.2f %.2f", imuModel.getBody().getArrayAcc()[0].getX(), imuModel.getBody().getArrayAcc()[0].getY(), imuModel.getBody().getArrayAcc()[0].getZ(), imuModel.getBody().getArrayGyro()[0].getX(), imuModel.getBody().getArrayGyro()[0].getY(), imuModel.getBody().getArrayGyro()[0].getZ());
-
-                    if (isRecording) {
-                        String resultStrRecord = String.format(Locale.getDefault(), "%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f",
-                                imuModel.getBody().getTimestamp(),
-                                imuModel.getBody().getArrayAcc()[0].getX(),
-                                imuModel.getBody().getArrayAcc()[0].getY(),
-                                imuModel.getBody().getArrayAcc()[0].getZ(),
-                                imuModel.getBody().getArrayGyro()[0].getX(),
-                                imuModel.getBody().getArrayGyro()[0].getY(),
-                                imuModel.getBody().getArrayGyro()[0].getZ(),
-                                imuModel.getBody().getArrayMag()[0].getX(),
-                                imuModel.getBody().getArrayMag()[0].getY(),
-                                imuModel.getBody().getArrayMag()[0].getZ()
-                        );
-                        try {
-                            writer.append(resultStrRecord).append("\n");
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                    for (int i = 0; i < imuModel.getBody().getArrayAcc().length; i++) {
+                        String resultStrRecord = String.format(Locale.getDefault(), "%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f", (imuModel.getBody().getTimestamp() + i * 20L), imuModel.getBody().getArrayAcc()[i].getX(), imuModel.getBody().getArrayAcc()[i].getY(), imuModel.getBody().getArrayAcc()[i].getZ(), imuModel.getBody().getArrayGyro()[i].getX(), imuModel.getBody().getArrayGyro()[i].getY(), imuModel.getBody().getArrayGyro()[i].getZ(), imuModel.getBody().getArrayMag()[i].getX(), imuModel.getBody().getArrayMag()[i].getY(), imuModel.getBody().getArrayMag()[i].getZ());
+                        sensorMsg.setText(resultStrRecord);
+                        if (isRecording) {
+                            try {
+                                writer.append(resultStrRecord).append("\n");
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
-                    }
 
-                    currentTimeSeconds = System.currentTimeMillis() / 1000.0;
+                        /*
+                        mLineDataAcc.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayAcc()[i].getX()), 0);
+                        mLineDataAcc.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayAcc()[i].getY()), 1);
+                        mLineDataAcc.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayAcc()[i].getZ()), 2);
+                        mLineDataAcc.notifyDataChanged();
 
-                    /*
-                    accX.add((float) imuModel.getBody().getArrayAcc()[0].getX());
-                    accY.add((float) imuModel.getBody().getArrayAcc()[0].getY());
-                    accZ.add((float) imuModel.getBody().getArrayAcc()[0].getZ());
+                        accChart.notifyDataSetChanged();
+                        accChart.setVisibleXRangeMaximum(50);
+                        accChart.moveViewToX((imuModel.getBody().getTimestamp() + i * 20L) / 100);
 
-                     */
+                        mLineDataGyro.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayGyro()[i].getX()), 0);
+                        mLineDataGyro.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayGyro()[i].getY()), 1);
+                        mLineDataGyro.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayGyro()[i].getZ()), 2);
+                        mLineDataGyro.notifyDataChanged();
 
-                    mLineDataAcc.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayAcc()[0].getX()), 0);
-                    mLineDataAcc.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayAcc()[0].getY()), 1);
-                    mLineDataAcc.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayAcc()[0].getZ()), 2);
-                    mLineDataAcc.notifyDataChanged();
+                        gyroChart.notifyDataSetChanged();
+                        gyroChart.setVisibleXRangeMaximum(50);
+                        gyroChart.moveViewToX((imuModel.getBody().getTimestamp() + i * 20L) / 100);
 
-                    accChart.notifyDataSetChanged();
-                    accChart.setVisibleXRangeMaximum(50);
-                    accChart.moveViewToX(imuModel.getBody().getTimestamp() / 100);
+                        if (imuModel.getBody().getArrayMag() != null) {
+                            mLineDataMag.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayMag()[i].getX()), 0);
+                            mLineDataMag.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayMag()[i].getY()), 1);
+                            mLineDataMag.addEntry(new Entry((imuModel.getBody().getTimestamp() + i * 20L) / 100, (float) imuModel.getBody().getArrayMag()[i].getZ()), 2);
+                            mLineDataMag.notifyDataChanged();
 
-                    mLineDataGyro.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayGyro()[0].getX()), 0);
-                    mLineDataGyro.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayGyro()[0].getY()), 1);
-                    mLineDataGyro.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayGyro()[0].getZ()), 2);
-                    mLineDataGyro.notifyDataChanged();
-
-                    gyroChart.notifyDataSetChanged();
-                    gyroChart.setVisibleXRangeMaximum(50);
-                    gyroChart.moveViewToX(imuModel.getBody().getTimestamp() / 100);
-
-                    if (imuModel.getBody().getArrayMag() != null) {
-                        mLineDataMag.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayMag()[0].getX()), 0);
-                        mLineDataMag.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayMag()[0].getY()), 1);
-                        mLineDataMag.addEntry(new Entry(imuModel.getBody().getTimestamp() / 100, (float) imuModel.getBody().getArrayMag()[0].getZ()), 2);
-                        mLineDataMag.notifyDataChanged();
-
-                        magChart.notifyDataSetChanged();
-                        magChart.setVisibleXRangeMaximum(50);
-                        magChart.moveViewToX(imuModel.getBody().getTimestamp() / 100);
-                    }
-
-                    /*
-                    double elapsedTime = currentTimeSeconds - previousTime;
-                    if (elapsedTime >= 2.0) {
-
-                        //float[][] acc = new float[3][accX.size()];
-
-                        float[] accM = new float[accX.size()];
-
-                        for (int i = 0; i < accX.size(); i++) {
-                            accM[i] = (float) Math.sqrt(
-                                    accX.get(i) * accX.get(i) +
-                                            accY.get(i) * accY.get(i) +
-                                            accZ.get(i) * accZ.get(i)
-                            );
-                            /*
-                            acc[0][i] = accX.get(i);
-                            acc[1][i] = accY.get(i);
-                            acc[2][i] = accZ.get(i);
-
+                            magChart.notifyDataSetChanged();
+                            magChart.setVisibleXRangeMaximum(50);
+                            magChart.moveViewToX((imuModel.getBody().getTimestamp() + i * 20L) / 100);
                         }
-                        checkForGesture(accM);
-                        previousTime = currentTimeSeconds;
+                        */
                     }
-
-                    //sensorMsg.setText(resultStr);
-
-                    */
                 }
             }
 
@@ -473,57 +445,6 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         set.setValueTextSize(0f);
 
         return set;
-    }
-
-    private void checkForGesture(float[] acc) {
-        clockwiseDistance = getAvgDistance(accTemplate1, acc);
-        anticlockwiseDistance = getAvgDistance(accTemplate2, acc);
-
-
-        String textToSpeak;
-        /*
-        if (clockwiseDistance > 2 && anticlockwiseDistance > 2) {
-            return;
-        }*/
-        if (clockwiseDistance < anticlockwiseDistance) {
-            textToSpeak = "zigzag!";
-        } else {
-            textToSpeak = "shake!";
-        }
-        Log.i(LOG_TAG, "zigzag Distance: " + clockwiseDistance + "\nshake Distance: " + anticlockwiseDistance +"\nDecision: :" + textToSpeak);
-
-        tts.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, null);
-    }
-
-    public double getAvgDistance(float[] preRecordedData, float[] dataRecorded) {
-        double avgDistance = 0;
-        //System.out.println(Arrays.toString(dataRecorded[0]));
-
-        DTW dtw = new DTW();
-
-        DTW.Result result = dtw.compute(preRecordedData, dataRecorded);
-
-        //int[][] warpingPath = result.getWarpingPath();
-        double distance = result.getDistance();
-        System.out.println(distance);
-
-        return distance;
-
-        /*
-        for (int i = 1; i < 4; i++) {
-            DTW dtw = new DTW();
-
-            DTW.Result result = dtw.compute(getDatafromCSV(fileToCompare, i), dataRecorded[i - 1]);
-
-            int[][] warpingPath = result.getWarpingPath();
-            double distance = result.getDistance();
-            System.out.println(distance);
-
-            avgDistance += (distance * distance);
-        }
-        */
-
-        //return avgDistance;
     }
 
     public float[] getDatafromCSV(String fileName, int dataType) {
@@ -587,6 +508,23 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
         startActivity(intent);
     }
 
+    private void setCurrentTimeToSensor(String serial) {
+        String timeUri = MessageFormat.format(URI_TIME, serial);
+        String payload = "{\"value\":" + (new Date().getTime() * 1000) + "}";
+        getMds().put(timeUri, payload, new MdsResponseListener() {
+            @Override
+            public void onSuccess(String data, MdsHeader header) {
+                Log.i(LOG_TAG, "PUT /Time successful: " + data);
+            }
+
+            @Override
+            public void onError(MdsException e) {
+                Log.e(LOG_TAG, "PUT /Time returned error: " + e);
+            }
+        });
+
+    }
+
     @Override
     public void onInit(int status) {
         if (status != TextToSpeech.SUCCESS) {
@@ -610,6 +548,21 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
+    @Override
+    public void surfaceCreated(@NonNull SurfaceHolder holder) {
+
+    }
+
+    @Override
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
 
     }
 }

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -14,12 +15,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.movesense.mds.Mds;
 import com.movesense.mds.MdsConnectionListener;
@@ -34,24 +35,47 @@ import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-    static Mds mMds;
-    static String connectedSerial;
-    static private RxBleClient mBleClient;
+    public static Mds mMds;
+    public static String connectedSerial;
+    private static RxBleClient mBleClient;
+    private Disposable mScanSubscription;
     private final ArrayList<MyScanResult> mScanResArrayList = new ArrayList<>();
-    ArrayAdapter<MyScanResult> mScanResArrayAdapter;
-    Button connectButton;
+    private ArrayAdapter<MyScanResult> mScanResArrayAdapter;
+    private Button connectButton, homeButton;
+    ListView mScanResultListView;
+    MyScanResult selectedDevice;
+    private boolean permissionsGranted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        requestNeededPermissions();
+        // UI elements
+        connectButton = findViewById(R.id.connectButton);
+        homeButton = findViewById(R.id.homeButton);
+        mScanResultListView = findViewById(R.id.bluetoothListView);
 
+        // Check for and request permissions
+        permissionsGranted = requestNeededPermissions();
+
+        // Initialize the Mds object
         initMds();
 
-        // UI
-        ListView mScanResultListView = findViewById(R.id.bluetoothListView);
+        // Initialize the scan result adapter
+        initMScanResAdapter();
+    }
+
+
+    /**
+     * Initialize the scan result adapter
+     * Sets the adapter for the mScanResultListView
+     * Sets the onItemClickListener for the mScanResultListView
+     * Sets padding for the TextView inside the default layout
+     * Notifies the mScanResArrayAdapter
+     * Logs any errors
+     */
+    private void initMScanResAdapter() {
         mScanResArrayAdapter = new ArrayAdapter<MyScanResult>(this, android.R.layout.simple_list_item_1, mScanResArrayList) {
             @NonNull
             @Override
@@ -60,19 +84,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 // Apply padding to the TextView inside the default layout
                 TextView textView = view.findViewById(android.R.id.text1);
-                textView.setPadding(20, 20, 20, 20); // Set padding in pixels (left, top, right, bottom)
+                float newSizeInSP = 23;
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, newSizeInSP);
+                textView.setPadding(20, 30, 20, 30); // Set padding in pixels (left, top, right, bottom)
 
                 return view;
             }
         };
         mScanResultListView.setAdapter(mScanResArrayAdapter);
         mScanResultListView.setOnItemClickListener(this);
-
-        connectButton = findViewById(R.id.connectButton);
-        connectButton.setEnabled(false);
-        startScan();
     }
 
+
+    /**
+     * Get the RxBleClient object
+     * If the object is null, create a new RxBleClient object
+     *
+     * @return: The RxBleClient object
+     */
     private RxBleClient getBleClient() {
         if (mBleClient == null) {
             mBleClient = RxBleClient.create(this);
@@ -81,38 +110,70 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return mBleClient;
     }
 
+
+    /**
+     * Initialize the Mds object
+     */
     private void initMds() {
         mMds = Mds.builder().build(this);
     }
 
-    public static boolean hasPermissions(Context context, String... permissions) {
+
+    /**
+     * Check if the app has the necessary permissions
+     * If the app does not have the necessary permissions, return false
+     * If the app has the necessary permissions, return true
+     * Log the permissions that are granted and not granted
+     */
+    private boolean hasPermissions(Context context, String... permissions) {
         if (context != null && permissions != null) {
             for (String permission : permissions) {
                 if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    System.out.println("Permission not granted: " + permission);
                     return false;
+                } else {
+                    System.out.println("Permission granted: " + permission);
                 }
             }
         }
         return true;
     }
 
-    void requestNeededPermissions() {
-        int PERMISSION_ALL = 1;
-        String[] PERMISSIONS = new String[0];
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            PERMISSIONS = new String[] {
-                    Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.MODIFY_AUDIO_SETTINGS
-            };
-        }
 
-        if (!hasPermissions(this, PERMISSIONS)) {
-            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
-        }
+    /**
+     * Request permissions needed for the app to function
+     * Request the necessary permissions
+     * Call hasPermissions() to confirm check if the app has the necessary permissions
+     * Return true if the app has the necessary permissions
+     */
+    private boolean requestNeededPermissions() {
+        int PERMISSION_ALL = 1;
+
+        // Permissions needed for the app to function
+        String[] PERMISSIONS = new String[]{
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.CAMERA,
+        };
+
+        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+
+        // Call hasPermissions() to confirm check if the app has the necessary permissions
+        return hasPermissions(this, PERMISSIONS);
     }
 
-    Disposable mScanSubscription;
 
+    /**
+     * Start scanning for BLE devices
+     * Clears the mScanResArrayList and notifies the mScanResArrayAdapter
+     * Subscribes to the scanBleDevices method of the RxBleClient
+     * Adds the scanned devices to the mScanResArrayList
+     * Notifies the mScanResArrayAdapter
+     * Logs any errors
+     */
     public void startScan() {
+        connectButton.setText("Scanning");
         mScanResArrayList.clear();
         mScanResArrayAdapter.notifyDataSetChanged();
 
@@ -131,17 +192,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }, throwable -> Log.e(LOG_TAG, "scan error: " + throwable));
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position < 0 || position >= mScanResArrayList.size()) return;
 
-        MyScanResult device = mScanResArrayList.get(position);
-        if (!device.isConnected()) {
-            Log.d(LOG_TAG, "Inside the connect method");
-            connectBLEDevice(device);
-        }
-    }
-
+    /**
+     * Stop scanning for BLE devices
+     * Disposes the mScanSubscription
+     */
     public void stopScan() {
         if (mScanSubscription != null) {
             mScanSubscription.dispose();
@@ -149,9 +204,43 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
-    public void connectBLEDevice(MyScanResult device) {
-        Toast.makeText(getApplicationContext(), "Connecting, this may take a moment...", Toast.LENGTH_SHORT).show();
 
+    /**
+     * onItemClick method for the mScanResultListView
+     * Connects to the BLE device that was clicked
+     * If the device is not connected, connect to the device
+     *
+     * @param parent: The AdapterView where the click happened
+     * @param view: The view within the AdapterView that was clicked
+     * @param position: The position of the view in the adapter
+     * @param id: The row id of the item that was clicked
+     *
+     */
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        if (position < 0 || position >= mScanResArrayList.size()) return;
+
+        MyScanResult device = mScanResArrayList.get(position);
+        if (!device.isConnected()) {
+            connectBLEDevice(device);
+        }
+    }
+
+
+    /**
+     * Connect to the BLE device
+     * Connect to the BLE device using the Mds object
+     * If the connection is successful, mark the device as connected
+     * Notify the mScanResArrayAdapter
+     * Set the connectedSerial
+     * Enable the homeButton
+     * Set the homeButton background tint
+     *
+     * @param device: The BLE device to connect to
+     */
+    public void connectBLEDevice(MyScanResult device) {
+        // Toast.makeText(getApplicationContext(), "Connecting, this may take a moment...", Toast.LENGTH_SHORT).show();
+        connectButton.setText("Connecting");
         RxBleDevice bleDevice = getBleClient().getBleDevice(device.macAddress);
 
         Log.i(LOG_TAG, "Connecting to BLE device: " + bleDevice.getMacAddress());
@@ -174,8 +263,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 }
                 mScanResArrayAdapter.notifyDataSetChanged();
                 connectedSerial = serial;
-                Toast.makeText(getApplicationContext(), "Device Connected", Toast.LENGTH_SHORT).show();
-                connectButton.setEnabled(true);
+                // Toast.makeText(getApplicationContext(), "Device Connected", Toast.LENGTH_SHORT).show();
+                connectButton.setText("Scan");
+                homeButton.setEnabled(true);
+                // Set home button background tint
+                homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme));
+                selectedDevice = device;
             }
 
             @Override
@@ -199,14 +292,63 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
     }
 
+
+    /**
+     * Disconnect the BLE device
+     * Disconnect the BLE device using the Mds object
+     * If the device is connected, disconnect the device
+     */
+    public void disconnectBLEDevice() {
+        if(mMds != null && selectedDevice != null && selectedDevice.isConnected()) {
+            mMds.disconnect(selectedDevice.macAddress);
+            selectedDevice.markDisconnected();
+
+        }
+    }
+
+
+    /**
+     * Show an alert dialog with the error message
+     *
+     * @param e: The MdsException object
+     */
     private void showConnectionError(MdsException e) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle("Connection Error:").setMessage(e.getMessage());
 
         builder.create().show();
     }
 
+
+    /**
+     * Called when the connect button is clicked
+     *
+     * @param view: The view that was clicked
+     */
     public void connectButtonClicked(View view) {
-        Intent intent = new Intent(MainActivity.this, GestureActivity.class);
-        startActivity(intent);
+        // Check if the required permissions are granted
+        if (!permissionsGranted) {
+            permissionsGranted = requestNeededPermissions();
+            System.out.println("Permissions granted: " + permissionsGranted);
+        } else {
+            // Stop scanning if already scanning and disable the homeButton
+            stopScan();
+            homeButton.setEnabled(false);
+            homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
+            disconnectBLEDevice();
+
+            // Start scanning for bluetooth devices
+            startScan();
+        }
+    }
+
+    /**
+     * Called when the home button is clicked
+     *
+     * @param view: The view that was clicked
+     */
+    public void homeButtonClicked(View view) {
+        // Go to the HomeActivity
+         Intent intent = new Intent(this, GestureActivity.class);
+         startActivity(intent);
     }
 }

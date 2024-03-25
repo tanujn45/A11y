@@ -34,16 +34,42 @@
         android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/homeConnectText" />
+        app:layout_constraintTop_toBottomOf="@+id/homeConnectText"
+      />
 
-    <Button
-        android:id="@+id/connectButton"
-        style="@style/ButtonStyle"
+    <LinearLayout
+        android:id="@+id/buttonGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="50dp"
-        android:onClick="connectButtonClicked"
-        android:text="Home"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/connectButton"
+            style="@style/ButtonStyle"
+            android:onClick="connectButtonClicked"
+            android:layout_width="0dp"
+            android:layout_marginEnd="7dp"
+            android:layout_height="wrap_content"
+            android:text="SCAN"
+            android:layout_weight="1"
+            />
+
+        <Button
+            android:id="@+id/homeButton"
+            style="@style/ButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:layout_weight="1"
+            android:enabled="false"
+            android:backgroundTint="@color/theme2"
+            android:onClick="homeButtonClicked"
+            android:text="Home" />
+    </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

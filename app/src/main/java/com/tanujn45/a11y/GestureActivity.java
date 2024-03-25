@@ -2,7 +2,6 @@ package com.tanujn45.a11y;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
@@ -289,34 +288,6 @@ public class GestureActivity extends AppCompatActivity implements TextToSpeech.O
                     adapter.notifyDataSetChanged();
                 }
             }
-        }
-    }
-
-    private void startRecording() {
-        mMediaRecorder = new MediaRecorder();
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-        mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-        mMediaRecorder.setOutputFile(getOutputMediaFile().getPath());
-        mMediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
-
-        try {
-            mMediaRecorder.prepare();
-            mMediaRecorder.start();
-            isRecording = true;
-            Toast.makeText(this, "Recording started", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void stopRecording() {
-        if (isRecording) {
-            mMediaRecorder.stop();
-            mMediaRecorder.release();
-            mMediaRecorder = null;
-            isRecording = false;
-            Toast.makeText(this, "Recording stopped", Toast.LENGTH_SHORT).show();
         }
     }
 

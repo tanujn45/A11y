@@ -52,21 +52,9 @@
                 app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText">
 
                 <Button
-                    android:id="@+id/addGestureButton"
-                    style="@style/ButtonStyle"
-                    android:layout_width="0dp"
-                    android:layout_marginRight="7dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/theme"
-                    android:fontFamily="@font/roboto_black"
-                    android:onClick="addGestureButtonClicked"
-                    android:text="add gesture" />
-
-                <Button
                     android:id="@+id/recordWholeButton"
                     style="@style/ButtonStyle"
                     android:layout_width="0dp"
-                    android:layout_marginLeft="7dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/theme"
                     android:fontFamily="@font/roboto_black"
@@ -82,258 +70,26 @@
                 android:background="@drawable/rounded_corner"
                 android:padding="18dp"
                 android:text="Subscribing to sensor"
-                android:textAlignment="center"
                 android:textSize="20dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/addGestureButton" />
 
-            <!--
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <Button
-                    android:id="@+id/rate13"
-                    style="@style/ButtonStyle"
-                    android:layout_width="0dp"
-                    android:layout_marginRight="7dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/theme"
-                    android:fontFamily="@font/roboto_black"
-                    android:onClick="addGestureButtonClicked"
-                    android:text="13" />
-
-                <Button
-                    android:id="@+id/rate26"
-                    style="@style/ButtonStyle"
-                    android:layout_width="0dp"
-                    android:layout_marginRight="7dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/theme"
-                    android:fontFamily="@font/roboto_black"
-                    android:onClick="addGestureButtonClicked"
-                    android:text="26" />
-
-                <Button
-                    android:id="@+id/rate52"
-                    style="@style/ButtonStyle"
-                    android:layout_width="0dp"
-                    android:layout_marginRight="7dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/theme"
-                    android:fontFamily="@font/roboto_black"
-                    android:onClick="addGestureButtonClicked"
-                    android:text="52" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <Button
-                    android:id="@+id/rate104"
-                    style="@style/ButtonStyle"
-                    android:layout_width="0dp"
-                    android:layout_marginRight="7dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/theme"
-                    android:fontFamily="@font/roboto_black"
-                    android:onClick="addGestureButtonClicked"
-                    android:text="104" />
-
-                <Button
-                    android:id="@+id/rate208"
-                    style="@style/ButtonStyle"
-                    android:layout_width="0dp"
-                    android:layout_marginRight="7dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/theme"
-                    android:fontFamily="@font/roboto_black"
-                    android:onClick="addGestureButtonClicked"
-                    android:text="208" />
-
-                <Button
-                    android:id="@+id/rate416"
-                    style="@style/ButtonStyle"
-                    android:layout_width="0dp"
-                    android:layout_marginRight="7dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/theme"
-                    android:fontFamily="@font/roboto_black"
-                    android:onClick="addGestureButtonClicked"
-                    android:text="416" />
-            </LinearLayout>
-            -->
-
-            <LinearLayout
-                android:id="@+id/refreshRateBox"
+            <FrameLayout
+                android:id="@+id/previewViewContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="60dp"
                 android:background="@drawable/rounded_corner"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="15dp"
-                android:paddingVertical="16dp">
-
-                <TextView
-                    android:id="@+id/refreshRateText"
-                    style="@style/SubHeaderFont"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Refresh Rate"
-                    android:textColor="@color/white" />
-
-                <Spinner
-                    android:id="@+id/refreshRate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:entries="@array/refresh_rate"
-                    android:spinnerMode="dropdown"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/sensorMsg" />
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:id="@+id/accBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/rounded_corner"
-                android:orientation="vertical"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/refreshRate">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="15dp"
-                    android:paddingVertical="4dp">
-
-                    <TextView
-                        android:id="@+id/accText"
-                        style="@style/SubHeaderFont"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Linear Accelerometer"
-                        android:textColor="@color/white" />
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/accSwitch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </LinearLayout>
-
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/imuChartAcc"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:background="@drawable/rounded_corner_white"
-                    android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/accText" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/rounded_corner"
-                android:orientation="vertical"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/accBox">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="15dp"
-                    android:paddingVertical="4dp">
-
-                    <TextView
-                        android:id="@+id/gyroText"
-                        style="@style/SubHeaderFont"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Gyroscope"
-                        android:textColor="@color/white" />
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/gyroSwitch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </LinearLayout>
-
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/imuChartGyro"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:background="@drawable/rounded_corner_white"
-                    android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/gyroText" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/rounded_corner"
-                android:orientation="vertical"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/accBox">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="15dp"
-                    android:paddingVertical="4dp">
-
-                    <TextView
-                        android:id="@+id/magText"
-                        style="@style/SubHeaderFont"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Magnetometer"
-                        android:textColor="@color/white" />
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/magSwitch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintEnd_toEndOf="parent" />
-                </LinearLayout>
-
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/imuChartMag"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:background="@drawable/rounded_corner_white"
-                    android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/magText" />
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:nestedScrollingEnabled="false"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/body" />
+                app:layout_constraintTop_toBottomOf="@+id/sensorMsg">
 
+                <androidx.camera.view.PreviewView
+                    android:id="@+id/previewView"
+                    android:layout_width="match_parent"
+                    android:layout_height="400dp" />
+            </FrameLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

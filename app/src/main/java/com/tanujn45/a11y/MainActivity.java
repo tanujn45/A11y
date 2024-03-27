@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Button connectButton, homeButton;
     ListView mScanResultListView;
     MyScanResult selectedDevice;
+    private boolean scanning = false;
     private boolean permissionsGranted = false;
 
     @Override
@@ -155,6 +156,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 Manifest.permission.BLUETOOTH_SCAN,
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO,
         };
 
         ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
@@ -240,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     public void connectBLEDevice(MyScanResult device) {
         // Toast.makeText(getApplicationContext(), "Connecting, this may take a moment...", Toast.LENGTH_SHORT).show();
-        connectButton.setText("Connecting");
+
         RxBleDevice bleDevice = getBleClient().getBleDevice(device.macAddress);
 
         Log.i(LOG_TAG, "Connecting to BLE device: " + bleDevice.getMacAddress());
@@ -250,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             @Override
             public void onConnect(String s) {
+                connectButton.setText("Connecting");
                 Log.d(LOG_TAG, "onConnect:" + s);
             }
 
@@ -284,7 +287,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 for (MyScanResult sr : mScanResArrayList) {
                     if (bleAddress.equals(sr.macAddress)) {
                         sr.markDisconnected();
-
                     }
                 }
                 mScanResArrayAdapter.notifyDataSetChanged();
@@ -299,10 +301,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      * If the device is connected, disconnect the device
      */
     public void disconnectBLEDevice() {
-        if(mMds != null && selectedDevice != null && selectedDevice.isConnected()) {
+        if (mMds != null && selectedDevice != null && selectedDevice.isConnected()) {
+            Log.d(LOG_TAG, "Disconnecting from device: " + selectedDevice.macAddress);
             mMds.disconnect(selectedDevice.macAddress);
             selectedDevice.markDisconnected();
-
+            mScanResArrayAdapter.notifyDataSetChanged();
+            Log.d(LOG_TAG, "Disconnected successfully.");
+        } else {
+            Log.d(LOG_TAG, "Cannot disconnect. mMds is null or selectedDevice is not connected.");
         }
     }
 
@@ -330,14 +336,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             permissionsGranted = requestNeededPermissions();
             System.out.println("Permissions granted: " + permissionsGranted);
         } else {
-            // Stop scanning if already scanning and disable the homeButton
-            stopScan();
-            homeButton.setEnabled(false);
-            homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
-            disconnectBLEDevice();
-
-            // Start scanning for bluetooth devices
-            startScan();
+            scanning = !scanning;
+            if(scanning) {
+                homeButton.setEnabled(false);
+                homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
+                disconnectBLEDevice();
+                startScan();
+            } else {
+                stopScan();
+                connectButton.setText("Scan");
+            }
         }
     }
 

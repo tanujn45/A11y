@@ -318,6 +318,7 @@ public class GestureActivity extends AppCompatActivity {
     /**
      * Set the current time to the sensor
      * This is used to synchronize the time between the phone and the sensor
+     * The time is set to the current time in milliseconds
      *
      * @param serial: The serial number of the connected device
      */

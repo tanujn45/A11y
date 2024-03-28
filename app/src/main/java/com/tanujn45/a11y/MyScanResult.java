@@ -11,10 +11,20 @@ class MyScanResult {
     public String name;
     public String connectedSerial;
 
+    public boolean previouslyConnected;
+
     public MyScanResult(ScanResult scanResult) {
         this.macAddress = scanResult.getBleDevice().getMacAddress();
         this.rssi = scanResult.getRssi();
         this.name = scanResult.getBleDevice().getName();
+        this.previouslyConnected = false;
+    }
+
+    public MyScanResult(MyScanResult myScanResult, boolean previouslyConnected) {
+        this.macAddress = myScanResult.macAddress;
+        this.rssi = myScanResult.rssi;
+        this.name = myScanResult.name;
+        this.previouslyConnected = previouslyConnected;
     }
 
     public boolean isConnected() {

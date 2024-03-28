@@ -27,15 +27,60 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
 
-    <ListView
-        android:id="@+id/bluetoothListView"
-        android:layout_width="match_parent"
+
+    <TextView
+        android:id="@+id/yourDevicesText"
+        style="@style/SubHeaderFont"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
+        android:text="Your Devices"
+        android:textColor="@color/grey"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/homeConnectText" />
+
+    <ListView
+        android:id="@+id/previouslyConnectedListView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/homeConnectText"
-      />
+        app:layout_constraintTop_toBottomOf="@+id/yourDevicesText" />
+
+    <TextView
+        android:id="@+id/newDevicesText"
+        style="@style/SubHeaderFont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="New Devices"
+        android:textColor="@color/grey"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/previouslyConnectedListView" />
+
+    <ListView
+        android:id="@+id/newDevicesListView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/newDevicesText" />
+
+    <Button
+        android:id="@+id/disconnectButton"
+        style="@style/ButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/theme2"
+        android:layout_marginBottom="5dp"
+        android:enabled="false"
+        android:onClick="disconnectButtonClicked"
+        android:text="Disconnect"
+        app:layout_constraintBottom_toTopOf="@id/buttonGroup"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
         android:id="@+id/buttonGroup"

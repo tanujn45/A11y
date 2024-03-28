@@ -102,7 +102,6 @@ public class GestureActivity extends AppCompatActivity {
      * Capture the video
      * If the video is already being captured, stop the video
      * If the video is not being captured, start the video
-     *
      */
     public void captureVideo() {
         Recording recording1 = recording;

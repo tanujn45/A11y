@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.gson.Gson;
 import com.movesense.mds.Mds;
 import com.movesense.mds.MdsConnectionListener;
 import com.movesense.mds.MdsException;
@@ -30,6 +32,8 @@ import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.scan.ScanSettings;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import io.reactivex.disposables.Disposable;
 
@@ -39,11 +43,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public static String connectedSerial;
     private static RxBleClient mBleClient;
     private Disposable mScanSubscription;
-    private final ArrayList<MyScanResult> mScanResArrayList = new ArrayList<>();
-    private ArrayAdapter<MyScanResult> mScanResArrayAdapter;
-    private Button connectButton, homeButton;
-    ListView mScanResultListView;
-    MyScanResult selectedDevice;
+    private static final String PREFS_NAME = "ConnectedDevices";
+    private static final String PREFS_KEY_DEVICES = "devices";
+
+    private final ArrayList<MyScanResult> mPreviousDeviceArrayList = new ArrayList<>();
+    private ArrayAdapter<MyScanResult> mPreviousDeviceAdapter;
+
+    private final ArrayList<MyScanResult> mNewDeviceArrayList = new ArrayList<>();
+    private ArrayAdapter<MyScanResult> mNewDeviceAdapter;
+    private Button connectButton, homeButton, disconnectButton;
+    ListView mScanResultListView, mPreviouslyConnectedListView;
+    private ArrayList<MyScanResult> selectedDevices = new ArrayList<>();
     private boolean scanning = false;
     private boolean permissionsGranted = false;
 
@@ -55,7 +65,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // UI elements
         connectButton = findViewById(R.id.connectButton);
         homeButton = findViewById(R.id.homeButton);
-        mScanResultListView = findViewById(R.id.bluetoothListView);
+        mScanResultListView = findViewById(R.id.newDevicesListView);
+        mPreviouslyConnectedListView = findViewById(R.id.previouslyConnectedListView);
+        disconnectButton = findViewById(R.id.disconnectButton);
 
         // Check for and request permissions
         permissionsGranted = requestNeededPermissions();
@@ -65,19 +77,32 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         // Initialize the scan result adapter
         initMScanResAdapter();
+        initPreviouslyConnectedAdapter();
+
+        // Load previously connected devices
+        loadPreviouslyConnectedDevices();
     }
 
 
-    /**
-     * Initialize the scan result adapter
-     * Sets the adapter for the mScanResultListView
-     * Sets the onItemClickListener for the mScanResultListView
-     * Sets padding for the TextView inside the default layout
-     * Notifies the mScanResArrayAdapter
-     * Logs any errors
-     */
-    private void initMScanResAdapter() {
-        mScanResArrayAdapter = new ArrayAdapter<MyScanResult>(this, android.R.layout.simple_list_item_1, mScanResArrayList) {
+    private void loadPreviouslyConnectedDevices() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        Set<String> myScanResultJsonSet = prefs.getStringSet(PREFS_KEY_DEVICES, new HashSet<>());
+
+        Gson gson = new Gson();
+        for (String myScanResultJson : myScanResultJsonSet) {
+            MyScanResult myScanResult = gson.fromJson(myScanResultJson, MyScanResult.class);
+            if (myScanResult != null) {
+                MyScanResult result = new MyScanResult(myScanResult, true);
+                mPreviousDeviceArrayList.add(result);
+            }
+        }
+
+        mPreviousDeviceAdapter.notifyDataSetChanged();
+    }
+
+
+    private void initPreviouslyConnectedAdapter() {
+        mPreviousDeviceAdapter = new ArrayAdapter<MyScanResult>(this, android.R.layout.simple_list_item_1, mPreviousDeviceArrayList) {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -92,7 +117,36 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 return view;
             }
         };
-        mScanResultListView.setAdapter(mScanResArrayAdapter);
+        mPreviouslyConnectedListView.setAdapter(mPreviousDeviceAdapter);
+        mPreviouslyConnectedListView.setOnItemClickListener(this);
+    }
+
+
+    /**
+     * Initialize the scan result adapter
+     * Sets the adapter for the mScanResultListView
+     * Sets the onItemClickListener for the mScanResultListView
+     * Sets padding for the TextView inside the default layout
+     * Notifies the mNewDeviceAdapter
+     * Logs any errors
+     */
+    private void initMScanResAdapter() {
+        mNewDeviceAdapter = new ArrayAdapter<MyScanResult>(this, android.R.layout.simple_list_item_1, mNewDeviceArrayList) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+
+                // Apply padding to the TextView inside the default layout
+                TextView textView = view.findViewById(android.R.id.text1);
+                float newSizeInSP = 23;
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, newSizeInSP);
+                textView.setPadding(20, 30, 20, 30); // Set padding in pixels (left, top, right, bottom)
+
+                return view;
+            }
+        };
+        mScanResultListView.setAdapter(mNewDeviceAdapter);
         mScanResultListView.setOnItemClickListener(this);
     }
 
@@ -168,16 +222,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     /**
      * Start scanning for BLE devices
-     * Clears the mScanResArrayList and notifies the mScanResArrayAdapter
+     * Clears the mNewDeviceArrayList and notifies the mNewDeviceAdapter
      * Subscribes to the scanBleDevices method of the RxBleClient
-     * Adds the scanned devices to the mScanResArrayList
-     * Notifies the mScanResArrayAdapter
+     * Adds the scanned devices to the mNewDeviceArrayList
+     * Notifies the mNewDeviceAdapter
      * Logs any errors
      */
     public void startScan() {
         connectButton.setText("Scanning");
-        mScanResArrayList.clear();
-        mScanResArrayAdapter.notifyDataSetChanged();
+        mNewDeviceArrayList.clear();
+        mNewDeviceAdapter.notifyDataSetChanged();
 
         mScanSubscription = getBleClient().scanBleDevices(new ScanSettings.Builder().build()).subscribe(scanResult -> {
             Log.d(LOG_TAG, "scanResult: " + scanResult);
@@ -185,11 +239,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             if (scanResult.getBleDevice() != null && scanResult.getBleDevice().getName() != null && scanResult.getBleDevice().getName().startsWith("Movesense")) {
 
                 MyScanResult msr = new MyScanResult(scanResult);
-                if (mScanResArrayList.contains(msr))
-                    mScanResArrayList.set(mScanResArrayList.indexOf(msr), msr);
-                else mScanResArrayList.add(0, msr);
+                // Check if the device already exists in mPreviousDeviceArrayList
+                boolean existsInPrevious = false;
+                for (MyScanResult prevDevice : mPreviousDeviceArrayList) {
+                    if (prevDevice.macAddress.equals(msr.macAddress) && prevDevice.name.equals(msr.name)) {
+                        existsInPrevious = true;
+                        break;
+                    }
+                }
 
-                mScanResArrayAdapter.notifyDataSetChanged();
+                // If the device doesn't exist in mPreviousDeviceArrayList, add it to mNewDeviceArrayList
+                if (!existsInPrevious) {
+                    if (mNewDeviceArrayList.contains(msr))
+                        mNewDeviceArrayList.set(mNewDeviceArrayList.indexOf(msr), msr);
+                    else mNewDeviceArrayList.add(0, msr);
+
+                    mNewDeviceAdapter.notifyDataSetChanged();
+                }
             }
         }, throwable -> Log.e(LOG_TAG, "scan error: " + throwable));
     }
@@ -220,11 +286,26 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position < 0 || position >= mScanResArrayList.size()) return;
+        MyScanResult device = null;
+        if (parent == mScanResultListView) {
+            // Get the device that was clicked
+            device = mNewDeviceArrayList.get(position);
 
-        MyScanResult device = mScanResArrayList.get(position);
-        if (!device.isConnected()) {
-            connectBLEDevice(device);
+            // Add the device to the previously connected devices
+            addDeviceToPreviouslyConnected(device);
+            mPreviousDeviceArrayList.add(0, device);
+            mPreviousDeviceAdapter.notifyDataSetChanged();
+
+            // Remove the device from the scan result list
+            mNewDeviceArrayList.remove(device);
+            mNewDeviceAdapter.notifyDataSetChanged();
+        } else if (parent == mPreviouslyConnectedListView) {
+            // Get the device that was clicked
+            device = mPreviousDeviceArrayList.get(position);
+        }
+
+        if (device != null) {
+            connectBLEDevice(device, true);
         }
     }
 
@@ -233,14 +314,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      * Connect to the BLE device
      * Connect to the BLE device using the Mds object
      * If the connection is successful, mark the device as connected
-     * Notify the mScanResArrayAdapter
+     * Notify the mNewDeviceAdapter
      * Set the connectedSerial
      * Enable the homeButton
      * Set the homeButton background tint
      *
      * @param device: The BLE device to connect to
      */
-    public void connectBLEDevice(MyScanResult device) {
+    public void connectBLEDevice(MyScanResult device, boolean newConnection) {
         // Toast.makeText(getApplicationContext(), "Connecting, this may take a moment...", Toast.LENGTH_SHORT).show();
 
         RxBleDevice bleDevice = getBleClient().getBleDevice(device.macAddress);
@@ -249,34 +330,41 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         stopScan();
         mMds.connect(bleDevice.getMacAddress(), new MdsConnectionListener() {
-
             @Override
             public void onConnect(String s) {
                 connectButton.setText("Connecting");
+                connectButton.setEnabled(false);
                 Log.d(LOG_TAG, "onConnect:" + s);
             }
 
             @Override
             public void onConnectionComplete(String macAddress, String serial) {
-                for (MyScanResult sr : mScanResArrayList) {
+                for (MyScanResult sr : mPreviousDeviceArrayList) {
                     if (sr.macAddress.equalsIgnoreCase(macAddress)) {
                         sr.markConnected(serial);
                         break;
                     }
                 }
-                mScanResArrayAdapter.notifyDataSetChanged();
+
+                mPreviousDeviceAdapter.notifyDataSetChanged();
                 connectedSerial = serial;
-                // Toast.makeText(getApplicationContext(), "Device Connected", Toast.LENGTH_SHORT).show();
+
                 connectButton.setText("Scan");
+
+                connectButton.setEnabled(true);
                 homeButton.setEnabled(true);
+
                 // Set home button background tint
                 homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme));
-                selectedDevice = device;
+                selectedDevices.add(device);
             }
 
             @Override
             public void onError(MdsException e) {
                 Log.e(LOG_TAG, "onError:" + e);
+
+                connectButton.setEnabled(true);
+                connectButton.setText("Scan");
 
                 showConnectionError(e);
             }
@@ -284,14 +372,38 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             @Override
             public void onDisconnect(String bleAddress) {
                 Log.d(LOG_TAG, "onDisconnect: " + bleAddress);
-                for (MyScanResult sr : mScanResArrayList) {
+                for (MyScanResult sr : mNewDeviceArrayList) {
                     if (bleAddress.equals(sr.macAddress)) {
                         sr.markDisconnected();
                     }
                 }
-                mScanResArrayAdapter.notifyDataSetChanged();
+                mPreviousDeviceAdapter.notifyDataSetChanged();
             }
         });
+    }
+
+
+    /**
+     * Add the device to the previously connected devices
+     * Convert the device to a JSON string
+     * Get the previously connected devices from the SharedPreferences
+     * Add the device to the deviceSet
+     * Save the deviceSet to the SharedPreferences
+     *
+     * @param device: The device to add to the previously connected devices
+     */
+    private void addDeviceToPreviouslyConnected(MyScanResult device) {
+        Gson gson = new Gson();
+        String scanResultJson = gson.toJson(device);
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        Set<String> deviceSet = prefs.getStringSet(PREFS_KEY_DEVICES, new HashSet<>());
+
+        Set<String> newDeviceSet = new HashSet<>(deviceSet);
+
+        newDeviceSet.add(scanResultJson);
+
+        prefs.edit().putStringSet(PREFS_KEY_DEVICES, newDeviceSet).apply();
     }
 
 
@@ -301,13 +413,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      * If the device is connected, disconnect the device
      */
     public void disconnectBLEDevice() {
-        if (mMds != null && selectedDevice != null && selectedDevice.isConnected()) {
-            Log.d(LOG_TAG, "Disconnecting from device: " + selectedDevice.macAddress);
-            mMds.disconnect(selectedDevice.macAddress);
-            selectedDevice.markDisconnected();
-            mScanResArrayAdapter.notifyDataSetChanged();
-            Log.d(LOG_TAG, "Disconnected successfully.");
-        } else {
+        if (mMds != null)
+            for (MyScanResult selectedDevice : selectedDevices) {
+                if (selectedDevice != null && selectedDevice.isConnected()) {
+                    Log.d(LOG_TAG, "Disconnecting from device: " + selectedDevice.macAddress);
+                    mMds.disconnect(selectedDevice.macAddress);
+                    selectedDevice.markDisconnected();
+                    mNewDeviceAdapter.notifyDataSetChanged();
+                    Log.d(LOG_TAG, "Disconnected successfully.");
+                } else {
+                    Log.d(LOG_TAG, "Cannot disconnect. mMds is null or selectedDevice is not connected.");
+                }
+            }
+        else {
             Log.d(LOG_TAG, "Cannot disconnect. mMds is null or selectedDevice is not connected.");
         }
     }
@@ -340,7 +458,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             if(scanning) {
                 homeButton.setEnabled(false);
                 homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
-                disconnectBLEDevice();
                 startScan();
             } else {
                 stopScan();
@@ -349,6 +466,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
+
     /**
      * Called when the home button is clicked
      *
@@ -356,7 +474,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     public void homeButtonClicked(View view) {
         // Go to the HomeActivity
-         Intent intent = new Intent(this, GestureActivity.class);
-         startActivity(intent);
+        Intent intent = new Intent(this, GestureActivity.class);
+        startActivity(intent);
+    }
+
+
+    /**
+     * Called when the disconnect button is clicked
+     *
+     * @param view: The view that was clicked
+     */
+    public void disconnectButtonClicked(View view) {
+        disconnectBLEDevice();
+
     }
 }

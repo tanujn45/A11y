@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArrayAdapter<MyScanResult> mNewDeviceAdapter;
     private Button connectButton, homeButton, disconnectButton;
     ListView mScanResultListView, mPreviouslyConnectedListView;
-    private ArrayList<MyScanResult> selectedDevices = new ArrayList<>();
+    private final ArrayList<MyScanResult> selectedDevices = new ArrayList<>();
     private boolean scanning = false;
     private boolean permissionsGranted = false;
 
@@ -84,6 +84,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
 
+    /**
+     * Load previously connected devices
+     * Get the previously connected devices from the SharedPreferences
+     * Convert the JSON strings to MyScanResult objects
+     * Add the devices to the mPreviousDeviceArrayList
+     * Notify the mPreviousDeviceAdapter
+     */
     private void loadPreviouslyConnectedDevices() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         Set<String> myScanResultJsonSet = prefs.getStringSet(PREFS_KEY_DEVICES, new HashSet<>());
@@ -101,6 +108,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
 
+    /**
+     * Initialize the previously connected adapter
+     * Sets the adapter for the mPreviouslyConnectedListView
+     * Sets the onItemClickListener for the mPreviouslyConnectedListView
+     * Sets padding for the TextView inside the default layout
+     * Notifies the mPreviousDeviceAdapter
+     * Logs any errors
+     */
     private void initPreviouslyConnectedAdapter() {
         mPreviousDeviceAdapter = new ArrayAdapter<MyScanResult>(this, android.R.layout.simple_list_item_1, mPreviousDeviceArrayList) {
             @NonNull
@@ -365,8 +380,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 connectButton.setEnabled(true);
                 connectButton.setText("Scan");
-
-                showConnectionError(e);
+                String msg = "Error connecting to Movesense device. Make sure the device is turned on and in range. If the problem persists, try restarting the app.";
+                showConnectionError(msg);
             }
 
             @Override
@@ -377,6 +392,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         sr.markDisconnected();
                     }
                 }
+
+                // String msg = "Disconnected from device: " + bleAddress;
+                // Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
                 mPreviousDeviceAdapter.notifyDataSetChanged();
             }
         });
@@ -413,21 +431,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      * If the device is connected, disconnect the device
      */
     public void disconnectBLEDevice() {
-        if (mMds != null)
-            for (MyScanResult selectedDevice : selectedDevices) {
-                if (selectedDevice != null && selectedDevice.isConnected()) {
-                    Log.d(LOG_TAG, "Disconnecting from device: " + selectedDevice.macAddress);
+        for (MyScanResult selectedDevice : selectedDevices) {
+            if (selectedDevice != null && selectedDevice.isConnected()) {
+                Log.d(LOG_TAG, "Disconnecting from device: " + selectedDevice.macAddress);
+
+                if (mMds != null)
                     mMds.disconnect(selectedDevice.macAddress);
-                    selectedDevice.markDisconnected();
-                    mNewDeviceAdapter.notifyDataSetChanged();
-                    Log.d(LOG_TAG, "Disconnected successfully.");
-                } else {
-                    Log.d(LOG_TAG, "Cannot disconnect. mMds is null or selectedDevice is not connected.");
-                }
+
+                selectedDevice.markDisconnected();
+                mNewDeviceAdapter.notifyDataSetChanged();
+                Log.d(LOG_TAG, "Disconnected successfully.");
+            } else {
+                Log.d(LOG_TAG, "Cannot disconnect. mMds is null or selectedDevice is not connected.");
             }
-        else {
-            Log.d(LOG_TAG, "Cannot disconnect. mMds is null or selectedDevice is not connected.");
         }
+        selectedDevices.clear();
+        homeButton.setEnabled(false);
+        homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
     }
 
 
@@ -441,6 +461,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         builder.create().show();
     }
+
+
+    /**
+     * Show an alert dialog with the error message
+     *
+     * @param msg: The error message
+     */
+    private void showConnectionError(String msg) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle("Connection Error:").setMessage(msg);
+
+        builder.create().show();
+    }
+
 
 
     /**

@@ -10,7 +10,6 @@ class MyScanResult {
     public String macAddress;
     public String name;
     public String connectedSerial;
-
     public boolean previouslyConnected;
 
     public MyScanResult(ScanResult scanResult) {

@@ -337,4 +337,33 @@ public class GestureActivity extends AppCompatActivity {
             }
         });
     }
+
+    protected void onPause() {
+        super.onPause();
+        // Stop recording if it's currently active
+        if (isRecording) {
+            try {
+                recordGestureButtonClicked(null); // Call the method to stop recording
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        // Unsubscribe from sensor data
+        unsubscribe();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Stop recording if it's currently active
+        if (isRecording) {
+            try {
+                recordGestureButtonClicked(null); // Call the method to stop recording
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        // Unsubscribe from sensor data when activity is destroyed
+        unsubscribe();
+    }
 }

@@ -201,8 +201,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
                     System.out.println("Permission not granted: " + permission);
                     return false;
-                } else {
-                    System.out.println("Permission granted: " + permission);
                 }
             }
         }
@@ -317,6 +315,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         } else if (parent == mPreviouslyConnectedListView) {
             // Get the device that was clicked
             device = mPreviousDeviceArrayList.get(position);
+            if (device.isConnected()) {
+                return;
+            }
         }
 
         if (device != null) {
@@ -372,6 +373,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 // Set home button background tint
                 homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme));
                 selectedDevices.add(device);
+
+                disconnectButton.setEnabled(true);
+                disconnectButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme));
             }
 
             @Override
@@ -439,13 +443,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     mMds.disconnect(selectedDevice.macAddress);
 
                 selectedDevice.markDisconnected();
-                mNewDeviceAdapter.notifyDataSetChanged();
                 Log.d(LOG_TAG, "Disconnected successfully.");
             } else {
                 Log.d(LOG_TAG, "Cannot disconnect. mMds is null or selectedDevice is not connected.");
             }
         }
         selectedDevices.clear();
+        disconnectButton.setEnabled(false);
+        disconnectButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
         homeButton.setEnabled(false);
         homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
     }
@@ -473,7 +478,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         builder.create().show();
     }
-
 
 
     /**
@@ -519,6 +523,30 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     public void disconnectButtonClicked(View view) {
         disconnectBLEDevice();
+    }
 
+
+    /**
+     * Called when the app is started
+     * Get the BLE client
+     * Print the number of connected peripherals
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mBleClient = getBleClient();
+        System.out.println(mBleClient.getConnectedPeripherals().size());
+    }
+
+
+    /**
+     * Called when the app is destroyed
+     * Disconnect any BLE device that is connected
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        disconnectBLEDevice();
     }
 }

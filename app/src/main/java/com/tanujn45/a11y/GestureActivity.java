@@ -1,54 +1,36 @@
 package com.tanujn45.a11y;
 
-import android.Manifest;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.Camera;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.Preview;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.video.MediaStoreOutputOptions;
-import androidx.camera.video.Quality;
-import androidx.camera.video.QualitySelector;
-import androidx.camera.video.Recorder;
-import androidx.camera.video.Recording;
-import androidx.camera.video.VideoCapture;
-import androidx.camera.video.VideoRecordEvent;
-import androidx.camera.view.PreviewView;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 import com.movesense.mds.Mds;
 import com.movesense.mds.MdsException;
-import com.movesense.mds.MdsHeader;
 import com.movesense.mds.MdsNotificationListener;
-import com.movesense.mds.MdsResponseListener;
 import com.movesense.mds.MdsSubscription;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import weka.clusterers.SimpleKMeans;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.converters.CSVLoader;
 
 public class GestureActivity extends AppCompatActivity {
     private static final String LOG_TAG = GestureActivity.class.getSimpleName();
@@ -56,23 +38,20 @@ public class GestureActivity extends AppCompatActivity {
     private static final String URI_TIME = "suunto://{0}/Time";
     private static final String PATH = "/Meas/IMU9/";
     private static final String RATE = "52";
-    private static final String RECORDING = "Recording";
-    private static final String RECORD = "Record";
-    public static final String FILE_TYPE = ".csv";
-    private String fileNameSave;
     private MdsSubscription mdsSubscription;
-    private boolean isRecording = false;
+    private static String trimmedCsvFolderPath;
+    private static String modelCsvFolderPath;
     private File directory;
-    FileOutputStream fos;
-    OutputStreamWriter writer;
-    ImageButton settingsButton;
-    Button recordButton;
-    TextView sensorMsg;
-    ExecutorService service;
-    Recording recording = null;
-    VideoCapture<Recorder> videoCapture = null;
-    PreviewView previewView;
-    int cameraFacing = CameraSelector.LENS_FACING_BACK;
+    private String[] prefixes;
+    private double[] weights;
+    private String[] csvFiles;
+    private int nClusters = 20;
+    Button recordScreenButton;
+    Spinner modelSpinner;
+    TextView sensorMsg, outputMsg;
+    ArrayList<SimpleKMeans> kmeans;
+    Instances combinedDataGestures;
+    Instances sensorInstances;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,112 +59,46 @@ public class GestureActivity extends AppCompatActivity {
         setContentView(R.layout.activity_gesture);
 
         // UI elements
-        settingsButton = findViewById(R.id.settingsButton);
+        recordScreenButton = findViewById(R.id.recordScreenButton);
+        modelSpinner = findViewById(R.id.modelSpinner);
         sensorMsg = findViewById(R.id.sensorMsg);
-        recordButton = findViewById(R.id.recordWholeButton);
-        previewView = findViewById(R.id.previewView);
+        outputMsg = findViewById(R.id.outputMsg);
 
-        // Get the connected serial
-        String connectedSerial = getConnectedSerial();
-        setCurrentTimeToSensor(connectedSerial);
-        subscribeToSensor(connectedSerial);
 
-        // Set the directory to save the file
+        // Set paths
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        trimmedCsvFolderPath = directory + "/trimmedData";
+        modelCsvFolderPath = directory + "/models";
 
-        // Start the camera
-        startCamera(cameraFacing);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getCSVFileNames(modelCsvFolderPath));
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        modelSpinner.setAdapter(adapter);
+
+        modelSpinner.setOnItemSelectedListener(itemSelectedListener);
+
+        sensorInstances = new Instances("sensorData", createAttributes(), 0);
+
+        subscribeToSensor(getConnectedSerial());
     }
 
-
-    /**
-     * Capture the video
-     * If the video is already being captured, stop the video
-     * If the video is not being captured, start the video
-     */
-    public void captureVideo() {
-        Recording recording1 = recording;
-
-        if (recording1 != null) {
-            recording1.stop();
-            recording = null;
-            return;
-        }
-
-        String name = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault()).format(System.currentTimeMillis());
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4");
-        contentValues.put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/CameraX-Video");
-
-        MediaStoreOutputOptions options = new MediaStoreOutputOptions.Builder(getContentResolver(), MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-                .setContentValues(contentValues).build();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            String msg = "Record audio permission not granted";
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        recording = videoCapture.getOutput().prepareRecording(GestureActivity.this, options).withAudioEnabled().start(ContextCompat.getMainExecutor(GestureActivity.this), videoRecordEvent -> {
-            if (videoRecordEvent instanceof VideoRecordEvent.Start) {
-                String msg = "Video capture started";
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-            } else if (videoRecordEvent instanceof VideoRecordEvent.Finalize) {
-                if (!((VideoRecordEvent.Finalize) videoRecordEvent).hasError()) {
-                    String msg = "Video capture succeeded: " + ((VideoRecordEvent.Finalize) videoRecordEvent).getOutputResults().getOutputUri();
-                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                } else {
-                    recording.close();
-                    recording = null;
-                    String msg = "Error: " + ((VideoRecordEvent.Finalize) videoRecordEvent).getError();
-                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
-
-
-    /**
-     * Start the camera
-     *
-     * @param cameraFacing: The camera facing to start the camera
-     */
-    public void startCamera(int cameraFacing) {
-        ListenableFuture<ProcessCameraProvider> processCameraProvider = ProcessCameraProvider.getInstance(GestureActivity.this);
-
-        processCameraProvider.addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = processCameraProvider.get();
-                Preview preview = new Preview.Builder().build();
-                preview.setSurfaceProvider(previewView.getSurfaceProvider());
-
-                Recorder recorder = new Recorder.Builder()
-                        .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
-                        .build();
-                videoCapture = VideoCapture.withOutput(recorder);
-
-                cameraProvider.unbindAll();
-
-                CameraSelector cameraSelector = new CameraSelector.Builder()
-                        .requireLensFacing(cameraFacing).build();
-
-                Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, videoCapture);
-
-
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }, ContextCompat.getMainExecutor(GestureActivity.this));
-    }
-
-
-    /**
-     * Get the Mds instance from MainActivity
-     *
-     * @return Mds
-     */
     private Mds getMds() {
         return MainActivity.mMds;
+    }
+
+    private ArrayList<Attribute> createAttributes() {
+        ArrayList<Attribute> attributes = new ArrayList<>();
+        attributes.add(new Attribute("timestamp"));
+        attributes.add(new Attribute("acc_x"));
+        attributes.add(new Attribute("acc_y"));
+        attributes.add(new Attribute("acc_z"));
+        attributes.add(new Attribute("gyro_x"));
+        attributes.add(new Attribute("gyro_y"));
+        attributes.add(new Attribute("gyro_z"));
+        attributes.add(new Attribute("magn_x"));
+        attributes.add(new Attribute("magn_y"));
+        attributes.add(new Attribute("magn_z"));
+        return attributes;
     }
 
 
@@ -198,51 +111,6 @@ public class GestureActivity extends AppCompatActivity {
         return MainActivity.connectedSerial;
     }
 
-
-    /**
-     * Record the gesture data
-     * If start recording, create a new file and write the data to it
-     * If stop recording, close the file and show a toast message
-     *
-     * @param view: The view that was clicked
-     * @throws IOException: If the file cannot be written to
-     */
-    public void recordGestureButtonClicked(View view) throws IOException {
-        isRecording = !isRecording;
-
-        if (isRecording) {
-            captureVideo();
-            recordButton.setText(RECORDING);
-
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault());
-            String currentDateTime = sdf.format(new Date());
-            fileNameSave = currentDateTime + FILE_TYPE;
-
-            File file = new File(directory, fileNameSave);
-            fos = new FileOutputStream(file);
-
-            writer = new OutputStreamWriter(fos);
-            writer.append("Timestamp,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,magn_x,magn_y,magn_z").append("\n");
-        } else {
-            captureVideo();
-            writer.flush();
-            writer.close();
-            fos.close();
-
-            Toast.makeText(GestureActivity.this, "File saved as " + fileNameSave, Toast.LENGTH_SHORT).show();
-
-            recordButton.setText(RECORD);
-        }
-    }
-
-
-    /**
-     * Subscribe to the sensor data
-     * If the subscription is already active, unsubscribe
-     * Create a new subscription to the sensor data
-     *
-     * @param connectedSerial: The serial number of the connected device
-     */
     private void subscribeToSensor(String connectedSerial) {
         if (mdsSubscription != null) {
             unsubscribe();
@@ -257,33 +125,21 @@ public class GestureActivity extends AppCompatActivity {
 
                 if (imuModel != null && imuModel.getBody().getArrayAcc().length > 0 && imuModel.getBody().getArrayGyro().length > 0) {
                     for (int i = 0; i < imuModel.getBody().getArrayAcc().length; i++) {
-                        String resultStrRecord = String.format(Locale.getDefault(), "%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f",
-                                (imuModel.getBody().getTimestamp() + i * 20L),
-                                imuModel.getBody().getArrayAcc()[i].getX(),
-                                imuModel.getBody().getArrayAcc()[i].getY(),
-                                imuModel.getBody().getArrayAcc()[i].getZ(),
-                                imuModel.getBody().getArrayGyro()[i].getX(),
-                                imuModel.getBody().getArrayGyro()[i].getY(),
-                                imuModel.getBody().getArrayGyro()[i].getZ(),
-                                imuModel.getBody().getArrayMag()[i].getX(),
-                                imuModel.getBody().getArrayMag()[i].getY(),
-                                imuModel.getBody().getArrayMag()[i].getZ()
-                        );
-                        String sensorMsgStr =
-                                "x: " + Math.round(imuModel.getBody().getArrayAcc()[i].getX() * 100) / 100.0 +
-                                        "  y: " + Math.round(imuModel.getBody().getArrayAcc()[i].getY() * 100) / 100.0 +
-                                        "  z: " + Math.round(imuModel.getBody().getArrayAcc()[i].getZ() * 100) / 100.0;
+
+                        String sensorMsgStr = "x: " + Math.round(imuModel.getBody().getArrayAcc()[i].getX() * 100) / 100.0 + "  y: " + Math.round(imuModel.getBody().getArrayAcc()[i].getY() * 100) / 100.0 + "  z: " + Math.round(imuModel.getBody().getArrayAcc()[i].getZ() * 100) / 100.0;
                         sensorMsg.setText(sensorMsgStr);
 
-                        if (isRecording) {
-                            try {
-                                writer.append(resultStrRecord).append("\n");
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
+                        DenseInstance instance = createInstance(imuModel.getBody().getTimestamp(), imuModel.getBody().getArrayAcc()[i].getX(), imuModel.getBody().getArrayAcc()[i].getY(), imuModel.getBody().getArrayAcc()[i].getZ(), imuModel.getBody().getArrayGyro()[i].getX(), imuModel.getBody().getArrayGyro()[i].getY(), imuModel.getBody().getArrayGyro()[i].getZ(), imuModel.getBody().getArrayMag()[i].getX(), imuModel.getBody().getArrayMag()[i].getY(), imuModel.getBody().getArrayMag()[i].getZ());
+
+                        sensorInstances.add(instance);
+                        if (sensorInstances.size() == 100) {
+                            performKMeans(sensorInstances);
+                            sensorInstances.clear();
                         }
+
                     }
                 }
+
             }
 
             @Override
@@ -294,10 +150,6 @@ public class GestureActivity extends AppCompatActivity {
         });
     }
 
-
-    /**
-     * Unsubscribe from the sensor data
-     */
     private void unsubscribe() {
         if (mdsSubscription != null) {
             mdsSubscription.unsubscribe();
@@ -305,65 +157,297 @@ public class GestureActivity extends AppCompatActivity {
         }
     }
 
+    private DenseInstance createInstance(double timestamp, double acc_x, double acc_y, double acc_z, double gyro_x, double gyro_y, double gyro_z, double magn_x, double magn_y, double magn_z) {
+        DenseInstance instance = new DenseInstance(10);
 
-    /**
-     * When the activity is destroyed, unsubscribe from the sensor data
-     */
-    public void settingsButtonClicked(View view) {
-        Intent intent = new Intent(GestureActivity.this, SettingsActivity.class);
+        // Set attribute values
+        instance.setValue(0, timestamp);
+        instance.setValue(1, acc_x);
+        instance.setValue(2, acc_y);
+        instance.setValue(3, acc_z);
+        instance.setValue(4, gyro_x);
+        instance.setValue(5, gyro_y);
+        instance.setValue(6, gyro_z);
+        instance.setValue(7, magn_x);
+        instance.setValue(8, magn_y);
+        instance.setValue(9, magn_z);
+
+        return instance;
+    }
+
+    private AdapterView.OnItemSelectedListener itemSelectedListener = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+            String selectedModel = modelSpinner.getSelectedItem().toString();
+            String modelFilePath = modelCsvFolderPath + "/" + selectedModel + ".csv";
+            try {
+                CSVLoader loader = new CSVLoader();
+                loader.setSource(new File(modelFilePath));
+                Instances data = loader.getDataSet();
+
+                prefixes = new String[data.numInstances()];
+                weights = new double[data.numInstances()];
+
+                for (int i = 0; i < data.numInstances(); i++) {
+//                    prefixes[i] = data.instance(i).stringValue(0);
+                    prefixes[i] = "acc";
+                    weights[i] = data.instance(i).value(1);
+                }
+
+                getKMeans();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parentView) {
+        }
+    };
+
+    private List<String> getCSVFileNames(String folderPath) {
+        File folder = new File(folderPath);
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".csv"));
+        List<String> csvFiles = new ArrayList<>();
+        for (File file : files) {
+            csvFiles.add(file.getName().replace(".csv", ""));
+        }
+        return csvFiles;
+    }
+
+    private List<File> getCSVFiles(String folderPath) {
+        List<File> csvFiles = new ArrayList<>();
+        File folder = new File(folderPath);
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(".csv")) {
+                    csvFiles.add(file);
+                }
+            }
+        }
+        return csvFiles;
+    }
+
+    public Instances combineData() throws Exception {
+        List<File> csvFiles = getCSVFiles(trimmedCsvFolderPath);
+
+        Instances combinedData = null;
+        for (File file : csvFiles) {
+            Instances data = loadData(file);
+            assert data != null;
+            if (combinedData == null) {
+                combinedData = new Instances(data);
+            } else {
+                combinedData.addAll(data);
+            }
+        }
+
+        return combinedData;
+    }
+
+    private Instances loadData(File file) {
+        try {
+            CSVLoader loader = new CSVLoader();
+            loader.setSource(file);
+            return loader.getDataSet();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Instances getColumnData(Instances data, List<String> columns) {
+
+        Instances newData = new Instances(data);
+        newData.delete();
+
+        // Create a mapping of attribute names to indices for faster lookup
+        Map<String, Integer> attributeIndices = new HashMap<>();
+        for (int i = 0; i < data.numAttributes(); i++) {
+            Attribute attribute = data.attribute(i);
+            attributeIndices.put(attribute.name(), i);
+        }
+
+        // Remove attributes not in the specified list
+        for (int j = newData.numAttributes() - 1; j >= 0; j--) {
+            Attribute attribute = newData.attribute(j);
+            if (attribute != null && !columns.contains(attribute.name())) {
+                newData.deleteAttributeAt(j);
+            }
+        }
+
+        // Copy instances
+        for (int j = 0; j < data.size(); j++) {
+            Instance instance = data.get(j);
+            Instance newDataInstance = new DenseInstance(newData.numAttributes());
+            for (int k = 0; k < newData.numAttributes(); k++) {
+                Attribute attr = newData.attribute(k);
+                Integer indexInUnknownData = attributeIndices.get(attr.name());
+                if (indexInUnknownData != null) {
+                    newDataInstance.setValue(attr, instance.value(indexInUnknownData));
+                }
+            }
+            newData.add(newDataInstance);
+        }
+
+        return newData;
+    }
+
+    public void getKMeans() throws Exception {
+        combinedDataGestures = combineData();
+
+        kmeans = new ArrayList<>();
+
+        for (int i = combinedDataGestures.numInstances() - 1; i >= 0; i--) {
+            if (hasMissingValues(combinedDataGestures.instance(i))) {
+                combinedDataGestures.delete(i);
+            }
+        }
+
+        for (String prefix : prefixes) {
+            List<String> columns = new ArrayList<>();
+
+            columns.add(prefix + "_x");
+            columns.add(prefix + "_y");
+            columns.add(prefix + "_z");
+
+            Instances kmeansColumns = getColumnData(combinedDataGestures, columns);
+
+
+            SimpleKMeans kmeansModel = new SimpleKMeans();
+            kmeansModel.setNumClusters(nClusters);
+            kmeansModel.buildClusterer(kmeansColumns);
+
+            Attribute clusterIdAttr = new Attribute("cluster_id_" + prefix);
+            combinedDataGestures.insertAttributeAt(clusterIdAttr, combinedDataGestures.numAttributes());
+
+            // Assign cluster IDs to instances in combinedDataGestures
+            for (int i = 0; i < kmeansColumns.numInstances(); i++) {
+                Instance instance = kmeansColumns.instance(i);
+                int clusterId = kmeansModel.clusterInstance(instance);
+                combinedDataGestures.instance(i).setValue(combinedDataGestures.numAttributes() - 1, clusterId);
+            }
+
+            kmeans.add(kmeansModel);
+        }
+    }
+
+    private boolean hasMissingValues(Instance instance) {
+        for (int i = 0; i < instance.numAttributes(); i++) {
+            if (instance.isMissing(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private double normSim(List<Integer> cluster1, List<Integer> cluster2) {
+        double longestCommonSubsequence = longestCommonSubsequence(cluster1, cluster2);
+        return longestCommonSubsequence / Math.max(cluster1.size(), cluster2.size());
+    }
+
+    private int longestCommonSubsequence(List<Integer> cluster1, List<Integer> cluster2) {
+        int m = cluster1.size();
+        int n = cluster2.size();
+        int[][] dp = new int[m + 1][n + 1];
+
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (cluster1.get(i - 1).equals(cluster2.get(j - 1))) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                } else {
+                    dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                }
+            }
+        }
+
+        return dp[m][n];
+    }
+
+    private double[] processData(Instances combinedData, Instances unknownData, String currPrefix) {
+        double[] result = new double[csvFiles.length];
+
+        for (int i = 0; i < csvFiles.length; i++) {
+            // String gestureId = csvFiles[i] + ".csv";
+
+            List<Integer> cluster1 = new ArrayList<>();
+            for (int j = 0; j < combinedData.numInstances(); j++) {
+                int currGestureId = (int) combinedData.instance(j).value(combinedData.attribute("gesture_id"));
+                if (i == currGestureId && combinedData.attribute("cluster_id_" + currPrefix) != null) {
+                    cluster1.add((int) combinedData.instance(j).value(combinedData.attribute("cluster_id_" + currPrefix)));
+                }
+            }
+
+            List<Integer> cluster2 = new ArrayList<>();
+            for (int j = 0; j < unknownData.numInstances(); j++) {
+                cluster2.add((int) unknownData.instance(j).value(unknownData.attribute("cluster_id_" + currPrefix)));
+            }
+
+            result[i] = normSim(cluster1, cluster2);
+        }
+
+        return result;
+    }
+
+    private void performKMeans(Instances unknownData) {
+        try {
+            csvFiles = getCSVFileNames(trimmedCsvFolderPath).toArray(new String[0]);
+            Arrays.sort(csvFiles);
+
+            double[] result = new double[csvFiles.length];
+            for (int i = 0; i < prefixes.length; i++) {
+                System.out.println("Prefix: " + prefixes[i] + ", Weight: " + weights[i]);
+                List<String> columns = new ArrayList<>();
+
+                columns.add(prefixes[i] + "_x");
+                columns.add(prefixes[i] + "_y");
+                columns.add(prefixes[i] + "_z");
+
+                Instances data = getColumnData(unknownData, columns);
+
+                // Make a copy of data
+                Instances dataCopy = new Instances(data);
+
+                SimpleKMeans kmeansModel = kmeans.get(i);
+
+                data.setClassIndex(data.numAttributes() - 1);
+
+                Attribute clusterIdAttr = new Attribute("cluster_id_" + prefixes[i]);
+                data.insertAttributeAt(clusterIdAttr, data.numAttributes());
+
+                for (int j = 0; j < data.numInstances(); j++) {
+                    int clusterId = kmeansModel.clusterInstance(dataCopy.instance(j));
+                    data.instance(j).setValue(data.numAttributes() - 1, clusterId);
+                }
+
+                double[] resultCurr = processData(combinedDataGestures, data, prefixes[i]);
+                for (int j = 0; j < result.length; j++) {
+                    result[j] += weights[i] * resultCurr[j];
+                }
+            }
+
+            for (int i = 0; i < result.length; i++) {
+                result[i] = Math.round(result[i] * 100.0) / 100.0;
+            }
+
+            int maxIndex = 0;
+            for (int i = 1; i < result.length; i++) {
+                if (result[i] > result[maxIndex]) {
+                    maxIndex = i;
+                }
+            }
+
+            outputMsg.setText("Predicted gesture ID: " + csvFiles[maxIndex]);
+            // System.out.println("Predicted gesture ID: " + csvFiles[maxIndex].split("\\.")[0]);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void recordScreenButtonClicked(View view) {
+        Intent intent = new Intent(GestureActivity.this, RecordActivity.class);
         startActivity(intent);
-    }
-
-
-    /**
-     * Set the current time to the sensor
-     * This is used to synchronize the time between the phone and the sensor
-     * The time is set to the current time in milliseconds
-     *
-     * @param serial: The serial number of the connected device
-     */
-    private void setCurrentTimeToSensor(String serial) {
-        String timeUri = MessageFormat.format(URI_TIME, serial);
-        String payload = "{\"value\":" + (new Date().getTime() * 1000) + "}";
-        getMds().put(timeUri, payload, new MdsResponseListener() {
-            @Override
-            public void onSuccess(String data, MdsHeader header) {
-                Log.i(LOG_TAG, "PUT /Time successful: " + data);
-            }
-
-            @Override
-            public void onError(MdsException e) {
-                Log.e(LOG_TAG, "PUT /Time returned error: " + e);
-            }
-        });
-    }
-
-    protected void onPause() {
-        super.onPause();
-        // Stop recording if it's currently active
-        if (isRecording) {
-            try {
-                recordGestureButtonClicked(null); // Call the method to stop recording
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        // Unsubscribe from sensor data
-        unsubscribe();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Stop recording if it's currently active
-        if (isRecording) {
-            try {
-                recordGestureButtonClicked(null); // Call the method to stop recording
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        // Unsubscribe from sensor data when activity is destroyed
-        unsubscribe();
     }
 }

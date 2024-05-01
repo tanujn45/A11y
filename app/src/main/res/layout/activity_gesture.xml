@@ -17,81 +17,52 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageButton
-        android:id="@+id/settingsButton"
-        style="@style/ImageButtonStyle"
-        android:layout_marginTop="@dimen/marginTopButton"
-        android:contentDescription="@string/app_name"
-        android:onClick="settingsButtonClicked"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/homeWelcomeText"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/settings"
-        tools:ignore="TouchTargetSizeCheck" />
-
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/body"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+    <Button
+        android:id="@+id/recordScreenButton"
+        style="@style/ButtonStyle"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:backgroundTint="@color/theme"
+        android:fontFamily="@font/roboto_black"
+        android:onClick="recordScreenButtonClicked"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText">
+        app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText"
+        android:text="Record Data" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="150dp">
+    <TextView
+        android:id="@+id/sensorMsg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_corner"
+        android:padding="18dp"
+        android:text="Subscribing to sensor"
+        android:textSize="20dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recordScreenButton" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText">
+    <Spinner
+        android:id="@+id/modelSpinner"
+        style="@style/ButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sensorMsg" />
 
-                <Button
-                    android:id="@+id/recordWholeButton"
-                    style="@style/ButtonStyle"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/theme"
-                    android:fontFamily="@font/roboto_black"
-                    android:onClick="recordGestureButtonClicked"
-                    android:text="Record" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/sensorMsg"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/rounded_corner"
-                android:padding="18dp"
-                android:text="Subscribing to sensor"
-                android:textSize="20dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/addGestureButton" />
-
-            <FrameLayout
-                android:id="@+id/previewViewContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
-                android:background="@drawable/rounded_corner"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/sensorMsg">
-
-                <androidx.camera.view.PreviewView
-                    android:id="@+id/previewView"
-                    android:layout_width="match_parent"
-                    android:layout_height="400dp" />
-            </FrameLayout>
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
+    <TextView
+        android:id="@+id/outputMsg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_corner"
+        android:padding="18dp"
+        android:layout_marginTop="20dp"
+        android:textSize="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/modelSpinner" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.Packaging
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -27,6 +29,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        viewBinding = true
+    }
+
+    packaging {
+        resources.excludes.add("META-INF/native-image/**")
+//        resources.excludes.add("/META-INF/LICENSE.md")
+    }
 }
 
 dependencies {
@@ -35,15 +45,18 @@ dependencies {
     implementation("com.google.android.material:material:1.10.0")
     implementation("com.polidea.rxandroidble2:rxandroidble:1.17.2")
     implementation("com.google.code.gson:gson:2.8.9")
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation(files("./libs/mdslib-3.15.0(1)-release.aar"))
     implementation("androidx.core:core-ktx:+")
+    implementation("androidx.navigation:navigation-fragment:2.5.3")
+    implementation("androidx.navigation:navigation-ui:2.5.3")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    // CameraX core library using the camera2 implementation
+    implementation(files("./libs/wekaSTRIPPED.jar"))
+//    implementation("nz.ac.waikato.cms.weka:weka-stable:3.8.0") {
+//        exclude(group = "nz.ac.waikato.cms.weka.thirdparty", module = "java-cup-11b-runtime")
+//    }
     val camerax_version = "1.4.0-alpha04"
-    // The following line is optional, as the core library is included indirectly by camera-camera2
     implementation("androidx.camera:camera-core:${camerax_version}")
     implementation("androidx.camera:camera-camera2:${camerax_version}")
     // If you want to additionally use the CameraX Lifecycle library

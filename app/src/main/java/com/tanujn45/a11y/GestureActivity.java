@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import weka.clusterers.SimpleKMeans;
 import weka.core.Attribute;
@@ -41,6 +42,7 @@ public class GestureActivity extends AppCompatActivity {
     private MdsSubscription mdsSubscription;
     private static String trimmedCsvFolderPath;
     private static String modelCsvFolderPath;
+    private String connectedSerial;
     private File directory;
     private String[] prefixes;
     private double[] weights;
@@ -79,7 +81,9 @@ public class GestureActivity extends AppCompatActivity {
 
         sensorInstances = new Instances("sensorData", createAttributes(), 0);
 
-        subscribeToSensor(getConnectedSerial());
+        connectedSerial = getConnectedSerial();
+
+        subscribeToSensor(connectedSerial);
     }
 
     private Mds getMds() {
@@ -98,6 +102,12 @@ public class GestureActivity extends AppCompatActivity {
         attributes.add(new Attribute("magn_x"));
         attributes.add(new Attribute("magn_y"));
         attributes.add(new Attribute("magn_z"));
+        attributes.add(new Attribute("acc_diff_x"));
+        attributes.add(new Attribute("acc_diff_y"));
+        attributes.add(new Attribute("acc_diff_z"));
+        attributes.add(new Attribute("acc_ma_x"));
+        attributes.add(new Attribute("acc_ma_y"));
+        attributes.add(new Attribute("acc_ma_z"));
         return attributes;
     }
 
@@ -158,7 +168,7 @@ public class GestureActivity extends AppCompatActivity {
     }
 
     private DenseInstance createInstance(double timestamp, double acc_x, double acc_y, double acc_z, double gyro_x, double gyro_y, double gyro_z, double magn_x, double magn_y, double magn_z) {
-        DenseInstance instance = new DenseInstance(10);
+        DenseInstance instance = new DenseInstance(16);
 
         // Set attribute values
         instance.setValue(0, timestamp);
@@ -171,6 +181,12 @@ public class GestureActivity extends AppCompatActivity {
         instance.setValue(7, magn_x);
         instance.setValue(8, magn_y);
         instance.setValue(9, magn_z);
+        instance.setValue(10, acc_x);
+        instance.setValue(11, acc_y);
+        instance.setValue(12, acc_z);
+        instance.setValue(13, acc_x);
+        instance.setValue(14, acc_y);
+        instance.setValue(15, acc_z);
 
         return instance;
     }
@@ -178,6 +194,7 @@ public class GestureActivity extends AppCompatActivity {
     private AdapterView.OnItemSelectedListener itemSelectedListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+            unsubscribe();
             String selectedModel = modelSpinner.getSelectedItem().toString();
             String modelFilePath = modelCsvFolderPath + "/" + selectedModel + ".csv";
             try {
@@ -189,12 +206,13 @@ public class GestureActivity extends AppCompatActivity {
                 weights = new double[data.numInstances()];
 
                 for (int i = 0; i < data.numInstances(); i++) {
-//                    prefixes[i] = data.instance(i).stringValue(0);
-                    prefixes[i] = "acc";
+                    prefixes[i] = data.instance(i).stringValue(0);
+                    //prefixes[i] = "acc";
                     weights[i] = data.instance(i).value(1);
                 }
 
                 getKMeans();
+                subscribeToSensor(connectedSerial);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -403,6 +421,22 @@ public class GestureActivity extends AppCompatActivity {
                 columns.add(prefixes[i] + "_x");
                 columns.add(prefixes[i] + "_y");
                 columns.add(prefixes[i] + "_z");
+
+                if (Objects.equals(prefixes[i], "acc_diff")) {
+                    for (int j = 0; j < unknownData.numInstances() - 1; j++) {
+                        unknownData.instance(j).setValue(10, unknownData.instance(j + 1).value(unknownData.attribute("acc_x")) - unknownData.instance(j).value(unknownData.attribute("acc_x")));
+                        unknownData.instance(j).setValue(11, unknownData.instance(j + 1).value(unknownData.attribute("acc_y")) - unknownData.instance(j).value(unknownData.attribute("acc_y")));
+                        unknownData.instance(j).setValue(12, unknownData.instance(j + 1).value(unknownData.attribute("acc_z")) - unknownData.instance(j).value(unknownData.attribute("acc_z")));
+                    }
+                }
+
+                if (Objects.equals(prefixes[i], "acc_ma")) {
+                    for (int j = 0; j < unknownData.numInstances() - 1; j++) {
+                        unknownData.instance(j).setValue(13, (unknownData.instance(j).value(unknownData.attribute("acc_x")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_x"))) / 2);
+                        unknownData.instance(j).setValue(14, (unknownData.instance(j).value(unknownData.attribute("acc_y")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_y"))) / 2);
+                        unknownData.instance(j).setValue(15, (unknownData.instance(j).value(unknownData.attribute("acc_z")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_z"))) / 2);
+                    }
+                }
 
                 Instances data = getColumnData(unknownData, columns);
 

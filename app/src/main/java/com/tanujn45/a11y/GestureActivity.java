@@ -1,12 +1,10 @@
 package com.tanujn45.a11y;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -48,7 +46,6 @@ public class GestureActivity extends AppCompatActivity {
     private double[] weights;
     private String[] csvFiles;
     private int nClusters = 20;
-    Button recordScreenButton;
     Spinner modelSpinner;
     TextView sensorMsg, outputMsg;
     ArrayList<SimpleKMeans> kmeans;
@@ -61,7 +58,6 @@ public class GestureActivity extends AppCompatActivity {
         setContentView(R.layout.activity_gesture);
 
         // UI elements
-        recordScreenButton = findViewById(R.id.recordScreenButton);
         modelSpinner = findViewById(R.id.modelSpinner);
         sensorMsg = findViewById(R.id.sensorMsg);
         outputMsg = findViewById(R.id.outputMsg);
@@ -472,16 +468,11 @@ public class GestureActivity extends AppCompatActivity {
                 }
             }
 
-            outputMsg.setText("Predicted gesture ID: " + csvFiles[maxIndex]);
+            outputMsg.setText("Predicted gesture ID: " + csvFiles[maxIndex].split("\\.")[0].split("_")[0]);
             // System.out.println("Predicted gesture ID: " + csvFiles[maxIndex].split("\\.")[0]);
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    public void recordScreenButtonClicked(View view) {
-        Intent intent = new Intent(GestureActivity.this, RecordActivity.class);
-        startActivity(intent);
     }
 }

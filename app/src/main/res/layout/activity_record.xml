@@ -67,7 +67,7 @@
                 android:id="@+id/previewViewContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
+                android:layout_marginTop="40dp"
                 android:background="@drawable/rounded_corner"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

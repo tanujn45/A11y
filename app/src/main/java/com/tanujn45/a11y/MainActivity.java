@@ -511,7 +511,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     public void homeButtonClicked(View view) {
         // Go to the HomeActivity
-        Intent intent = new Intent(this, GestureActivity.class);
+        Intent intent = new Intent(this, HomeActivity.class);
         startActivity(intent);
     }
 

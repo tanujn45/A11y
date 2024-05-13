@@ -25,6 +25,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.A11y">
         <activity
+            android:name=".AccessibleActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoadActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+        <activity
             android:name=".RecordActivity"
             android:exported="false"
             android:label="@string/title_activity_record"

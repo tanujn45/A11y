@@ -17,19 +17,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/recordScreenButton"
-        style="@style/ButtonStyle"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:backgroundTint="@color/theme"
-        android:fontFamily="@font/roboto_black"
-        android:onClick="recordScreenButtonClicked"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText"
-        android:text="Record Data" />
-
     <TextView
         android:id="@+id/sensorMsg"
         android:layout_width="match_parent"
@@ -41,17 +28,30 @@
         android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recordScreenButton" />
+        app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
+
+    <TextView
+        android:id="@+id/modelMsg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Choose a model"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sensorMsg" />
+
 
     <Spinner
         android:id="@+id/modelSpinner"
         style="@style/ButtonStyle"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="17dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sensorMsg" />
+        app:layout_constraintTop_toBottomOf="@+id/modelMsg" />
 
     <TextView
         android:id="@+id/outputMsg"

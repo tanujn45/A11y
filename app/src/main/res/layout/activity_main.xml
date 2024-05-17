@@ -7,14 +7,29 @@
     android:paddingHorizontal="@dimen/margin"
     tools:context=".MainActivity">
 
-    <TextView
+    <LinearLayout
         android:id="@+id/homeWelcomeText"
-        style="@style/HeaderFont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome"
+        android:layout_marginTop="@dimen/marginTop"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingBottom="28dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="15dp"
+            android:src="@drawable/bluetooth" />
+
+        <TextView
+            style="@style/HeaderFont"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Welcome to A11y" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/homeConnectText"
@@ -100,8 +115,7 @@
             android:layout_marginEnd="7dp"
             android:layout_height="wrap_content"
             android:text="SCAN"
-            android:layout_weight="1"
-            />
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/homeButton"

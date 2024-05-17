@@ -3,13 +3,13 @@ package com.tanujn45.a11y;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
 
-    CardView recordDataCardView, recognizeGestureCardView, AccessibleGesturesCardView, LoadModelDataCardView;
+    LinearLayout recordDataCardView, recognizeGestureCardView, AccessibleGesturesCardView, LoadModelDataCardView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

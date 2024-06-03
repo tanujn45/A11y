@@ -5,15 +5,13 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 public class AccItem extends ConstraintLayout {
-    private ImageView imageView;
-    private TextView textView;
+    private TextView textView1, textView2;
     private ImageButton closeButton;
 
     public interface OnItemRemovedListener {
@@ -46,8 +44,8 @@ public class AccItem extends ConstraintLayout {
         LayoutInflater inflator = LayoutInflater.from(context);
         inflator.inflate(R.layout.acc_item_view, this);
 
-        imageView = findViewById(R.id.imageView);
-        textView = findViewById(R.id.textView);
+        textView2 = findViewById(R.id.textView2);
+        textView1 = findViewById(R.id.textView1);
         closeButton = findViewById(R.id.closeButton);
 
         closeButton.setOnClickListener(v -> {
@@ -60,15 +58,19 @@ public class AccItem extends ConstraintLayout {
         });
     }
 
-    public void setImage(int resId) {
-        imageView.setImageResource(resId);
+    public void setText1(String text) {
+        textView1.setText(text);
     }
 
-    public void setText(String text) {
-        textView.setText(text);
+    public String getText1() {
+        return textView1.getText().toString();
     }
 
-    public String getText() {
-        return textView.getText().toString();
+    public void setText2(String text) {
+        textView2.setText(text);
+    }
+
+    public String getText2() {
+        return textView2.getText().toString();
     }
 }

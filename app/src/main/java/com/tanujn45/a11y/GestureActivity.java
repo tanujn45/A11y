@@ -1,5 +1,6 @@
 package com.tanujn45.a11y;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -404,6 +405,7 @@ public class GestureActivity extends AppCompatActivity {
         return result;
     }
 
+    @SuppressLint("SetTextI18n")
     private void performKMeans(Instances unknownData) {
         try {
             csvFiles = getCSVFileNames(trimmedCsvFolderPath).toArray(new String[0]);
@@ -411,7 +413,7 @@ public class GestureActivity extends AppCompatActivity {
 
             double[] result = new double[csvFiles.length];
             for (int i = 0; i < prefixes.length; i++) {
-                System.out.println("Prefix: " + prefixes[i] + ", Weight: " + weights[i]);
+                //System.out.println("Prefix: " + prefixes[i] + ", Weight: " + weights[i]);
                 List<String> columns = new ArrayList<>();
 
                 columns.add(prefixes[i] + "_x");
@@ -463,16 +465,30 @@ public class GestureActivity extends AppCompatActivity {
 
             int maxIndex = 0;
             for (int i = 1; i < result.length; i++) {
+                System.out.print("Gesture ID: " + csvFiles[i] + ", Similarity: " + result[i] + "\n");
                 if (result[i] > result[maxIndex]) {
                     maxIndex = i;
                 }
             }
 
-            outputMsg.setText("Predicted gesture ID: " + csvFiles[maxIndex].split("\\.")[0].split("_")[0]);
+            //System.out.println("Predicted gesture ID: " + csvFiles[maxIndex]);
+            outputMsg.setText("Predicted gesture ID: " + csvFiles[maxIndex]);
             // System.out.println("Predicted gesture ID: " + csvFiles[maxIndex].split("\\.")[0]);
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unsubscribe();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unsubscribe();
     }
 }

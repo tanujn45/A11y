@@ -5,6 +5,8 @@
 
     <uses-feature android:name="android.hardware.camera.any" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
@@ -25,6 +27,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.A11y">
         <activity
+            android:name=".DialogActivity"
+            android:exported="false" />
+        <activity
             android:name=".AccessibleActivity"
             android:exported="false" />
         <activity
@@ -38,12 +43,6 @@
             android:exported="false"
             android:label="@string/title_activity_record"
             android:theme="@style/Theme.A11y" />
-        <activity
-            android:name=".SettingsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".RegisterActivity"
-            android:exported="false" />
         <activity
             android:name=".GestureActivity"
             android:exported="false" />

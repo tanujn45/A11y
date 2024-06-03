@@ -53,6 +53,7 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation(files("./libs/wekaSTRIPPED.jar"))
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
 //    implementation("nz.ac.waikato.cms.weka:weka-stable:3.8.0") {
 //        exclude(group = "nz.ac.waikato.cms.weka.thirdparty", module = "java-cup-11b-runtime")
 //    }

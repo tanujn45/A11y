@@ -102,10 +102,20 @@ public class RecordActivity extends AppCompatActivity {
      */
     public void createDirectories() {
         File rawData = new File(directory, "rawData");
+        File trimmedData = new File(directory, "trimmedData");
+        File models = new File(directory, "models");
         File rawVideos = new File(directory, "rawVideos");
 
         if (!rawData.exists()) {
             rawData.mkdirs();
+        }
+
+        if (!trimmedData.exists()) {
+            trimmedData.mkdirs();
+        }
+
+        if (!models.exists()) {
+            models.mkdirs();
         }
 
         if (!rawVideos.exists()) {

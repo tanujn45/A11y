@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -31,6 +33,7 @@ import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.scan.ScanSettings;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -62,6 +65,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        permissionsGranted = requestNeededPermissions();
+
         // UI elements
         connectButton = findViewById(R.id.connectButton);
         homeButton = findViewById(R.id.homeButton);
@@ -69,20 +74,48 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mPreviouslyConnectedListView = findViewById(R.id.previouslyConnectedListView);
         disconnectButton = findViewById(R.id.disconnectButton);
 
-        // Check for and request permissions
-        permissionsGranted = requestNeededPermissions();
-
-        // Initialize the Mds object
-        initMds();
-
-        // Initialize the scan result adapter
-        initMScanResAdapter();
-        initPreviouslyConnectedAdapter();
-
-        // Load previously connected devices
-        loadPreviouslyConnectedDevices();
+//        // Initialize the Mds object
+//        initMds();
+//
+//        // Initialize the scan result adapter
+//        initMScanResAdapter();
+//        initPreviouslyConnectedAdapter();
+//
+//        // Load previously connected devices
+//        loadPreviouslyConnectedDevices();
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (hasPermissions(this, permissions)) {
+            initializeBluetoothFeatures(); // Initialize Bluetooth operations after permissions are granted
+        }
+    }
+
+    public void createDirectories() {
+        File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        File rawData = new File(directory, "rawData");
+        File trimmedData = new File(directory, "trimmedData");
+        File models = new File(directory, "models");
+        File rawVideos = new File(directory, "rawVideos");
+
+        if (!rawData.exists()) {
+            rawData.mkdirs();
+        }
+
+        if (!trimmedData.exists()) {
+            trimmedData.mkdirs();
+        }
+
+        if (!models.exists()) {
+            models.mkdirs();
+        }
+
+        if (!rawVideos.exists()) {
+            rawVideos.mkdirs();
+        }
+    }
 
     /**
      * Load previously connected devices
@@ -165,6 +198,33 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mScanResultListView.setOnItemClickListener(this);
     }
 
+    private void initializeBluetoothFeatures() {
+        // Check if the necessary permissions are granted before proceeding with Bluetooth operations
+        if (hasBluetoothPermissions()) {
+            // Initialize all Bluetooth features here
+            createDirectories();
+            initMds();
+            initMScanResAdapter();
+            initPreviouslyConnectedAdapter();
+            loadPreviouslyConnectedDevices();
+        }
+    }
+
+    private boolean hasBluetoothPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // For Android 12 (API level 31) and above
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        } else {
+            // For Android versions below 12
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+
 
     /**
      * Get the RxBleClient object
@@ -220,6 +280,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Permissions needed for the app to function
         String[] PERMISSIONS = new String[]{
                 Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.BLUETOOTH_SCAN,
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.CAMERA,

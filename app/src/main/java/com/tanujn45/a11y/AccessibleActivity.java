@@ -93,6 +93,15 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
         trimmedCsvFolderPath = directory + "/trimmedData";
         modelCsvFolderPath = directory + "/models";
 
+        List<String> trimmedFileNames = getCSVFileNames(trimmedCsvFolderPath);
+        List<String> modelFileNames = getCSVFileNames(modelCsvFolderPath);
+        if (trimmedFileNames.isEmpty() || modelFileNames.isEmpty()) {
+            // Navigate to a different screen because no files are found
+            Intent intent = new Intent(AccessibleActivity.this, RecordActivity.class);
+            startActivity(intent);
+            finish();
+        }
+
         modelSpinner = findViewById(R.id.modelSpinner);
         modelSpinner.setEnabled(false);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getCSVFileNames(modelCsvFolderPath));
@@ -168,7 +177,7 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
                 writer.flush();
                 writer.close();
                 fos.close();
-                Toast.makeText(this, "Dialogs file created", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(this, "Dialogs file created", Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 e.printStackTrace();
             }

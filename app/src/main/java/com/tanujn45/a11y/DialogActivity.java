@@ -145,6 +145,4 @@ public class DialogActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
-
 }

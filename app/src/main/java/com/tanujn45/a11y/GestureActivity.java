@@ -1,6 +1,7 @@
 package com.tanujn45.a11y;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -69,18 +70,26 @@ public class GestureActivity extends AppCompatActivity {
         trimmedCsvFolderPath = directory + "/trimmedData";
         modelCsvFolderPath = directory + "/models";
 
+        List<String> trimmedFileNames = getCSVFileNames(trimmedCsvFolderPath);
+        List<String> modelFileNames = getCSVFileNames(modelCsvFolderPath);
+        if (trimmedFileNames.isEmpty() || modelFileNames.isEmpty()) {
+            // Navigate to a different screen because no files are found
+            Intent intent = new Intent(GestureActivity.this, RecordActivity.class);
+            startActivity(intent);
+            finish();
+        } else {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getCSVFileNames(modelCsvFolderPath));
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            modelSpinner.setAdapter(adapter);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getCSVFileNames(modelCsvFolderPath));
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        modelSpinner.setAdapter(adapter);
+            modelSpinner.setOnItemSelectedListener(itemSelectedListener);
 
-        modelSpinner.setOnItemSelectedListener(itemSelectedListener);
+            sensorInstances = new Instances("sensorData", createAttributes(), 0);
 
-        sensorInstances = new Instances("sensorData", createAttributes(), 0);
+            connectedSerial = getConnectedSerial();
 
-        connectedSerial = getConnectedSerial();
-
-        subscribeToSensor(connectedSerial);
+            subscribeToSensor(connectedSerial);
+        }
     }
 
     private Mds getMds() {

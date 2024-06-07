@@ -28,6 +28,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.A11y">
         <activity
+            android:name=".VideoListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AnnotationActivity"
+            android:exported="false" />
+        <activity
             android:name=".DialogActivity"
             android:exported="false" />
         <activity

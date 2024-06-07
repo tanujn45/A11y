@@ -6,4 +6,6 @@
     <color name="theme2">#2E2E2E</color>
     <color name="grey">#9A9A9A</color>
     <color name="green">#0A7E00</color>
+    <color name="transparent">#00000000</color>
+    <color name="black_transparent">#55000000</color>
 </resources>

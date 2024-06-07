@@ -44,6 +44,8 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.android.material:material:1.10.0")
     implementation("com.polidea.rxandroidble2:rxandroidble:1.17.2")
+    implementation("com.github.a914-gowtham:android-video-trimmer:1.7.19")
+    implementation("com.google.guava:guava:31.1-android")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation(files("./libs/mdslib-3.15.0(1)-release.aar"))
     implementation("androidx.core:core-ktx:+")
@@ -60,14 +62,9 @@ dependencies {
     val camerax_version = "1.4.0-alpha04"
     implementation("androidx.camera:camera-core:${camerax_version}")
     implementation("androidx.camera:camera-camera2:${camerax_version}")
-    // If you want to additionally use the CameraX Lifecycle library
     implementation("androidx.camera:camera-lifecycle:${camerax_version}")
-    // If you want to additionally use the CameraX VideoCapture library
     implementation("androidx.camera:camera-video:${camerax_version}")
-    // If you want to additionally use the CameraX View class
     implementation("androidx.camera:camera-view:${camerax_version}")
-    // If you want to additionally add CameraX ML Kit Vision Integration
     implementation("androidx.camera:camera-mlkit-vision:${camerax_version}")
-    // If you want to additionally use the CameraX Extensions library
     implementation("androidx.camera:camera-extensions:${camerax_version}")
 }

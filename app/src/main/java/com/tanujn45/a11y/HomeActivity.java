@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
 
-    LinearLayout recordDataCardView, recognizeGestureCardView, AccessibleGesturesCardView, LoadModelDataCardView;
+    LinearLayout recordDataCardView, recognizeGestureCardView, accessibleGesturesCardView, loadModelDataCardView, annotateGestureCardView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,13 +17,16 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
         recordDataCardView = findViewById(R.id.recordDataCardView);
         recognizeGestureCardView = findViewById(R.id.recognizeGesturesCardView);
-        AccessibleGesturesCardView = findViewById(R.id.accessibleGesturesCardView);
-        LoadModelDataCardView = findViewById(R.id.loadModelDataCardView);
+        accessibleGesturesCardView = findViewById(R.id.accessibleGesturesCardView);
+        loadModelDataCardView = findViewById(R.id.loadModelDataCardView);
+        annotateGestureCardView = findViewById(R.id.annotateGestureCardView);
+
 
         recordDataCardView.setOnClickListener(this);
         recognizeGestureCardView.setOnClickListener(this);
-        AccessibleGesturesCardView.setOnClickListener(this);
-        LoadModelDataCardView.setOnClickListener(this);
+        accessibleGesturesCardView.setOnClickListener(this);
+        loadModelDataCardView.setOnClickListener(this);
+        annotateGestureCardView.setOnClickListener(this);
     }
 
     @Override
@@ -40,6 +43,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(i);
         } else if (v.getId() == R.id.loadModelDataCardView) {
             i = new Intent(this, LoadActivity.class);
+            startActivity(i);
+        } else if (v.getId() == R.id.annotateGestureCardView) {
+            i = new Intent(this, AnnotationActivity.class);
             startActivity(i);
         }
     }

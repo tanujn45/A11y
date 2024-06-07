@@ -1,15 +1,13 @@
 package com.tanujn45.a11y;
 
 import android.Manifest;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,7 +16,7 @@ import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.video.MediaStoreOutputOptions;
+import androidx.camera.video.FileOutputOptions;
 import androidx.camera.video.Quality;
 import androidx.camera.video.QualitySelector;
 import androidx.camera.video.Recorder;
@@ -64,7 +62,7 @@ public class RecordActivity extends AppCompatActivity {
     private File directory;
     FileOutputStream fos;
     OutputStreamWriter writer;
-    Button recordButton;
+    ImageButton recordButton;
     TextView sensorMsg;
     ExecutorService service;
     Recording recording = null;
@@ -137,13 +135,19 @@ public class RecordActivity extends AppCompatActivity {
             return;
         }
 
-        String name = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault()).format(System.currentTimeMillis());
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4");
-        contentValues.put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/CameraX-Video");
+        String name = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault()).format(System.currentTimeMillis()) + ".mp4";
 
-        MediaStoreOutputOptions options = new MediaStoreOutputOptions.Builder(getContentResolver(), MediaStore.Video.Media.EXTERNAL_CONTENT_URI).setContentValues(contentValues).build();
+//        ContentValues contentValues = new ContentValues();
+//        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+//        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4");
+//        contentValues.put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/CameraX-Video");
+//
+//        MediaStoreOutputOptions options = new MediaStoreOutputOptions.Builder(getContentResolver(), MediaStore.Video.Media.EXTERNAL_CONTENT_URI).setContentValues(contentValues).build();
+
+        File file = new File(directory + "/rawVideos/", name);
+
+        FileOutputOptions options = new FileOutputOptions.Builder(file).build();
+
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             String msg = "Record audio permission not granted";
@@ -151,14 +155,8 @@ public class RecordActivity extends AppCompatActivity {
             return;
         }
         recording = videoCapture.getOutput().prepareRecording(RecordActivity.this, options).withAudioEnabled().start(ContextCompat.getMainExecutor(RecordActivity.this), videoRecordEvent -> {
-            if (videoRecordEvent instanceof VideoRecordEvent.Start) {
-                String msg = "Video capture started";
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-            } else if (videoRecordEvent instanceof VideoRecordEvent.Finalize) {
-                if (!((VideoRecordEvent.Finalize) videoRecordEvent).hasError()) {
-                    String msg = "Video capture succeeded: " + ((VideoRecordEvent.Finalize) videoRecordEvent).getOutputResults().getOutputUri();
-                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                } else {
+            if (videoRecordEvent instanceof VideoRecordEvent.Finalize) {
+                if (((VideoRecordEvent.Finalize) videoRecordEvent).hasError()) {
                     recording.close();
                     recording = null;
                     String msg = "Error: " + ((VideoRecordEvent.Finalize) videoRecordEvent).getError();
@@ -232,8 +230,9 @@ public class RecordActivity extends AppCompatActivity {
         isRecording = !isRecording;
 
         if (isRecording) {
+
             captureVideo();
-            recordButton.setText(RECORDING);
+            recordButton.setImageResource(R.drawable.recording);
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault());
             String currentDateTime = sdf.format(new Date());
@@ -250,9 +249,9 @@ public class RecordActivity extends AppCompatActivity {
             writer.close();
             fos.close();
 
-            Toast.makeText(RecordActivity.this, "File saved as " + fileNameSave, Toast.LENGTH_SHORT).show();
+            // Toast.makeText(RecordActivity.this, "File saved as " + fileNameSave, Toast.LENGTH_SHORT).show();
 
-            recordButton.setText(RECORD);
+            recordButton.setImageResource(R.drawable.record);
         }
     }
 

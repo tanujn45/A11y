@@ -39,15 +39,38 @@ android {
     }
 }
 
+configurations {
+    all {
+        resolutionStrategy {
+            force("androidx.appcompat:appcompat:1.6.1")
+            force("androidx.core:core:1.9.0")
+            force("androidx.recyclerview:recyclerview:1.2.1")
+            force("androidx.annotation:annotation:1.2.0")
+        }
+
+    }
+}
+
 dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.android.material:material:1.10.0")
     implementation("com.polidea.rxandroidble2:rxandroidble:1.17.2")
-    implementation("com.github.a914-gowtham:android-video-trimmer:1.7.19")
+    implementation(files("./libs/isoparser-1.9.56.jar"))
+    implementation(files("./libs/muxer-1.9.56.jar"))
+    implementation(files("./libs/slf4j-simple-2.0.9.jar"))
+    implementation(files("./libs/slf4j-api-2.0.9.jar"))
+    // https://mvnrepository.com/artifact/org.aspectj/aspectjrt
+    runtimeOnly("org.aspectj:aspectjrt:1.9.22.1")
+
+//    implementation("org.mp4parser:isoparser:1.9.56")
+//    implementation("org.mp4parser:muxer:1.9.56")
+//    implementation("com.github.a914-gowtham:android-video-trimmer:1.7.19")
+//    implementation("life.knowledge4:k4l-video-trimmer:1.0")
     implementation("com.google.guava:guava:31.1-android")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation(files("./libs/mdslib-3.15.0(1)-release.aar"))
+//    implementation(files("./libs/VideoTrimmer.aar"))
     implementation("androidx.core:core-ktx:+")
     implementation("androidx.navigation:navigation-fragment:2.5.3")
     implementation("androidx.navigation:navigation-ui:2.5.3")

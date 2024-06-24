@@ -1,6 +1,5 @@
 package com.tanujn45.a11y;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
@@ -15,14 +14,10 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.gowtham.library.utils.LogMessage;
-import com.gowtham.library.utils.TrimVideo;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,16 +58,6 @@ public class VideoListActivity extends AppCompatActivity {
             startTrimActivityWithDialog(videoPath);
         });
         recyclerView.setAdapter(videoAdapter);
-
-        trimForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                Uri uri = Uri.parse(TrimVideo.getTrimmedVideoPath(result.getData()));
-                System.out.println("Trimmed path:: " + uri);
-                File destFile = new File(directory + "/trimmedVideos", gestureName + ".mp4");
-
-                moveFile(uri, destFile);
-            } else LogMessage.v("videoTrimResultLauncher data is null");
-        });
     }
 
 
@@ -106,13 +91,6 @@ public class VideoListActivity extends AppCompatActivity {
             Log.e("moveFile", "Error moving file: " + e.getMessage());
         }
     }
-
-
-    private void startTrimActivity(String videoPath) {
-        Uri videoUri = Uri.fromFile(new File(videoPath));
-        TrimVideo.activity(videoUri.toString()).start(this, trimForResult);
-    }
-
 
     private List<Video> getVideosFromFolder() throws IOException {
         List<Video> videos = new ArrayList<>();
@@ -157,7 +135,12 @@ public class VideoListActivity extends AppCompatActivity {
         saveButton.setOnClickListener(v -> {
             gestureName = fileNameEditText.getText().toString();
             if (!gestureName.isEmpty()) {
-                startTrimActivity(videoPath);
+                // Do something here with the gesture name
+                Intent intent = new Intent(VideoListActivity.this, TrimVideoActivity.class);
+                intent.putExtra("videoPath", videoPath);
+                intent.putExtra("gestureName", gestureName);
+                startActivity(intent);
+                finish();
                 alertDialog.dismiss();
             } else {
                 Toast.makeText(VideoListActivity.this, "Gesture name is required", Toast.LENGTH_SHORT).show();
@@ -167,12 +150,9 @@ public class VideoListActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-
-
     private boolean isVideoFile(File file) {
         return file.getName().toLowerCase().endsWith(".mp4");
     }
-
 
     private Bitmap generateThumbnail(File videoFile) throws IOException {
         Bitmap thumbnail = null;

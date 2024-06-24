@@ -13,10 +13,6 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
     private List<Video> videoList;
     private  OnItemClickListener listener;
 
-    public VideoAdapter(List<Video> videoList) {
-        this.videoList = videoList;
-    }
-
     public interface OnItemClickListener {
         void onItemClick(Video video);
     }

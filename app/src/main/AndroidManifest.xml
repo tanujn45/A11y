@@ -28,6 +28,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.A11y">
         <activity
+            android:name=".TrimVideoActivity"
+            android:exported="false" />
+        <activity
             android:name=".VideoListActivity"
             android:exported="false" />
         <activity

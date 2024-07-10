@@ -28,6 +28,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.A11y">
         <activity
+            android:name=".InstanceDataActivity"
+            android:exported="false" />
+        <activity
+            android:name=".GestureInstanceActivity"
+            android:exported="false" />
+        <activity
+            android:name=".GestureCategoryActivity"
+            android:exported="false" />
+        <activity
             android:name=".TrimVideoActivity"
             android:exported="false" />
         <activity

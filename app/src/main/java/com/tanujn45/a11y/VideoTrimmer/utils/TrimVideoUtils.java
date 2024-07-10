@@ -17,7 +17,6 @@ import org.mp4parser.muxer.tracks.ClippedTrack;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -31,7 +30,7 @@ public class TrimVideoUtils {
 
     private static final String TAG = TrimVideoUtils.class.getSimpleName();
 
-    public static void startTrim(@NonNull File src, @NonNull String dst, long startMs, long endMs, @NonNull OnTrimVideoListener callback) throws IOException {
+    public static void startTrim(@NonNull File src, @NonNull String dst, long startMs, long endMs, @NonNull OnTrimVideoListener callback) throws Exception {
         final String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
         final String fileName = "MP4_" + timeStamp + ".mp4";
         final String filePath = dst + fileName;
@@ -42,7 +41,7 @@ public class TrimVideoUtils {
         genVideoUsingMp4Parser(src, file, startMs, endMs, callback);
     }
 
-    private static void genVideoUsingMp4Parser(@NonNull File src, @NonNull File dst, long startMs, long endMs, @NonNull OnTrimVideoListener callback) throws IOException {
+    private static void genVideoUsingMp4Parser(@NonNull File src, @NonNull File dst, long startMs, long endMs, @NonNull OnTrimVideoListener callback) throws Exception {
         Movie movie = MovieCreator.build(src.getPath());
 
         List<Track> tracks = movie.getTracks();

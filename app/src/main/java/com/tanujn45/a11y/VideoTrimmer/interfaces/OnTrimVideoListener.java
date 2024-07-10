@@ -6,7 +6,7 @@ public interface OnTrimVideoListener {
 
     void onTrimStarted();
 
-    void getResult(final Uri uri, final int startPostion, final int endPostion);
+    void getResult(final Uri uri, final int startPostion, final int endPostion) throws Exception;
 
     void cancelAction();
 

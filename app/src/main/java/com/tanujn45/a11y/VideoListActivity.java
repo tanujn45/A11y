@@ -41,6 +41,9 @@ public class VideoListActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
 
+        Intent intent = getIntent();
+        gestureName = intent.getStringExtra("gestureCategoryName");
+
         File trimmedVideosDir = new File(directory, "trimmedVideos");
 
         if (!trimmedVideosDir.exists()) {
@@ -55,7 +58,8 @@ public class VideoListActivity extends AppCompatActivity {
         videoAdapter = new VideoAdapter(videoList, video -> {
             String videoPath = video.getPath();
             System.out.println("Video path:: " + videoPath);
-            startTrimActivityWithDialog(videoPath);
+            // startTrimActivityWithDialog(videoPath);
+            startTrimActivity(videoPath);
         });
         recyclerView.setAdapter(videoAdapter);
     }
@@ -135,12 +139,7 @@ public class VideoListActivity extends AppCompatActivity {
         saveButton.setOnClickListener(v -> {
             gestureName = fileNameEditText.getText().toString();
             if (!gestureName.isEmpty()) {
-                // Do something here with the gesture name
-                Intent intent = new Intent(VideoListActivity.this, TrimVideoActivity.class);
-                intent.putExtra("videoPath", videoPath);
-                intent.putExtra("gestureName", gestureName);
-                startActivity(intent);
-                finish();
+                startTrimActivity(videoPath);
                 alertDialog.dismiss();
             } else {
                 Toast.makeText(VideoListActivity.this, "Gesture name is required", Toast.LENGTH_SHORT).show();
@@ -148,6 +147,14 @@ public class VideoListActivity extends AppCompatActivity {
         });
 
         alertDialog.show();
+    }
+
+    private void startTrimActivity(String videoPath) {
+        Intent intent = new Intent(VideoListActivity.this, TrimVideoActivity.class);
+        intent.putExtra("videoPath", videoPath);
+        intent.putExtra("gestureCategoryName", gestureName);
+        startActivity(intent);
+        finish();
     }
 
     private boolean isVideoFile(File file) {

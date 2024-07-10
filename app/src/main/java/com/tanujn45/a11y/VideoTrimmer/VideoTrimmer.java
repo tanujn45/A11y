@@ -118,7 +118,13 @@ public class VideoTrimmer extends FrameLayout {
 
         findViewById(R.id.btCancel).setOnClickListener(view -> onCancelClicked());
 
-        findViewById(R.id.btSave).setOnClickListener(view -> onSaveClicked());
+        findViewById(R.id.btSave).setOnClickListener(view -> {
+            try {
+                onSaveClicked();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         final GestureDetector gestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
             @Override
@@ -201,7 +207,7 @@ public class VideoTrimmer extends FrameLayout {
         mVideoProgressIndicator.setLayoutParams(lp);
     }
 
-    private void onSaveClicked() {
+    private void onSaveClicked() throws Exception {
         if (mStartPosition <= 0 && mEndPosition >= mDuration) {
             if (mOnTrimVideoListener != null) mOnTrimVideoListener.getResult(mSrc, mStartPosition, mEndPosition);
         } else {

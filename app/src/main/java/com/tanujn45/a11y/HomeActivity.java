@@ -45,7 +45,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             i = new Intent(this, LoadActivity.class);
             startActivity(i);
         } else if (v.getId() == R.id.annotateGestureCardView) {
-            i = new Intent(this, AnnotationActivity.class);
+            i = new Intent(this, GestureCategoryActivity.class);
             startActivity(i);
         }
     }

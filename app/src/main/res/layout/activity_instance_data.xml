@@ -22,7 +22,7 @@
 
             <LinearLayout
                 android:id="@+id/homeWelcomeText"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/marginTop"
                 android:gravity="center"
@@ -32,11 +32,23 @@
                 <TextView
                     android:id="@+id/instanceName"
                     style="@style/HeaderFont"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:layout_height="wrap_content" />
+
+                <ImageButton
+                    android:id="@+id/deleteInstanceImageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="@color/transparent"
+                    android:onClick="deleteInstance"
+                    android:padding="10dp"
+                    android:src="@drawable/delete" />
             </LinearLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:onClick="playInstanceVideo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 

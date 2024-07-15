@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -11,10 +12,10 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.view.LayoutInflater;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.tanujn45.a11y.CSVEditor.CSVFile;
 
@@ -22,9 +23,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-//Todo: Implement Edit button to change the name of the gesture and it's instances. This should also have a delete button to delete the Gesture and all it's instances
-//Todo: Increase the font size for the list elements maybe
 
 public class GestureInstanceActivity extends AppCompatActivity {
     private String gestureName, speakableText, path, folderName;
@@ -37,13 +35,22 @@ public class GestureInstanceActivity extends AppCompatActivity {
     CSVFile master, subMaster;
     TextToSpeech tts;
 
+    // Expects GestureCategoryName as extra intent
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gesture_instance);
 
         Intent intent = getIntent();
-        gestureName = intent.getStringExtra("gestureCategoryName");
+        if (intent.hasExtra("gestureCategoryName")) {
+            gestureName = intent.getStringExtra("gestureCategoryName");
+        } else {
+            // go back one activity
+            Intent goBackIntent = new Intent(this, GestureCategoryActivity.class);
+            startActivity(goBackIntent);
+            finish();
+        }
 
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         folderName = gestureName.replace(" ", "_").toLowerCase();
@@ -86,7 +93,12 @@ public class GestureInstanceActivity extends AppCompatActivity {
         playTTSButton = findViewById(R.id.playTTSButton);
 
         gestureCategoryNameTextView.setText(gestureName);
-        speakableTextTextView.setText(speakableText);
+        if (speakableText == null || speakableText.isEmpty()) {
+            speakableTextTextView.setText("No speakable text provided");
+            speakableTextTextView.setTextColor(ContextCompat.getColor(this, R.color.theme));
+        } else {
+            speakableTextTextView.setText(speakableText);
+        }
 
         setInstanceList();
     }
@@ -115,7 +127,6 @@ public class GestureInstanceActivity extends AppCompatActivity {
         intent.putExtra("gestureCategoryName", gestureName);
         intent.putExtra("instanceName", selectedItem);
         startActivity(intent);
-        finish();
     }
 
     public void addGestureInstance(View view) {
@@ -141,7 +152,7 @@ public class GestureInstanceActivity extends AppCompatActivity {
         cancelButton.setOnClickListener(v -> alertDialog.dismiss());
 
         saveButton.setOnClickListener(v -> {
-            //Todo: change the name of the files inside the instances folder
+            // Change the name of the files inside the instances folder
             List<String[]> subMasterData = subMaster.getCSVData();
             String newInstanceSubstring = gestureCategoryNameEditText.getText().toString().toLowerCase().replace(" ", "_").trim();
 
@@ -157,7 +168,8 @@ public class GestureInstanceActivity extends AppCompatActivity {
             subMaster.save();
 
             renameInstanceFiles(folderName, newInstanceSubstring);
-            //Todo: change the name of the folder
+
+            // Change the name of the folder
             File oldDir = new File(path);
             if (!oldDir.exists() || !oldDir.isDirectory()) {
                 return;

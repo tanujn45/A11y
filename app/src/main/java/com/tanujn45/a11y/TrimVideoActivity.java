@@ -139,7 +139,10 @@ public class TrimVideoActivity extends AppCompatActivity implements OnTrimVideoL
 
     @Override
     public void cancelAction() {
-
+        Intent intent = new Intent(this, GestureInstanceActivity.class);
+        intent.putExtra("gestureCategoryName", gestureName);
+        startActivity(intent);
+        finish();
     }
 
     @Override

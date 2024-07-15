@@ -52,7 +52,6 @@ public class GestureCategoryActivity extends AppCompatActivity {
         }
 
         setGestureList();
-
     }
 
     /*
@@ -95,8 +94,12 @@ public class GestureCategoryActivity extends AppCompatActivity {
         cancelButton.setOnClickListener(v -> alertDialog.dismiss());
 
         saveButton.setOnClickListener(v -> {
-            String gestureCategoryName = gestureCategoryNameEditText.getText().toString();
-            String speakableText = speakableTextEditText.getText().toString();
+            if (gestureCategoryNameEditText.getText().toString().isEmpty()) {
+                Toast.makeText(this, "Gesture Category Name is required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String gestureCategoryName = gestureCategoryNameEditText.getText().toString().trim();
+            String speakableText = speakableTextEditText.getText().toString().trim();
 
             if (master.checkIfDataExistsInARow(gestureCategoryName)) {
                 Toast.makeText(this, "Gesture Category already exists", Toast.LENGTH_SHORT).show();

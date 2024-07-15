@@ -180,9 +180,9 @@ public class CSVFile {
 
         for(int i = 1; i < csvData.size(); i++) {
             String[] row = csvData.get(i);
-            accX.add(Double.parseDouble(row[0]));
-            accY.add(Double.parseDouble(row[1]));
-            accZ.add(Double.parseDouble(row[2]));
+            accX.add(Double.parseDouble(row[1]));
+            accY.add(Double.parseDouble(row[2]));
+            accZ.add(Double.parseDouble(row[3]));
         }
 
         List<Double> movingAvgX = calculateMovingAverage(accX, windowSize);
@@ -229,9 +229,9 @@ public class CSVFile {
 
         for (int i = 1; i < csvData.size(); i++) {
             String[] row = csvData.get(i);
-            accX.add(Double.parseDouble(row[0]));
-            accY.add(Double.parseDouble(row[1]));
-            accZ.add(Double.parseDouble(row[2]));
+            accX.add(Double.parseDouble(row[1]));
+            accY.add(Double.parseDouble(row[2]));
+            accZ.add(Double.parseDouble(row[3]));
         }
 
         List<Double> diffX = calculateDifferences(accX);

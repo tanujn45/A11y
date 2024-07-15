@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,18 +25,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-//Todo: Implement Video player
-//Todo: Implement deletion of the instance
-//Todo: Fix the Diff and MA plots
-
 public class InstanceDataActivity extends AppCompatActivity {
     private LineChart accChart, accMAChart, accDiffChart, gyroChart;
     private TextView instanceNameTextView;
     private ImageView instanceImageView;
+    private ImageButton deleteInstanceImageButton;
     private File directory;
     private String instanceName, gestureName, path, folderName, videoPath;
     private CSVFile subMaster, instanceData;
     private float startTime, endTime;
+
+    // Expects instanceName and gestureCategoryName as extra intent
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +45,15 @@ public class InstanceDataActivity extends AppCompatActivity {
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
 
         Intent intent = getIntent();
+        if (intent.hasExtra("instanceName") && intent.hasExtra("gestureCategoryName")) {
+            instanceName = intent.getStringExtra("instanceName");
+            gestureName = intent.getStringExtra("gestureCategoryName");
+        } else {
+            Intent goBackIntent = new Intent(this, GestureCategoryActivity.class);
+            startActivity(goBackIntent);
+            finish();
+        }
+
         instanceName = intent.getStringExtra("instanceName");
         gestureName = intent.getStringExtra("gestureCategoryName");
 
@@ -65,6 +75,7 @@ public class InstanceDataActivity extends AppCompatActivity {
         instanceNameTextView = findViewById(R.id.instanceName);
         instanceNameTextView.setText(instanceName);
         instanceImageView = findViewById(R.id.videoThumbnail);
+        deleteInstanceImageButton = findViewById(R.id.deleteInstanceImageButton);
 
         Bitmap thumbnail;
         try {
@@ -86,6 +97,24 @@ public class InstanceDataActivity extends AppCompatActivity {
         setChart(accMAChart, "acc_ma");
         setChart(accDiffChart, "acc_diff");
         setChart(gyroChart, "gyro");
+    }
+
+    private boolean deleteFileOnPath(String path) {
+        File file = new File(path);
+        return file.delete();
+    }
+
+    public void deleteInstance(View view) throws Exception {
+        if (deleteFileOnPath(videoPath) && deleteFileOnPath(videoPath.replace(".mp4", ".csv"))) {
+            subMaster.deleteRowWithData(instanceName);
+            subMaster.save();
+
+            Intent intent = new Intent(this, GestureCategoryActivity.class);
+            startActivity(intent);
+            finish();
+        } else {
+            throw new Exception("Failed to delete the instance");
+        }
     }
 
     private Bitmap getVideoThumbnail(String videopath) throws IOException {
@@ -141,5 +170,11 @@ public class InstanceDataActivity extends AppCompatActivity {
         chart.setDrawMarkers(false);
 
         chart.invalidate();
+    }
+
+    public void playInstanceVideo(View view) {
+        Intent intent = new Intent(this, VideoPlayer.class);
+        intent.putExtra("videoPath", videoPath);
+        startActivity(intent);
     }
 }

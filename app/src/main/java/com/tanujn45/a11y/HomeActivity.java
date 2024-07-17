@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
 
-    LinearLayout recordDataCardView, recognizeGestureCardView, accessibleGesturesCardView, loadModelDataCardView, annotateGestureCardView;
+    LinearLayout recordDataCardView, recognizeGestureCardView, accessibleGesturesCardView, loadModelDataCardView, annotateGestureCardView, visualizeGestureCardView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,6 +20,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         accessibleGesturesCardView = findViewById(R.id.accessibleGesturesCardView);
         loadModelDataCardView = findViewById(R.id.loadModelDataCardView);
         annotateGestureCardView = findViewById(R.id.annotateGestureCardView);
+        visualizeGestureCardView = findViewById(R.id.visualizeGestureCardView);
 
 
         recordDataCardView.setOnClickListener(this);
@@ -27,6 +28,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         accessibleGesturesCardView.setOnClickListener(this);
         loadModelDataCardView.setOnClickListener(this);
         annotateGestureCardView.setOnClickListener(this);
+        visualizeGestureCardView.setOnClickListener(this);
     }
 
     @Override
@@ -46,6 +48,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(i);
         } else if (v.getId() == R.id.annotateGestureCardView) {
             i = new Intent(this, GestureCategoryActivity.class);
+            startActivity(i);
+        } else if (v.getId() == R.id.visualizeGestureCardView) {
+            i = new Intent(this, VisualizationActivity.class);
             startActivity(i);
         }
     }

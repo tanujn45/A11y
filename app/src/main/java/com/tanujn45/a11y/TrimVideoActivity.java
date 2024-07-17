@@ -18,9 +18,6 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.util.Objects;
 
-//Todo: Implement the on Trim cancel function to go back to the Instance activity
-//Todo: Implement a preloader while trim is happening
-
 public class TrimVideoActivity extends AppCompatActivity implements OnTrimVideoListener {
     private VideoTrimmer mVideoTrimmer;
     private File directory;

@@ -9,7 +9,7 @@
 
     <LinearLayout
         android:id="@+id/homeWelcomeText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/marginTop"
         android:gravity="center"
@@ -22,17 +22,28 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginEnd="15dp"
-            android:src="@drawable/eye" />
+            android:src="@drawable/sliders" />
 
         <TextView
             style="@style/HeaderFont"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Set Filters" />
+
+        <Button
+            android:id="@+id/doneButton"
+            style="@style/ButtonStyle"
+            android:backgroundTint="@color/theme2"
+            android:enabled="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Visualization Tool" />
+            android:onClick="doneWithFilterButtonClicked"
+            android:text="Done" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/accLayout"
+        android:id="@+id/filterLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -59,14 +70,12 @@
                     android:text="Acc"
                     android:textColor="@color/white"
                     android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/accValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <com.google.android.material.slider.Slider
+                app:tickColorActive="@color/theme"
+                app:tickColorInactive="@color/off_white"
+                app:trackColorInactive="@color/off_white"
                 android:id="@+id/accSlider"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -94,14 +103,12 @@
                     android:text="Acc Moving Average"
                     android:textColor="@color/white"
                     android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/accMAValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <com.google.android.material.slider.Slider
+                app:tickColorActive="@color/theme"
+                app:tickColorInactive="@color/off_white"
+                app:trackColorInactive="@color/off_white"
                 android:id="@+id/accMASlider"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -129,14 +136,12 @@
                     android:text="Acc Difference"
                     android:textColor="@color/white"
                     android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/accDiffValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <com.google.android.material.slider.Slider
+                app:tickColorActive="@color/theme"
+                app:tickColorInactive="@color/off_white"
+                app:trackColorInactive="@color/off_white"
                 android:id="@+id/accDiffSlider"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -164,14 +169,12 @@
                     android:text="Gyro"
                     android:textColor="@color/white"
                     android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/gyroValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <com.google.android.material.slider.Slider
+                app:tickColorActive="@color/theme"
+                app:tickColorInactive="@color/off_white"
+                app:trackColorInactive="@color/off_white"
                 android:id="@+id/gyroSlider"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -181,49 +184,24 @@
         </LinearLayout>
     </LinearLayout>
 
-
-    <LinearLayout
-        android:id="@+id/buttonGroup"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/totalTextView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/disconnectButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        android:layout_marginEnd="15dp"
+        android:fontFamily="@font/roboto_medium"
+        android:text="Total %: "
+        android:textColor="@color/white"
+        android:textSize="25sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filterLayout" />
 
-        <Button
-            android:id="@+id/saveModel"
-            style="@style/ButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="7dp"
-            android:layout_weight="1"
-            android:text="Save Model" />
-
-        <Button
-            android:id="@+id/homeButton"
-            style="@style/ButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="7dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/theme2"
-            android:enabled="false"
-            android:text="Similarity" />
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/disconnectButton"
-        style="@style/ButtonStyle"
-        android:layout_width="0dp"
+    <TextView
+        android:id="@+id/totalValue"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="50dp"
-        android:backgroundTint="@color/theme2"
-        android:enabled="false"
-        android:text="Generate Heatmap"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
+        android:fontFamily="@font/roboto_medium"
+        android:textSize="25sp"
+        app:layout_constraintStart_toEndOf="@+id/totalTextView"
+        app:layout_constraintTop_toBottomOf="@id/filterLayout" />
 </androidx.constraintlayout.widget.ConstraintLayout>

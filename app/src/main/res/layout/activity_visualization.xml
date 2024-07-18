@@ -34,6 +34,7 @@
     <LinearLayout
         android:id="@+id/instanceSelectionLayout"
         android:layout_width="match_parent"
+        android:gravity="center"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -53,7 +54,20 @@
             android:background="@drawable/rounded_corner"
             android:layout_width="0dp"
             android:layout_marginStart="7dp"
+            android:layout_marginEnd="7dp"
             android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/editFiltersButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:background="@drawable/rounded_corner"
+            android:backgroundTint="@color/theme"
+            android:onClick="setFiltersButtonClicked"
+            android:padding="10dp"
+
+            android:src="@drawable/sliders" />
     </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
@@ -29,7 +30,6 @@ public class VisualizationActivity extends AppCompatActivity {
     Spinner gestureOneSpinner, gestureTwoSpinner;
     ImageView gestureOneThumbnail, gestureTwoThumbnail;
     ArrayAdapter<String> adapterOne, adapterTwo;
-
     String gestureOneVideoPath, gestureTwoVideoPath;
 
     @Override

@@ -32,6 +32,11 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
     @Override
     public void onBindViewHolder(@NonNull VideoViewHolder holder, int position) {
         Video video = videoList.get(position);
+        if (video.getShowEditButton()) {
+            holder.editButton.setVisibility(View.VISIBLE);
+        } else {
+            holder.editButton.setVisibility(View.GONE);
+        }
         // Bind thumbnail image to ImageView
         holder.thumbnailImageView.setImageBitmap(video.getThumbnail());
         // Bind title to TextView
@@ -47,10 +52,13 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         ImageView thumbnailImageView;
         TextView titleTextView;
 
+        ImageView editButton;
+
         public VideoViewHolder(@NonNull View itemView) {
             super(itemView);
             thumbnailImageView = itemView.findViewById(R.id.image_thumbnail);
             titleTextView = itemView.findViewById(R.id.text_title);
+            editButton = itemView.findViewById(R.id.edit_button);
 
             itemView.setOnClickListener(v -> {
                 int position = getBindingAdapterPosition();

@@ -9,7 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
 
-    LinearLayout recordDataCardView, recognizeGestureCardView, accessibleGesturesCardView, loadModelDataCardView, annotateGestureCardView, visualizeGestureCardView;
+    LinearLayout recordDataCardView, recognizeGestureCardView, accessibleGesturesCardView, loadModelDataCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,6 +22,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         loadModelDataCardView = findViewById(R.id.loadModelDataCardView);
         annotateGestureCardView = findViewById(R.id.annotateGestureCardView);
         visualizeGestureCardView = findViewById(R.id.visualizeGestureCardView);
+        rawVideoActivityCardView = findViewById(R.id.rawVideoCardView);
 
 
         recordDataCardView.setOnClickListener(this);
@@ -29,6 +31,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         loadModelDataCardView.setOnClickListener(this);
         annotateGestureCardView.setOnClickListener(this);
         visualizeGestureCardView.setOnClickListener(this);
+        rawVideoActivityCardView.setOnClickListener(this);
     }
 
     @Override
@@ -51,6 +54,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(i);
         } else if (v.getId() == R.id.visualizeGestureCardView) {
             i = new Intent(this, VisualizationActivity.class);
+            startActivity(i);
+        } else if (v.getId() == R.id.rawVideoCardView) {
+            i = new Intent(this, RawVideoActivity.class);
             startActivity(i);
         }
     }

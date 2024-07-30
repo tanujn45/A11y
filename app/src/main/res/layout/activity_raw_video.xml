@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:paddingHorizontal="@dimen/margin"
     android:layout_height="match_parent"
-    tools:context=".VideoListActivity">
+    tools:context=".RawVideoActivity">
 
     <LinearLayout
         android:id="@+id/homeWelcomeText"
@@ -23,15 +23,14 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginEnd="15dp"
-            android:src="@drawable/video" />
+            android:src="@drawable/raw" />
 
         <TextView
             style="@style/HeaderFont"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Select a video" />
+            android:text="Raw Data" />
     </LinearLayout>
-
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"

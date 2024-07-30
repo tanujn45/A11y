@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -21,30 +22,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VideoListActivity extends AppCompatActivity {
+public class RawVideoActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private VideoAdapter videoAdapter;
     private List<Video> videoList;
     private File directory;
-    private String gestureName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_video_list);
+        setContentView(R.layout.activity_raw_video);
 
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-
-        Intent intent = getIntent();
-        gestureName = intent.getStringExtra("gestureCategoryName");
-
-        File trimmedVideosDir = new File(directory, "trimmedVideos");
-
-        if (!trimmedVideosDir.exists()) {
-            trimmedVideosDir.mkdirs();
-        }
 
         try {
             videoList = getVideosFromFolder();
@@ -54,8 +45,7 @@ public class VideoListActivity extends AppCompatActivity {
         videoAdapter = new VideoAdapter(videoList, video -> {
             String videoPath = video.getPath();
             System.out.println("Video path:: " + videoPath);
-            // startTrimActivityWithDialog(videoPath);
-            startTrimActivity(videoPath);
+            editRawVideoDialog(videoPath);
         });
         recyclerView.setAdapter(videoAdapter);
     }
@@ -64,7 +54,6 @@ public class VideoListActivity extends AppCompatActivity {
         List<Video> videos = new ArrayList<>();
 
         File rawVideos = new File(directory, "rawVideos");
-
         File[] files = rawVideos.listFiles();
 
         if (files != null) {
@@ -72,7 +61,7 @@ public class VideoListActivity extends AppCompatActivity {
                 if (isVideoFile(file)) {
                     Bitmap thumbnail = generateThumbnail(file);
                     String title = file.getName().replaceFirst("[.][^.]+$", "");
-                    videos.add(new Video(file.getPath(), thumbnail, title, false));
+                    videos.add(new Video(file.getPath(), thumbnail, title));
                 }
             }
         }
@@ -80,45 +69,95 @@ public class VideoListActivity extends AppCompatActivity {
         return videos;
     }
 
-
-    private void startTrimActivityWithDialog(String videoPath) {
+    private void editRawVideoDialog(String videoPath) {
         // Inflate the custom layout
         View dialogView = LayoutInflater.from(this).inflate(R.layout.custom_alert_dialog, null);
 
         // Find views in the custom layout
+        TextView titleTextView = dialogView.findViewById(R.id.alertTitle);
         EditText fileNameEditText = dialogView.findViewById(R.id.fileNameEditText);
+        Button deleteButton = dialogView.findViewById(R.id.deleteButton);
+        Button renameButton = dialogView.findViewById(R.id.saveButton);
         Button cancelButton = dialogView.findViewById(R.id.cancelButton);
-        Button saveButton = dialogView.findViewById(R.id.saveButton);
+
+        titleTextView.setText("Enter new video title");
+        deleteButton.setText("Delete");
+        renameButton.setText("Rename");
 
         // Create the AlertDialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(dialogView);
         AlertDialog alertDialog = builder.create();
 
-        cancelButton.setOnClickListener(v -> {
-            Toast.makeText(VideoListActivity.this, "Trimming cancelled", Toast.LENGTH_SHORT).show();
+        deleteButton.setOnClickListener(v -> {
+            deleteData(videoPath);
+            Intent intent = getIntent();
+            finish();
+            startActivity(intent);
             alertDialog.dismiss();
         });
 
-        saveButton.setOnClickListener(v -> {
-            gestureName = fileNameEditText.getText().toString();
-            if (!gestureName.isEmpty()) {
-                startTrimActivity(videoPath);
-                alertDialog.dismiss();
-            } else {
-                Toast.makeText(VideoListActivity.this, "Gesture name is required", Toast.LENGTH_SHORT).show();
+        renameButton.setOnClickListener(v -> {
+            String renamedFileName = fileNameEditText.getText().toString();
+
+            if (renamedFileName.isEmpty()) {
+                Toast.makeText(this, "Please enter a valid file name", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            renamedFileName = renamedFileName.replace(" ", "_");
+            renameData(videoPath, renamedFileName);
+            Intent intent = getIntent();
+            finish();
+            startActivity(intent);
+            alertDialog.dismiss();
         });
+
+        cancelButton.setOnClickListener(v -> alertDialog.dismiss());
 
         alertDialog.show();
     }
 
-    private void startTrimActivity(String videoPath) {
-        Intent intent = new Intent(VideoListActivity.this, TrimVideoActivity.class);
-        intent.putExtra("videoPath", videoPath);
-        intent.putExtra("gestureCategoryName", gestureName);
-        startActivity(intent);
-        finish();
+    private void deleteData(String videoPath) {
+        String csvPath = videoPath.replace("rawVideos", "rawData").replace(".mp4", ".csv");
+        File videoFile = new File(videoPath);
+        File csvFile = new File(csvPath);
+
+        if (!videoFile.exists() || !csvFile.exists()) {
+            Toast.makeText(this, "File not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (videoFile.delete() && csvFile.delete()) {
+            Toast.makeText(this, "Video deleted successfully", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Failed to delete file", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void renameData(String videoPath, String newFileName) {
+        String csvPath = videoPath.replace("rawVideos", "rawData").replace(".mp4", ".csv");
+        File videoFile = new File(videoPath);
+        File csvFile = new File(csvPath);
+
+        if (!videoFile.exists() || !csvFile.exists()) {
+            Toast.makeText(this, "File not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File newVideoFile = new File(videoFile.getParent(), newFileName + ".mp4");
+        File newCsvFile = new File(csvFile.getParent(), newFileName + ".csv");
+
+        if (newVideoFile.exists() || newCsvFile.exists()) {
+            Toast.makeText(this, "File with the same name already exists", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (videoFile.renameTo(newVideoFile) && csvFile.renameTo(newCsvFile)) {
+            Toast.makeText(this, "File renamed successfully", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Failed to rename file", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private boolean isVideoFile(File file) {

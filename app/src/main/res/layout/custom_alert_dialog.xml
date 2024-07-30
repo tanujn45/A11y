@@ -8,6 +8,7 @@
     android:paddingVertical="@dimen/margin">
 
     <TextView
+        android:id="@+id/alertTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/roboto_medium"
@@ -56,4 +57,12 @@
             android:text="Save" />
     </LinearLayout>
 
+    <Button
+        android:id="@+id/deleteButton"
+        style="@style/ButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:backgroundTint="@color/red"
+        android:text="Delete" />
 </LinearLayout>

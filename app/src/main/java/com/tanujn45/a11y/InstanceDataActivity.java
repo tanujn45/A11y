@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+//Todo:
 
 public class InstanceDataActivity extends AppCompatActivity {
     private LineChart accChart, accMAChart, accDiffChart, gyroChart;
@@ -73,9 +74,13 @@ public class InstanceDataActivity extends AppCompatActivity {
         getStartEndTime();
 
         instanceNameTextView = findViewById(R.id.instanceName);
-        instanceNameTextView.setText(instanceName);
+        instanceNameTextView.setText(instanceName.replace("_", " "));
         instanceImageView = findViewById(R.id.videoThumbnail);
         deleteInstanceImageButton = findViewById(R.id.deleteInstanceImageButton);
+
+        if (intent.hasExtra("notFromInstanceGestureIntent")) {
+            deleteInstanceImageButton.setVisibility(View.GONE);
+        }
 
         Bitmap thumbnail;
         try {

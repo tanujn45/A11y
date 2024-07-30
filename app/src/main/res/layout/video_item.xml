@@ -45,7 +45,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/imageView"
+            android:id="@+id/edit_button"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@color/black_transparent"

@@ -3,6 +3,8 @@ package com.tanujn45.a11y.KMeans;
 import android.content.Context;
 import android.os.Environment;
 
+import com.tanujn45.a11y.CSVEditor.CSVFile;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,14 +18,17 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.CSVLoader;
 
 
-//Todo: Perform KMeans clustering on known data and generate a matrix for the purpose of comparison
+//Todo: Figure out why is data not being loaded by CSVLoaders
+
+// First set model
+// Set KMeans
 public class KMeans {
     private final File directory;
     private final List<File> csvFiles;
     private final List<File> models;
+    private HashMap<String, Integer> csvFileNameToGestureId;
     private String[] csvFileNames;
     private String[] prefixes;
     private double[] weights;
@@ -41,6 +46,7 @@ public class KMeans {
         this.csvFiles = new ArrayList<>();
         this.kMeans = new ArrayList<>();
         this.models = new ArrayList<>();
+        this.csvFileNameToGestureId = new HashMap<>();
         this.setModels();
         this.setSensorInstancesAttributes();
     }
@@ -91,26 +97,22 @@ public class KMeans {
     }
 
     private void setPrefixesAndWeights(File model) {
+        CSVFile modelCSV;
         try {
-            CSVLoader loader = new CSVLoader();
-            loader.setSource(model);
-            Instances data = loader.getDataSet();
-
-            if (data == null) {
-                throw new RuntimeException("Model data is empty!");
-            }
-
-            this.prefixes = new String[data.numAttributes() - 1];
-            this.weights = new double[data.numAttributes() - 1];
-
-            for (int i = 0; i < data.numAttributes() - 1; i++) {
-                this.prefixes[i] = data.attribute(i).name();
-                this.weights[i] = data.instance(0).value(i);
-            }
+            modelCSV = new CSVFile(model.getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
+            return;
         }
 
+        this.prefixes = new String[modelCSV.getCSVData().size() - 1];
+        this.weights = new double[modelCSV.getCSVData().size() - 1];
+
+        List<String[]> data = modelCSV.getCSVData();
+        for (int i = 1; i < data.size(); i++) {
+            this.prefixes[i - 1] = data.get(i)[0];
+            this.weights[i - 1] = Double.parseDouble(data.get(i)[1]);
+        }
         try {
             this.getKMeans();
         } catch (Exception e) {
@@ -156,27 +158,68 @@ public class KMeans {
     }
 
     // Loads data from a File and returns an Instances object
-    private Instances loadData(File file) {
+//    private Instances loadData(File file) throws IOException {
+//        if (!file.exists()) {
+//            System.out.println("File does not exist");
+//        }
+//        CSVLoader loader = new CSVLoader();
+//        loader.setSource(file);
+//        Instances data = loader.getDataSet();
+//        return data;
+//    }
+
+    private Instances loadData(File file, int gestureId) {
+        // Create a CSV file object
+        String filePath = file.getAbsolutePath();
+        CSVFile dataFile = null;
         try {
-            CSVLoader loader = new CSVLoader();
-            loader.setSource(file);
-            return loader.getDataSet();
+            dataFile = new CSVFile(filePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+
+        // Retrieve all the data from the CSV file
+        assert dataFile != null;
+        List<String[]> data = dataFile.getCSVData();
+
+        // Create an arraylist of attributes
+        String[] header = data.get(0);
+        ArrayList<Attribute> attributes = new ArrayList<>();
+        for (String s : header) {
+            attributes.add(new Attribute(s));
+        }
+        attributes.add(new Attribute("gesture_id"));
+
+        // Create an instance with the attributes
+        Instances dataInstances = new Instances(file.getName(), attributes, 0);
+
+        // Add the data to the instance
+        int numAttributes = attributes.size();
+        for (int i = 1; i < data.size(); i++) {
+            DenseInstance instance = new DenseInstance(numAttributes);
+            for (int j = 0; j < numAttributes - 1; j++) {
+                instance.setValue(j, Double.parseDouble(data.get(i)[j]));
+            }
+
+            instance.setValue(numAttributes - 1, (double) gestureId);
+            dataInstances.add(instance);
+        }
+
+        return dataInstances;
     }
 
     // Sets the list of gesture CSV files in the sub-directories in trimmed data directory
-    private void getCSVFiles() {
+    private List<String> getCSVFiles() {
+        // Check if the trimmed data folder exists
         File dir = new File(this.trimmedDataFolderPath);
         if (!dir.isDirectory()) {
             throw new RuntimeException("Trimmed Data Folder does not exist!");
         }
 
-        File[] subDirs = directory.listFiles();
+        // Get all the Gesture directories
+        File[] subDirs = dir.listFiles();
         if (subDirs == null) {
-            return;
+            return null;
         }
 
         List<String> tempCSVFileNames = new ArrayList<>();
@@ -185,6 +228,7 @@ public class KMeans {
                 continue;
             }
 
+            // Get all the files in the sub-directory
             File[] files = subDir.listFiles();
             if (files == null) {
                 continue;
@@ -202,20 +246,27 @@ public class KMeans {
                 }
             }
         }
-        this.csvFileNames = tempCSVFileNames.toArray(new String[0]);
-        Arrays.sort(this.csvFileNames);
+
+        return tempCSVFileNames;
     }
 
     // Finds all the trimmed CSV files and combines them into a single Instances object
     private void combineData() {
-        this.getCSVFiles();
+        List<String> csvFileNamesList = this.getCSVFiles();
+        assert csvFileNamesList != null;
+        this.csvFileNames = csvFileNamesList.toArray(new String[0]);
+
+        // Sorted CSV file names
+        Arrays.sort(this.csvFileNames);
 
         this.combinedGesturesData = null;
-        for (File file : this.csvFiles) {
-            Instances data = this.loadData(file);
-            if (data == null) {
-                continue;
-            }
+        for (int i = 0; i < this.csvFiles.size(); i++) {
+            File file = this.csvFiles.get(i);
+            Instances data = this.loadData(file, i);
+
+            // this.addGestureId(data, i);
+            this.csvFileNameToGestureId.put(this.csvFiles.get(i).getName(), i);
+
             if (this.combinedGesturesData == null) {
                 this.combinedGesturesData = new Instances(data);
             } else {
@@ -261,30 +312,6 @@ public class KMeans {
         return newData;
     }
 
-    private double[] processData(Instances combinedData, Instances unknownData, String currPrefix) {
-        int csvFilesLength = this.csvFileNames.length;
-        double[] result = new double[csvFilesLength];
-
-        for (int i = 0; i < csvFilesLength; i++) {
-            List<Integer> cluster1 = new ArrayList<>();
-            for (int j = 0; j < combinedData.numInstances(); j++) {
-                int currGestureId = (int) combinedData.instance(j).value(combinedData.attribute("gesture_id"));
-                if (i == currGestureId && combinedData.attribute("cluster_id_" + currPrefix) != null) {
-                    cluster1.add((int) combinedData.instance(j).value(combinedData.attribute("cluster_id_" + currPrefix)));
-                }
-            }
-
-            List<Integer> cluster2 = new ArrayList<>();
-            for (int j = 0; j < unknownData.numInstances(); j++) {
-                cluster2.add((int) unknownData.instance(j).value(unknownData.attribute("cluster_id_" + currPrefix)));
-            }
-
-            result[i] = this.normSim(cluster1, cluster2);
-        }
-
-        return result;
-    }
-
     // Perform KMeans clustering on the combined data and assign cluster IDs to instances
     public void getKMeans() throws Exception {
         combineData();
@@ -295,7 +322,6 @@ public class KMeans {
             }
         }
 
-        //Todo: get prefixes and weights from models
         for (String prefix : this.prefixes) {
             List<String> columns = new ArrayList<>();
 
@@ -354,7 +380,7 @@ public class KMeans {
         }
     }
 
-    public void performKMeans(Instances unknownData) {
+    private void performKMeans(Instances unknownData) {
         try {
             double[] result = new double[this.csvFileNames.length];
             for (int i = 0; i < this.prefixes.length; i++) {
@@ -369,17 +395,17 @@ public class KMeans {
                 //Todo: Update the indexes for the new attributes
                 if (Objects.equals(prefix, "acc_diff")) {
                     for (int j = 0; j < unknownData.numInstances() - 1; j++) {
-                        unknownData.instance(j).setValue(10, unknownData.instance(j + 1).value(unknownData.attribute("acc_x")) - unknownData.instance(j).value(unknownData.attribute("acc_x")));
-                        unknownData.instance(j).setValue(11, unknownData.instance(j + 1).value(unknownData.attribute("acc_y")) - unknownData.instance(j).value(unknownData.attribute("acc_y")));
-                        unknownData.instance(j).setValue(12, unknownData.instance(j + 1).value(unknownData.attribute("acc_z")) - unknownData.instance(j).value(unknownData.attribute("acc_z")));
+                        unknownData.instance(j).setValue(unknownData.attribute("acc_diff_x"), unknownData.instance(j + 1).value(unknownData.attribute("acc_x")) - unknownData.instance(j).value(unknownData.attribute("acc_x")));
+                        unknownData.instance(j).setValue(unknownData.attribute("acc_diff_y"), unknownData.instance(j + 1).value(unknownData.attribute("acc_y")) - unknownData.instance(j).value(unknownData.attribute("acc_y")));
+                        unknownData.instance(j).setValue(unknownData.attribute("acc_diff_z"), unknownData.instance(j + 1).value(unknownData.attribute("acc_z")) - unknownData.instance(j).value(unknownData.attribute("acc_z")));
                     }
                 }
 
                 if (Objects.equals(prefix, "acc_ma")) {
                     for (int j = 0; j < unknownData.numInstances() - 1; j++) {
-                        unknownData.instance(j).setValue(13, (unknownData.instance(j).value(unknownData.attribute("acc_x")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_x"))) / 2);
-                        unknownData.instance(j).setValue(14, (unknownData.instance(j).value(unknownData.attribute("acc_y")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_y"))) / 2);
-                        unknownData.instance(j).setValue(15, (unknownData.instance(j).value(unknownData.attribute("acc_z")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_z"))) / 2);
+                        unknownData.instance(j).setValue(unknownData.attribute("acc_ma_x"), (unknownData.instance(j).value(unknownData.attribute("acc_x")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_x"))) / 2);
+                        unknownData.instance(j).setValue(unknownData.attribute("acc_ma_y"), (unknownData.instance(j).value(unknownData.attribute("acc_y")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_y"))) / 2);
+                        unknownData.instance(j).setValue(unknownData.attribute("acc_ma_z"), (unknownData.instance(j).value(unknownData.attribute("acc_z")) + unknownData.instance(j + 1).value(unknownData.attribute("acc_z"))) / 2);
                     }
                 }
 
@@ -422,6 +448,95 @@ public class KMeans {
             System.out.println("Error: " + e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    private double[] processData(Instances combinedData, Instances unknownData, String currPrefix) {
+        int csvFilesLength = this.csvFileNames.length;
+        double[] result = new double[csvFilesLength];
+
+        for (int i = 0; i < csvFilesLength; i++) {
+            List<Integer> cluster1 = new ArrayList<>();
+            int gestureId = this.csvFileNameToGestureId.get(this.csvFileNames[i]);
+            for (int j = 0; j < combinedData.numInstances(); j++) {
+                int currGestureId = (int) combinedData.instance(j).value(combinedData.attribute("gesture_id"));
+                if (gestureId == currGestureId && combinedData.attribute("cluster_id_" + currPrefix) != null) {
+                    cluster1.add((int) combinedData.instance(j).value(combinedData.attribute("cluster_id_" + currPrefix)));
+                }
+            }
+
+            List<Integer> cluster2 = new ArrayList<>();
+            for (int j = 0; j < unknownData.numInstances(); j++) {
+                cluster2.add((int) unknownData.instance(j).value(unknownData.attribute("cluster_id_" + currPrefix)));
+            }
+
+            result[i] = this.normSim(cluster1, cluster2);
+        }
+
+        return result;
+    }
+
+    private double[][] processDataForHeatmap(String currPrefix) {
+        int csvFilesLength = this.csvFileNames.length;
+        double[][] result = new double[csvFilesLength][csvFilesLength];
+
+        for (int i = 0; i < csvFilesLength; i++) {
+            for (int j = 0; j < csvFilesLength; j++) {
+                List<Integer> cluster1 = new ArrayList<>();
+                int gestureId = this.csvFileNameToGestureId.get(this.csvFileNames[i]);
+                for (int k = 0; k < this.combinedGesturesData.numInstances(); k++) {
+                    Attribute gestureIdAtt = this.combinedGesturesData.attribute("gesture_id");
+                    Instance instance = this.combinedGesturesData.instance(k);
+                    int currGestureId = (int) instance.value(gestureIdAtt);
+
+                    if (gestureId == currGestureId) {
+                        cluster1.add((int) this.combinedGesturesData.instance(k).value(this.combinedGesturesData.attribute("cluster_id_" + currPrefix)));
+                    }
+                }
+
+                List<Integer> cluster2 = new ArrayList<>();
+                gestureId = this.csvFileNameToGestureId.get(this.csvFileNames[j]);
+                for (int k = 0; k < this.combinedGesturesData.numInstances(); k++) {
+                    Attribute gestureIdAtt = this.combinedGesturesData.attribute("gesture_id");
+                    Instance instance = this.combinedGesturesData.instance(k);
+                    int currGestureId = (int) instance.value(gestureIdAtt);
+
+                    if (gestureId == currGestureId) {
+                        cluster2.add((int) this.combinedGesturesData.instance(k).value(this.combinedGesturesData.attribute("cluster_id_" + currPrefix)));
+                    }
+                }
+
+                result[i][j] = this.normSim(cluster1, cluster2);
+            }
+        }
+        return result;
+    }
+
+    public double[][] performKMeans() {
+        double result[][] = new double[this.csvFileNames.length][this.csvFileNames.length];
+
+        for (int i = 0; i < this.prefixes.length; i++) {
+            String prefix = this.prefixes[i];
+            List<String> columns = new ArrayList<>();
+
+            columns.add(prefix + "_x");
+            columns.add(prefix + "_y");
+            columns.add(prefix + "_z");
+
+            double[][] resultCurr = this.processDataForHeatmap(prefix);
+            for (int j = 0; j < result.length; j++) {
+                for (int k = 0; k < result[0].length; k++) {
+                    result[j][k] += this.weights[i] * resultCurr[j][k];
+                }
+            }
+        }
+
+        for (int i = 0; i < result.length; i++) {
+            for (int j = 0; j < result[0].length; j++) {
+                result[i][j] = Math.round(result[i][j] * 100.0) / 100.0;
+            }
+        }
+
+        return result;
     }
 
     private boolean hasMissingValues(Instance instance) {

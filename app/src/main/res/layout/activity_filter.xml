@@ -42,14 +42,25 @@
             android:text="Done" />
     </LinearLayout>
 
+    <Spinner
+        android:id="@+id/modelSpinner"
+        style="@style/spinnerStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_corner"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/homeWelcomeText" />
+
     <LinearLayout
         android:id="@+id/filterLayout"
+        android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/homeWelcomeText">
+        app:layout_constraintTop_toBottomOf="@id/modelSpinner">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -202,6 +213,21 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/roboto_medium"
         android:textSize="25sp"
+        android:textColor="@color/red"
         app:layout_constraintStart_toEndOf="@+id/totalTextView"
+        android:text="0.0"
         app:layout_constraintTop_toBottomOf="@id/filterLayout" />
+
+    <Button
+        android:id="@+id/saveModelButton"
+        style="@style/ButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
+        android:backgroundTint="@color/theme2"
+        android:onClick="saveModelButtonClicked"
+        android:text="Save Model"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

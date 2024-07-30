@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+// Todo: Create a No op gesture which cannot be deleted and is there when user enters this screen
 public class GestureCategoryActivity extends AppCompatActivity {
 
     private File directory;

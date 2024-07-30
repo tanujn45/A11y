@@ -8,11 +8,12 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.tanujn45.a11y.KMeans.KMeans;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,12 +26,15 @@ import java.util.List;
 public class VisualizationActivity extends AppCompatActivity {
     List<String> gestureNamesList = new ArrayList<>();
     HashMap<String, String> gestureNameToPath = new HashMap<>();
+    HashMap<String, String> instanceNameToGestureName = new HashMap<>();
 
     File directory;
     Spinner gestureOneSpinner, gestureTwoSpinner;
     ImageView gestureOneThumbnail, gestureTwoThumbnail;
     ArrayAdapter<String> adapterOne, adapterTwo;
     String gestureOneVideoPath, gestureTwoVideoPath;
+    String gestureOneCategory, gestureTwoCategory;
+    String gestureOneInstance, gestureTwoInstance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +50,17 @@ public class VisualizationActivity extends AppCompatActivity {
 
         initGestureDict();
         initSpinners();
+
+        KMeans kMeans = new KMeans(this);
+        kMeans.setModel("model1");
+
+        double[][] heatmap = kMeans.performKMeans();
+        for (double[] doubles : heatmap) {
+            for (double aDouble : doubles) {
+                System.out.print(aDouble + " ");
+            }
+            System.out.println();
+        }
     }
 
     private void initGestureDict() {
@@ -66,6 +81,8 @@ public class VisualizationActivity extends AppCompatActivity {
             if (!dir.isDirectory()) {
                 continue;
             }
+
+            String dirName = dir.getName();
 
             File[] gestureFiles = dir.listFiles();
             if (gestureFiles == null) {
@@ -89,10 +106,11 @@ public class VisualizationActivity extends AppCompatActivity {
                     int lastDotIndex = currGesture.lastIndexOf(".");
                     if (lastDotIndex > 0) {
                         name = currGesture.substring(0, lastDotIndex);
+                        gestureNamesList.add(name.replace("_", " ").trim());
                     }
 
-                    gestureNamesList.add(name);
                     gestureNameToPath.put(name, path);
+                    instanceNameToGestureName.put(name, dirName);
                 }
             }
         }
@@ -106,6 +124,9 @@ public class VisualizationActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedItem = (String) parent.getItemAtPosition(position);
+                selectedItem = selectedItem.replace(" ", "_").toLowerCase();
+                gestureOneInstance = selectedItem;
+                gestureOneCategory = instanceNameToGestureName.get(selectedItem);
                 String path = gestureNameToPath.get(selectedItem);
                 gestureOneVideoPath = path.replace(".csv", ".mp4");
                 setVideoThumbnail(gestureOneThumbnail, gestureOneVideoPath);
@@ -124,6 +145,9 @@ public class VisualizationActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedItem = (String) parent.getItemAtPosition(position);
+                selectedItem = selectedItem.replace(" ", "_").toLowerCase();
+                gestureTwoInstance = selectedItem;
+                gestureTwoCategory = instanceNameToGestureName.get(selectedItem);
                 String path = gestureNameToPath.get(selectedItem);
                 gestureTwoVideoPath = path.replace(".csv", ".mp4");
                 setVideoThumbnail(gestureTwoThumbnail, gestureTwoVideoPath);
@@ -158,14 +182,19 @@ public class VisualizationActivity extends AppCompatActivity {
     }
 
     public void playInstanceVideoOne(View view) {
-        Intent intent = new Intent(this, VideoPlayer.class);
+        Intent intent = new Intent(this, InstanceDataActivity.class);
+        intent.putExtra("instanceName", gestureOneInstance);
+        intent.putExtra("gestureCategoryName", gestureOneCategory);
+        intent.putExtra("notFromInstanceGestureIntent", true);
         intent.putExtra("videoPath", gestureOneVideoPath);
         startActivity(intent);
     }
 
     public void playInstanceVideoTwo(View view) {
-        String videoPath = "";
-        Intent intent = new Intent(this, VideoPlayer.class);
+        Intent intent = new Intent(this, InstanceDataActivity.class);
+        intent.putExtra("instanceName", gestureTwoInstance);
+        intent.putExtra("gestureCategoryName", gestureTwoCategory);
+        intent.putExtra("notFromInstanceGestureIntent", true);
         intent.putExtra("videoPath", gestureTwoVideoPath);
         startActivity(intent);
     }

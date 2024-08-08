@@ -1,35 +1,39 @@
-package com.tanujn45.a11y;
+package com.tanujn45.a11y.filters;
 
-import android.os.Bundle;
+import android.content.Context;
 import android.os.Environment;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.slider.Slider;
 import com.tanujn45.a11y.CSVEditor.CSVFile;
+import com.tanujn45.a11y.R;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class FilterActivity extends AppCompatActivity {
-    Slider acc, accMa, accDiff, gyro;
+public class Filters extends ConstraintLayout {
+    Slider acc, accMa, gyro;
     TextView totalValue;
-    Button doneButton;
     Button saveModelButton;
     Button updateModelButton;
+    Button deleteModelButton;
+    LinearLayout updateDeleteLayout;
     private float value;
     Spinner modelSpinner;
     ArrayAdapter<String> modelAdapter;
@@ -38,43 +42,68 @@ public class FilterActivity extends AppCompatActivity {
     String[] prefixes;
     double[] weights;
     HashMap<String, Slider> prefixToSlider = new HashMap<>();
+    HashMap<Slider, String> sliderToPrefix = new HashMap<>();
+    HashMap<String, String> prefixToWeight = new HashMap<>();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_filter);
+    public Filters(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(context);
+    }
+
+    public Filters(Context context) {
+        super(context);
+        init(context);
+    }
+
+    private void init(Context context) {
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater.inflate(R.layout.filters_card, this, true);
 
         acc = findViewById(R.id.accSlider);
         accMa = findViewById(R.id.accMASlider);
-        accDiff = findViewById(R.id.accDiffSlider);
         gyro = findViewById(R.id.gyroSlider);
         totalValue = findViewById(R.id.totalValue);
-        doneButton = findViewById(R.id.doneButton);
         modelSpinner = findViewById(R.id.modelSpinner);
         saveModelButton = findViewById(R.id.saveModelButton);
         updateModelButton = findViewById(R.id.updateModelButton);
+        deleteModelButton = findViewById(R.id.deleteModelButton);
+        updateDeleteLayout = findViewById(R.id.updateDeleteLayout);
+
+        updateDeleteLayout.setVisibility(View.INVISIBLE);
+        saveModelButton.setVisibility(View.VISIBLE);
 
         value = 0;
 
-        File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        File directory = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         modelPath = directory.getAbsolutePath() + "/models";
 
         setSlider(acc);
         setSlider(accMa);
-        setSlider(accDiff);
         setSlider(gyro);
 
         prefixToSlider.put("acc", acc);
         prefixToSlider.put("accMa", accMa);
-        prefixToSlider.put("accDiff", accDiff);
         prefixToSlider.put("gyro", gyro);
+
+        sliderToPrefix.put(acc, "acc");
+        sliderToPrefix.put(accMa, "accMa");
+        sliderToPrefix.put(gyro, "gyro");
+
+        prefixToWeight.put("acc", "0");
+        prefixToWeight.put("accMa", "0");
+        prefixToWeight.put("gyro", "0");
 
         loadModels();
         initSpinners();
+
+        updateModelButton.setOnClickListener(v -> updateModel());
+        saveModelButton.setOnClickListener(v -> saveModel());
+        deleteModelButton.setOnClickListener(v -> deleteModel());
     }
 
     // Load all the models from the models directory
     private void loadModels() {
+        models.clear();
         models.add("Choose a model");
         File modelDir = new File(modelPath);
         if (modelDir.exists()) {
@@ -84,24 +113,27 @@ public class FilterActivity extends AppCompatActivity {
             }
             for (File modelFile : modelFiles) {
                 String modelName = modelFile.getName();
+                if (modelName.endsWith(".csv")) {
+                    modelName = modelName.replace(".csv", "");
+                }
                 models.add(modelName);
             }
         }
+
+        modelAdapter = new ArrayAdapter<>(this.getContext(), android.R.layout.simple_spinner_item, models);
+        modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        modelSpinner.setAdapter(modelAdapter);
     }
 
     // Reset all sliders to 0
     private void setSlidersToZero() {
         moveSlider(acc, 0);
         moveSlider(accMa, 0);
-        moveSlider(accDiff, 0);
         moveSlider(gyro, 0);
     }
 
     // Initialize the spinner with the models
     private void initSpinners() {
-        modelAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, models);
-        modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        modelSpinner.setAdapter(modelAdapter);
         modelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -109,10 +141,11 @@ public class FilterActivity extends AppCompatActivity {
                 if (selectedModel.equals("Choose a model")) {
                     setSlidersToZero();
                     saveModelButton.setVisibility(View.VISIBLE);
-                    updateModelButton.setVisibility(View.INVISIBLE);
+                    updateDeleteLayout.setVisibility(View.INVISIBLE);
                 } else {
+                    selectedModel = selectedModel + ".csv";
                     saveModelButton.setVisibility(View.INVISIBLE);
-                    updateModelButton.setVisibility(View.VISIBLE);
+                    updateDeleteLayout.setVisibility(View.VISIBLE);
                     setPrefixesAndWeights(new File(modelPath + "/" + selectedModel));
                 }
             }
@@ -167,11 +200,14 @@ public class FilterActivity extends AppCompatActivity {
     }
 
     private void updateTotal(Slider slider) {
-        value = acc.getValue() + accMa.getValue() + accDiff.getValue() + gyro.getValue();
+        // Setting the weight for Slider that changed
+        String currFilter = sliderToPrefix.get(slider);
+        double currWeight = slider.getValue();
+        prefixToWeight.put(currFilter, String.valueOf(currWeight));
+
+        value = acc.getValue() + accMa.getValue() + gyro.getValue();
         if (value == 100.0) {
-            totalValue.setTextColor(ContextCompat.getColor(this, R.color.green));
-            doneButton.setBackgroundColor(ContextCompat.getColor(this, R.color.theme));
-            doneButton.setEnabled(true);
+            totalValue.setTextColor(ContextCompat.getColor(this.getContext(), R.color.green));
 
             if (!modelSpinner.getSelectedItem().toString().equals("Choose a model")) {
                 boolean isModelChanged = false;
@@ -185,53 +221,53 @@ public class FilterActivity extends AppCompatActivity {
                 }
 
                 if (isModelChanged) {
-                    updateModelButton.setBackgroundColor(ContextCompat.getColor(this, R.color.theme));
+                    updateModelButton.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.theme));
                     updateModelButton.setEnabled(true);
                 } else {
-                    updateModelButton.setBackgroundColor(ContextCompat.getColor(this, R.color.theme2));
+                    updateModelButton.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.theme2));
                     updateModelButton.setEnabled(false);
                 }
             } else {
-                saveModelButton.setBackgroundColor(ContextCompat.getColor(this, R.color.theme));
+                saveModelButton.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.theme));
                 saveModelButton.setEnabled(true);
             }
         } else {
-            totalValue.setTextColor(ContextCompat.getColor(this, R.color.red));
+            totalValue.setTextColor(ContextCompat.getColor(this.getContext(), R.color.red));
 
-            saveModelButton.setBackgroundColor(ContextCompat.getColor(this, R.color.theme2));
-            updateModelButton.setBackgroundColor(ContextCompat.getColor(this, R.color.theme2));
-            doneButton.setBackgroundColor(ContextCompat.getColor(this, R.color.theme2));
+            saveModelButton.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.theme2));
+            updateModelButton.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.theme2));
 
             saveModelButton.setEnabled(false);
             updateModelButton.setEnabled(false);
-            doneButton.setEnabled(false);
         }
         totalValue.setText(String.valueOf(value));
     }
 
     private void saveModel() {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.custom_alert_dialog, null);
+        View dialogView = LayoutInflater.from(this.getContext()).inflate(R.layout.custom_alert_dialog, null);
 
         TextView dialogTitle = dialogView.findViewById(R.id.alertTitle);
         EditText modelName = dialogView.findViewById(R.id.fileNameEditText);
         Button saveButton = dialogView.findViewById(R.id.saveButton);
         Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        Button deleteButton = dialogView.findViewById(R.id.deleteButton);
+        deleteButton.setVisibility(View.INVISIBLE);
 
         dialogTitle.setText("Enter the model name");
         modelName.setHint("Model name");
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this.getContext());
         builder.setView(dialogView);
         AlertDialog alertDialog = builder.create();
 
         saveButton.setOnClickListener(v -> {
             String name = modelName.getText().toString();
             if (name.isEmpty()) {
-                Toast.makeText(FilterActivity.this, "Model name is required", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this.getContext(), "Model name is required", Toast.LENGTH_SHORT).show();
                 return;
             }
             if (models.contains(name + ".csv")) {
-                Toast.makeText(FilterActivity.this, "Model with the same name already exists", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this.getContext(), "Model with the same name already exists", Toast.LENGTH_SHORT).show();
                 return;
             }
             createModelFile(name);
@@ -246,18 +282,20 @@ public class FilterActivity extends AppCompatActivity {
     }
 
     private void updateModel() {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.custom_alert_dialog, null);
+        View dialogView = LayoutInflater.from(this.getContext()).inflate(R.layout.custom_alert_dialog, null);
 
         TextView dialogTitle = dialogView.findViewById(R.id.alertTitle);
         EditText modelName = dialogView.findViewById(R.id.fileNameEditText);
         Button saveButton = dialogView.findViewById(R.id.saveButton);
         Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        Button deleteButton = dialogView.findViewById(R.id.deleteButton);
 
+        deleteButton.setVisibility(View.INVISIBLE);
+        saveButton.setText("Update");
         modelName.setVisibility(View.INVISIBLE);
-
         dialogTitle.setText("Overwrite the model?");
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this.getContext());
         builder.setView(dialogView);
         AlertDialog alertDialog = builder.create();
 
@@ -290,32 +328,30 @@ public class FilterActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-
-    private void createModelFile(String name) {
-        try {
-            CSVFile modelCSV = new CSVFile(modelPath + "/" + name + ".csv");
-            modelCSV.addRow(new String[]{"prefix", "weight"});
-            for (String prefix : prefixes) {
-                Slider slider = prefixToSlider.get(prefix);
-                double weight = slider.getValue() / 100;
-                weight = Math.round(weight * 100.0) / 100.0;
-                if (weight == 0.0) {
-                    continue;
-                }
-                modelCSV.addRow(new String[]{prefix, String.valueOf(weight)});
-            }
-            modelCSV.save();
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void deleteModel() {
+        File model = new File(modelPath + "/" + modelSpinner.getSelectedItem().toString() + ".csv");
+        if (model.delete()) {
+            Toast.makeText(this.getContext(), "Model deleted", Toast.LENGTH_SHORT).show();
+            loadModels();
+        } else {
+            Toast.makeText(this.getContext(), "Failed to delete model", Toast.LENGTH_SHORT).show();
         }
     }
 
-    public void doneWithFilterButtonClicked(View view) {
-        // Pass the value as intent to Visualization activity
-        finish();
-    }
-
-    public void saveModelButtonClicked(View view) {
-        saveModel();
+    private void createModelFile(String name) {
+        try {
+            CSVFile modelCSV = new CSVFile(new String[]{"prefix", "weight"}, modelPath + "/" + name + ".csv");
+            prefixToWeight.forEach((prefix, weight) -> {
+                if (Double.parseDouble(weight) == 0.0) {
+                    return;
+                }
+                double weightValue = Double.parseDouble(weight) / 100;
+                modelCSV.addRow(new String[]{prefix, String.valueOf(weightValue)});
+            });
+            modelCSV.save();
+            loadModels();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

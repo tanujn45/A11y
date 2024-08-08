@@ -1,197 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingHorizontal="@dimen/margin"
     tools:context=".VisualizationActivity">
 
-    <LinearLayout
-        android:id="@+id/homeWelcomeText"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/marginTop"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingBottom="28dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:paddingHorizontal="@dimen/margin">
 
-        <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="15dp"
-            android:src="@drawable/eye" />
-
-        <TextView
-            style="@style/HeaderFont"
+        <LinearLayout
+            android:id="@+id/homeWelcomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Visualization Tool" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/instanceSelectionLayout"
-        android:layout_width="match_parent"
-        android:gravity="center"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText">
-
-        <Spinner
-            android:id="@+id/gestureOneSpinner"
-            style="@style/spinnerStyle"
-            android:layout_width="0dp"
-            android:background="@drawable/rounded_corner"
-            android:layout_marginEnd="7dp"
-            android:layout_weight="1" />
-
-        <Spinner
-            android:id="@+id/gestureTwoSpinner"
-            style="@style/spinnerStyle"
-            android:background="@drawable/rounded_corner"
-            android:layout_width="0dp"
-            android:layout_marginStart="7dp"
-            android:layout_marginEnd="7dp"
-            android:layout_weight="1" />
-
-        <ImageButton
-            android:id="@+id/editFiltersButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="7dp"
-            android:background="@drawable/rounded_corner"
-            android:backgroundTint="@color/theme"
-            android:onClick="setFiltersButtonClicked"
-            android:padding="10dp"
-
-            android:src="@drawable/sliders" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_marginTop="20dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/instanceSelectionLayout">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/instanceOneVideoLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="7dp"
-            android:layout_weight="1"
-            android:onClick="playInstanceVideoOne">
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                app:cardCornerRadius="8dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <ImageView
-                    android:id="@+id/videoThumbnailOne"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:contentDescription="Thumbnail"
-                    android:scaleType="centerCrop" />
-            </androidx.cardview.widget.CardView>
+            android:layout_marginTop="@dimen/marginTop"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingBottom="28dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="15dp"
+                android:src="@drawable/eye" />
+
+            <TextView
+                style="@style/HeaderFont"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@color/transparent"
-                android:elevation="2dp"
-                android:padding="10dp"
-                android:src="@drawable/play"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                android:text="Visualization Tool" />
+        </LinearLayout>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/instanceSelectionLayout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="7dp"
-            android:layout_weight="1"
-            android:onClick="playInstanceVideoTwo">
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/card_view"
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                app:cardCornerRadius="8dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+            <Spinner
+                android:id="@+id/gestureOneSpinner"
+                style="@style/spinnerStyle"
+                android:layout_width="0dp"
+                android:layout_marginEnd="7dp"
+                android:layout_weight="1"
+                android:background="@drawable/rounded_corner" />
+
+            <Spinner
+                android:id="@+id/gestureTwoSpinner"
+                style="@style/spinnerStyle"
+                android:layout_width="0dp"
+                android:layout_marginStart="7dp"
+                android:layout_weight="1"
+                android:background="@drawable/rounded_corner" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/videoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/instanceSelectionLayout">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/instanceOneVideoLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="7dp"
+                android:layout_weight="1"
+                android:onClick="playInstanceVideoOne">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    app:cardCornerRadius="8dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/videoThumbnailOne"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:contentDescription="Thumbnail"
+                        android:scaleType="centerCrop" />
+                </androidx.cardview.widget.CardView>
 
                 <ImageView
-                    android:id="@+id/videoThumbnailTwo"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:contentDescription="Thumbnail"
-                    android:scaleType="centerCrop" />
-            </androidx.cardview.widget.CardView>
+                    android:layout_height="wrap_content"
+                    android:background="@color/transparent"
+                    android:elevation="2dp"
+                    android:padding="10dp"
+                    android:src="@drawable/play"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <ImageView
-                android:layout_width="wrap_content"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@color/transparent"
-                android:elevation="2dp"
-                android:padding="10dp"
-                android:src="@drawable/play"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </LinearLayout>
+                android:layout_marginStart="7dp"
+                android:layout_weight="1"
+                android:onClick="playInstanceVideoTwo">
 
-    <Button
-        android:id="@+id/getSimilarityButton"
-        style="@style/ButtonStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="getSimilarityButtonClicked"
-        android:text="Similarity"
-        app:layout_constraintBottom_toTopOf="@+id/bottomButtons"
-        app:layout_constraintStart_toEndOf="parent" />
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/card_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    app:cardCornerRadius="8dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
-    <LinearLayout
-        android:id="@+id/bottomButtons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="50dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+                    <ImageView
+                        android:id="@+id/videoThumbnailTwo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:contentDescription="Thumbnail"
+                        android:scaleType="centerCrop" />
+                </androidx.cardview.widget.CardView>
 
-        <Button
-            android:id="@+id/generateHeatmapButton"
-            style="@style/ButtonStyle"
-            android:layout_width="0dp"
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@color/transparent"
+                    android:elevation="2dp"
+                    android:padding="10dp"
+                    android:src="@drawable/play"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
+
+        <com.tanujn45.a11y.filters.Filters
+            android:layout_marginVertical="20dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="7dp"
-            android:layout_weight="1"
-            android:onClick="generateHeatmapButtonClicked"
-            android:text="Heatmap" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/videoLayout" />
 
-        <Button
-            android:id="@+id/saveModelButton"
-            style="@style/ButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="7dp"
-            android:layout_weight="1"
-            android:onClick="saveModelButtonClicked"
-            android:text="Save model" />
-
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

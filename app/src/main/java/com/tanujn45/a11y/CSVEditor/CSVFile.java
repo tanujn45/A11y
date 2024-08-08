@@ -41,6 +41,10 @@ public class CSVFile {
         System.out.println();
     }
 
+    public void clearData() {
+        csvData.clear();
+    }
+
     public void addRow(String[] row) {
         csvData.add(row);
     }

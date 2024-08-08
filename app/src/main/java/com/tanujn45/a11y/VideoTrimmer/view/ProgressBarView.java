@@ -11,8 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.tanujn45.a11y.R;
-import com.tanujn45.a11y.VideoTrimmer.interfaces.*;
-import com.tanujn45.a11y.VideoTrimmer.view.*;
+import com.tanujn45.a11y.VideoTrimmer.interfaces.OnProgressVideoListener;
+import com.tanujn45.a11y.VideoTrimmer.interfaces.OnRangeSeekBarListener;
 
 public class ProgressBarView extends View implements OnRangeSeekBarListener, OnProgressVideoListener {
 

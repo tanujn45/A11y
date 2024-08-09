@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.VideoView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,7 +28,7 @@ public class VisualizationActivity extends AppCompatActivity {
     List<String> gestureNamesList = new ArrayList<>();
     HashMap<String, String> gestureNameToPath = new HashMap<>();
     HashMap<String, String> instanceNameToGestureName = new HashMap<>();
-
+    VideoView videoView1, videoView2;
     File directory;
     Spinner gestureOneSpinner, gestureTwoSpinner;
     ImageView gestureOneThumbnail, gestureTwoThumbnail;
@@ -35,6 +36,8 @@ public class VisualizationActivity extends AppCompatActivity {
     String gestureOneVideoPath, gestureTwoVideoPath;
     String gestureOneCategory, gestureTwoCategory;
     String gestureOneInstance, gestureTwoInstance;
+    boolean videoOneIsFinished = false;
+    boolean videoTwoIsFinished = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +50,12 @@ public class VisualizationActivity extends AppCompatActivity {
         gestureTwoSpinner = findViewById(R.id.gestureTwoSpinner);
         gestureOneThumbnail = findViewById(R.id.videoThumbnailOne);
         gestureTwoThumbnail = findViewById(R.id.videoThumbnailTwo);
+        videoView1 = findViewById(R.id.videoView1);
+        videoView2 = findViewById(R.id.videoView2);
 
         initGestureDict();
         initSpinners();
+        initVideoViews();
 
         KMeans kMeans = new KMeans(this);
         kMeans.setModel("model1");
@@ -129,6 +135,7 @@ public class VisualizationActivity extends AppCompatActivity {
                 gestureOneCategory = instanceNameToGestureName.get(selectedItem);
                 String path = gestureNameToPath.get(selectedItem);
                 gestureOneVideoPath = path.replace(".csv", ".mp4");
+                videoView1.setVideoPath(gestureOneVideoPath);
                 setVideoThumbnail(gestureOneThumbnail, gestureOneVideoPath);
             }
 
@@ -150,6 +157,7 @@ public class VisualizationActivity extends AppCompatActivity {
                 gestureTwoCategory = instanceNameToGestureName.get(selectedItem);
                 String path = gestureNameToPath.get(selectedItem);
                 gestureTwoVideoPath = path.replace(".csv", ".mp4");
+                videoView2.setVideoPath(gestureTwoVideoPath);
                 setVideoThumbnail(gestureTwoThumbnail, gestureTwoVideoPath);
             }
 
@@ -169,6 +177,37 @@ public class VisualizationActivity extends AppCompatActivity {
             throw new RuntimeException(e);
         } finally {
             retriever.release();
+        }
+    }
+
+    private void initVideoViews() {
+        videoView1.setOnPreparedListener(mp -> {
+            mp.setVolume(0, 0);
+        });
+
+        videoView2.setOnPreparedListener(mp -> {
+            mp.setVolume(0, 0);
+        });
+
+        videoView1.setOnCompletionListener(mp -> {
+            videoOneIsFinished = true;
+            videoView1.seekTo(0);
+            startVideos();
+        });
+
+        videoView2.setOnCompletionListener(mp -> {
+            videoTwoIsFinished = true;
+            videoView2.seekTo(0);
+            startVideos();
+        });
+    }
+
+    private void startVideos() {
+        if (videoOneIsFinished && videoTwoIsFinished) {
+            videoView1.start();
+            videoView2.start();
+            videoOneIsFinished = false;
+            videoTwoIsFinished = false;
         }
     }
 
@@ -202,5 +241,10 @@ public class VisualizationActivity extends AppCompatActivity {
     public void setFiltersButtonClicked(View view) {
         Intent intent = new Intent(this, FilterActivity.class);
         startActivity(intent);
+    }
+
+    public void playBothVideos(View view) {
+        videoView1.start();
+        videoView2.start();
     }
 }

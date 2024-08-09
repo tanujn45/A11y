@@ -62,14 +62,61 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/videoLayout"
+            android:id="@+id/videoPlayersLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:gravity="center"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/instanceSelectionLayout">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:layout_marginEnd="7dp"
+                android:layout_weight="1">
+
+                <VideoView
+                    android:id="@+id/videoView1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent" />
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:layout_marginStart="7dp"
+                android:layout_weight="1">
+
+                <VideoView
+                    android:id="@+id/videoView2"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent" />
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/compareVideosButton"
+            style="@style/ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:onClick="playBothVideos"
+            android:text="Compare Videos"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/videoPlayersLayout" />
+
+        <LinearLayout
+            android:layout_marginTop="20dp"
+            android:id="@+id/videoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/compareVideosButton">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/instanceOneVideoLayout"

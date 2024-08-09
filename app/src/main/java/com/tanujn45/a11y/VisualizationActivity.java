@@ -2,6 +2,7 @@ package com.tanujn45.a11y;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Environment;
@@ -18,13 +19,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.tanujn45.a11y.CSVEditor.CSVFile;
 import com.tanujn45.a11y.KMeans.KMeans;
+
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import weka.classifiers.evaluation.output.prediction.CSV;
 
 //Todo: Update the UI to not have a separate set filter activity
 
@@ -38,8 +48,10 @@ public class VisualizationActivity extends AppCompatActivity {
     Spinner gestureOneSpinner, gestureTwoSpinner;
     ImageButton playBothVideosButton;
     ImageView gestureOneThumbnail, gestureTwoThumbnail;
+    LineChart accChart;
     ArrayAdapter<String> adapterOne, adapterTwo;
     String gestureOneVideoPath, gestureTwoVideoPath;
+    String gestureOneCSVPath, gestureTwoCSVPath;
     String gestureOneCategory, gestureTwoCategory;
     String gestureOneInstance, gestureTwoInstance;
     boolean videoOneIsFinished;
@@ -62,6 +74,7 @@ public class VisualizationActivity extends AppCompatActivity {
         instanceTwoVideoLayout = findViewById(R.id.instanceTwoVideoLayout);
         videoView1 = findViewById(R.id.videoView1);
         videoView2 = findViewById(R.id.videoView2);
+        accChart = findViewById(R.id.accLineChart);
 
         initGestureDict();
         initSpinners();
@@ -73,7 +86,93 @@ public class VisualizationActivity extends AppCompatActivity {
         arePlaying = false;
     }
 
-    public void setPlayBothVideosButtonWidth() {
+    private void setChart(LineChart chart, String filter, CSVFile instanceOneData, CSVFile instanceTwoData) {
+        List<Entry> xOneEntries = new ArrayList<>();
+        List<Entry> yOneEntries = new ArrayList<>();
+        List<Entry> zOneEntries = new ArrayList<>();
+
+        List<Entry> xTwoEntries = new ArrayList<>();
+        List<Entry> yTwoEntries = new ArrayList<>();
+        List<Entry> zTwoEntries = new ArrayList<>();
+
+
+        List<String> xOneData = instanceOneData.getColumnData(filter + "_x");
+        List<String> yOneData = instanceOneData.getColumnData(filter + "_y");
+        List<String> zOneData = instanceOneData.getColumnData(filter + "_z");
+
+        List<String> xTwoData = instanceTwoData.getColumnData(filter + "_x");
+        List<String> yTwoData = instanceTwoData.getColumnData(filter + "_y");
+        List<String> zTwoData = instanceTwoData.getColumnData(filter + "_z");
+
+        int maxLength = Math.max(xOneData.size(), xTwoData.size());
+
+        for (int i = 0; i < maxLength; i++) {
+            if (i < xOneData.size()) {
+                float x = Float.parseFloat(xOneData.get(i));
+                xOneEntries.add(new Entry(i, x));
+                float y = Float.parseFloat(yOneData.get(i));
+                yOneEntries.add(new Entry(i, y));
+                float z = Float.parseFloat(zOneData.get(i));
+                zOneEntries.add(new Entry(i, z));
+            }
+
+            if (i < xTwoData.size()) {
+                float x = Float.parseFloat(xTwoData.get(i));
+                xTwoEntries.add(new Entry(i, x));
+                float y = Float.parseFloat(yTwoData.get(i));
+                yTwoEntries.add(new Entry(i, y));
+                float z = Float.parseFloat(zTwoData.get(i));
+                zTwoEntries.add(new Entry(i, z));
+            }
+        }
+
+        LineDataSet xOneDataSet = new LineDataSet(xOneEntries, "X_1");
+        xOneDataSet.setColor(Color.RED);
+        xOneDataSet.setDrawCircles(false);
+        LineDataSet yOneDataSet = new LineDataSet(yOneEntries, "Y_1");
+        yOneDataSet.setColor(Color.GREEN);
+        yOneDataSet.setDrawCircles(false);
+        LineDataSet zOneDataSet = new LineDataSet(zOneEntries, "Z_1");
+        zOneDataSet.setColor(Color.BLUE);
+        zOneDataSet.setDrawCircles(false);
+
+        LineDataSet xTwoDataSet = new LineDataSet(xTwoEntries, "X_2");
+        xTwoDataSet.setColor(Color.rgb(255, 165, 0));
+        xTwoDataSet.setDrawCircles(false);
+        LineDataSet yTwoDataSet = new LineDataSet(yTwoEntries, "Y_2");
+        yTwoDataSet.setColor(Color.rgb(128, 0, 128));
+        yTwoDataSet.setDrawCircles(false);
+        LineDataSet zTwoDataSet = new LineDataSet(zTwoEntries, "Z_2");
+        zTwoDataSet.setColor(Color.rgb(0, 255, 255));
+        zTwoDataSet.setDrawCircles(false);
+
+        LineData lineData = new LineData(xOneDataSet, yOneDataSet, zOneDataSet, xTwoDataSet, yTwoDataSet, zTwoDataSet);
+        chart.setData(lineData);
+        chart.getDescription().setEnabled(false);
+        chart.setDrawMarkers(false);
+
+        chart.animateX(2000);
+        chart.invalidate();
+    }
+
+
+    private void setupGraph() {
+        if (gestureOneCSVPath == null || gestureTwoCSVPath == null) {
+            return;
+        }
+        CSVFile instanceOneData;
+        CSVFile instanceTwoData;
+        try {
+            instanceOneData = new CSVFile(gestureOneCSVPath);
+            instanceTwoData = new CSVFile(gestureTwoCSVPath);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        setChart(accChart, "acc", instanceOneData, instanceTwoData);
+    }
+
+
+    private void setPlayBothVideosButtonWidth() {
         playBothVideosButton.post(new Runnable() {
             @Override
             public void run() {
@@ -151,9 +250,11 @@ public class VisualizationActivity extends AppCompatActivity {
                 gestureOneInstance = selectedItem;
                 gestureOneCategory = instanceNameToGestureName.get(selectedItem);
                 String path = gestureNameToPath.get(selectedItem);
+                gestureOneCSVPath = path;
                 gestureOneVideoPath = path.replace(".csv", ".mp4");
                 videoView1.setVideoPath(gestureOneVideoPath);
                 resetVideos();
+                setupGraph();
                 setVideoThumbnail(gestureOneThumbnail, gestureOneVideoPath);
             }
 
@@ -174,9 +275,11 @@ public class VisualizationActivity extends AppCompatActivity {
                 gestureTwoInstance = selectedItem;
                 gestureTwoCategory = instanceNameToGestureName.get(selectedItem);
                 String path = gestureNameToPath.get(selectedItem);
+                gestureTwoCSVPath = path;
                 gestureTwoVideoPath = path.replace(".csv", ".mp4");
                 videoView2.setVideoPath(gestureTwoVideoPath);
                 resetVideos();
+                setupGraph();
                 setVideoThumbnail(gestureTwoThumbnail, gestureTwoVideoPath);
             }
 
@@ -273,8 +376,6 @@ public class VisualizationActivity extends AppCompatActivity {
             videoView1.start();
             videoView2.start();
             arePlaying = true;
-            gestureOneThumbnail.setVisibility(View.INVISIBLE);
-            gestureTwoThumbnail.setVisibility(View.INVISIBLE);
             instanceOneVideoLayout.setVisibility(View.INVISIBLE);
             instanceTwoVideoLayout.setVisibility(View.INVISIBLE);
             playBothVideosButton.setImageResource(R.drawable.pause);
@@ -282,8 +383,6 @@ public class VisualizationActivity extends AppCompatActivity {
             videoView1.stopPlayback();
             videoView2.stopPlayback();
             arePlaying = false;
-            gestureOneThumbnail.setVisibility(View.VISIBLE);
-            gestureTwoThumbnail.setVisibility(View.VISIBLE);
             instanceOneVideoLayout.setVisibility(View.VISIBLE);
             instanceTwoVideoLayout.setVisibility(View.VISIBLE);
             playBothVideosButton.setImageResource(R.drawable.play);

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".VisualizationActivity">
 
@@ -57,8 +57,21 @@
                 style="@style/spinnerStyle"
                 android:layout_width="0dp"
                 android:layout_marginStart="7dp"
+                android:layout_marginEnd="7dp"
                 android:layout_weight="1"
                 android:background="@drawable/rounded_corner" />
+
+            <ImageButton
+                android:id="@+id/playBothVideos"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="0dp"
+                android:layout_marginStart="7dp"
+                android:backgroundTint="@color/black_transparent"
+                android:onClick="playBothVideos"
+                android:padding="0dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/play" />
         </LinearLayout>
 
         <LinearLayout
@@ -75,48 +88,40 @@
                 android:layout_width="0dp"
                 android:layout_height="200dp"
                 android:layout_marginEnd="7dp"
-                android:layout_weight="1">
+                android:layout_weight="1"
+                app:cardCornerRadius="8dp">
 
                 <VideoView
                     android:id="@+id/videoView1"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent" />
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center" />
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="200dp"
                 android:layout_marginStart="7dp"
-                android:layout_weight="1">
+                android:layout_weight="1"
+                app:cardCornerRadius="8dp">
 
                 <VideoView
                     android:id="@+id/videoView2"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent" />
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center" />
             </androidx.cardview.widget.CardView>
         </LinearLayout>
 
-        <Button
-            android:id="@+id/compareVideosButton"
-            style="@style/ButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:onClick="playBothVideos"
-            android:text="Compare Videos"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/videoPlayersLayout" />
-
         <LinearLayout
-            android:layout_marginTop="20dp"
             android:id="@+id/videoLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:layout_marginTop="20dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/compareVideosButton">
+            app:layout_constraintTop_toBottomOf="@+id/instanceSelectionLayout">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/instanceOneVideoLayout"
@@ -127,6 +132,7 @@
                 android:onClick="playInstanceVideoOne">
 
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/thumbnailOneCardView"
                     android:layout_width="wrap_content"
                     android:layout_height="200dp"
                     app:cardCornerRadius="8dp"
@@ -155,14 +161,14 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/instanceTwoVideoLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="7dp"
                 android:layout_weight="1"
                 android:onClick="playInstanceVideoTwo">
-
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/card_view"
+                    android:id="@+id/thumbnailTwoCardView"
                     android:layout_width="wrap_content"
                     android:layout_height="200dp"
                     app:cardCornerRadius="8dp"
@@ -192,9 +198,9 @@
         </LinearLayout>
 
         <com.tanujn45.a11y.filters.Filters
-            android:layout_marginVertical="20dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginVertical="20dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/videoLayout" />

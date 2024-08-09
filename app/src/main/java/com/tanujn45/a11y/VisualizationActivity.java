@@ -6,13 +6,17 @@ import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.VideoView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.tanujn45.a11y.KMeans.KMeans;
 
@@ -30,14 +34,17 @@ public class VisualizationActivity extends AppCompatActivity {
     HashMap<String, String> instanceNameToGestureName = new HashMap<>();
     VideoView videoView1, videoView2;
     File directory;
+    ConstraintLayout instanceOneVideoLayout, instanceTwoVideoLayout;
     Spinner gestureOneSpinner, gestureTwoSpinner;
+    ImageButton playBothVideosButton;
     ImageView gestureOneThumbnail, gestureTwoThumbnail;
     ArrayAdapter<String> adapterOne, adapterTwo;
     String gestureOneVideoPath, gestureTwoVideoPath;
     String gestureOneCategory, gestureTwoCategory;
     String gestureOneInstance, gestureTwoInstance;
-    boolean videoOneIsFinished = false;
-    boolean videoTwoIsFinished = false;
+    boolean videoOneIsFinished;
+    boolean videoTwoIsFinished;
+    boolean arePlaying;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,23 +57,33 @@ public class VisualizationActivity extends AppCompatActivity {
         gestureTwoSpinner = findViewById(R.id.gestureTwoSpinner);
         gestureOneThumbnail = findViewById(R.id.videoThumbnailOne);
         gestureTwoThumbnail = findViewById(R.id.videoThumbnailTwo);
+        playBothVideosButton = findViewById(R.id.playBothVideos);
+        instanceOneVideoLayout = findViewById(R.id.instanceOneVideoLayout);
+        instanceTwoVideoLayout = findViewById(R.id.instanceTwoVideoLayout);
         videoView1 = findViewById(R.id.videoView1);
         videoView2 = findViewById(R.id.videoView2);
 
         initGestureDict();
         initSpinners();
         initVideoViews();
+        setPlayBothVideosButtonWidth();
 
-        KMeans kMeans = new KMeans(this);
-        kMeans.setModel("model1");
+        videoOneIsFinished = false;
+        videoTwoIsFinished = false;
+        arePlaying = false;
+    }
 
-        double[][] heatmap = kMeans.performKMeans();
-        for (double[] doubles : heatmap) {
-            for (double aDouble : doubles) {
-                System.out.print(aDouble + " ");
+    public void setPlayBothVideosButtonWidth() {
+        playBothVideosButton.post(new Runnable() {
+            @Override
+            public void run() {
+                int height = playBothVideosButton.getHeight();
+
+                ViewGroup.LayoutParams params = playBothVideosButton.getLayoutParams();
+                params.width = height;
+                playBothVideosButton.setLayoutParams(params);
             }
-            System.out.println();
-        }
+        });
     }
 
     private void initGestureDict() {
@@ -136,6 +153,7 @@ public class VisualizationActivity extends AppCompatActivity {
                 String path = gestureNameToPath.get(selectedItem);
                 gestureOneVideoPath = path.replace(".csv", ".mp4");
                 videoView1.setVideoPath(gestureOneVideoPath);
+                resetVideos();
                 setVideoThumbnail(gestureOneThumbnail, gestureOneVideoPath);
             }
 
@@ -158,6 +176,7 @@ public class VisualizationActivity extends AppCompatActivity {
                 String path = gestureNameToPath.get(selectedItem);
                 gestureTwoVideoPath = path.replace(".csv", ".mp4");
                 videoView2.setVideoPath(gestureTwoVideoPath);
+                resetVideos();
                 setVideoThumbnail(gestureTwoThumbnail, gestureTwoVideoPath);
             }
 
@@ -211,6 +230,17 @@ public class VisualizationActivity extends AppCompatActivity {
         }
     }
 
+    private void resetVideos() {
+        videoView1.pause();
+        videoView2.pause();
+        videoView1.seekTo(0);
+        videoView2.seekTo(0);
+        videoView1.start();
+        videoView2.start();
+        videoOneIsFinished = false;
+        videoTwoIsFinished = false;
+    }
+
     private void setVideoThumbnail(ImageView imageView, String videoPath) {
         try {
             Bitmap thumbnail = getVideoThumbnail(videoPath);
@@ -238,13 +268,25 @@ public class VisualizationActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void setFiltersButtonClicked(View view) {
-        Intent intent = new Intent(this, FilterActivity.class);
-        startActivity(intent);
-    }
-
     public void playBothVideos(View view) {
-        videoView1.start();
-        videoView2.start();
+        if (!arePlaying) {
+            videoView1.start();
+            videoView2.start();
+            arePlaying = true;
+            gestureOneThumbnail.setVisibility(View.INVISIBLE);
+            gestureTwoThumbnail.setVisibility(View.INVISIBLE);
+            instanceOneVideoLayout.setVisibility(View.INVISIBLE);
+            instanceTwoVideoLayout.setVisibility(View.INVISIBLE);
+            playBothVideosButton.setImageResource(R.drawable.pause);
+        } else {
+            videoView1.stopPlayback();
+            videoView2.stopPlayback();
+            arePlaying = false;
+            gestureOneThumbnail.setVisibility(View.VISIBLE);
+            gestureTwoThumbnail.setVisibility(View.VISIBLE);
+            instanceOneVideoLayout.setVisibility(View.VISIBLE);
+            instanceTwoVideoLayout.setVisibility(View.VISIBLE);
+            playBothVideosButton.setImageResource(R.drawable.play);
+        }
     }
 }

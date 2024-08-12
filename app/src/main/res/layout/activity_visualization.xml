@@ -87,8 +87,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="200dp"
-                android:layout_marginEnd="7dp"
                 android:layout_weight="1"
+                android:layout_marginEnd="7dp"
                 app:cardCornerRadius="8dp">
 
                 <VideoView
@@ -101,8 +101,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="200dp"
-                android:layout_marginStart="7dp"
                 android:layout_weight="1"
+                android:layout_marginStart="7dp"
                 app:cardCornerRadius="8dp">
 
                 <VideoView
@@ -126,8 +126,8 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/instanceOneVideoLayout"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
                 android:layout_marginEnd="7dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:onClick="playInstanceVideoOne">
 
@@ -211,14 +211,34 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/videoPlayersLayout">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!--            <Spinner-->
+            <!--                android:id="@+id/filterSpinner"-->
+            <!--                style="@style/spinnerStyleWhite"-->
+            <!--                android:layout_weight="1"-->
+            <!--                android:background="@drawable/rounded_corner" />-->
+
+
+            <com.skydoves.powerspinner.PowerSpinnerView
+                android:id="@+id/filterSpinner"
+                android:layout_width="match_parent"
+                android:layout_marginBottom="20dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                android:background="@drawable/black_border"
+                android:backgroundTint="@color/off_white"
                 android:fontFamily="@font/roboto_medium"
-                android:text="Acc"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="15dp"
                 android:textColor="@color/black"
-                android:textSize="20sp" />
+                android:textColorHint="@color/black"
+                android:textSize="17sp"
+                app:spinner_arrow_gravity="end"
+                app:spinner_arrow_padding="8dp"
+                app:spinner_arrow_tint="@color/black"
+                app:spinner_divider_show="false"
+                app:spinner_item_height="50dp"
+                app:spinner_popup_animation="normal"
+                app:spinner_popup_background="@color/white"
+                app:spinner_popup_elevation="14dp" />
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/accLineChart"
@@ -227,6 +247,7 @@
         </LinearLayout>
 
         <com.tanujn45.a11y.filters.Filters
+            android:id="@+id/filters"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginVertical="20dp"

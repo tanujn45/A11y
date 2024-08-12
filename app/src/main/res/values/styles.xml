@@ -25,6 +25,19 @@
         <item name="android:textColor">@color/white</item>
     </style>
 
+    <style name="spinnerStyleWhite">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingVertical" tools:ignore="NewApi">15dp</item>
+        <item name="cornerRadius">10dp</item>
+        <item name="textAllCaps">true</item>
+        <item name="fontFamily">@font/roboto_medium</item>
+        <item name="borderWidth">1dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="backgroundTint">@color/grey</item>
+        <item name="android:textColor">@color/red</item>
+    </style>
+
     <style name="ImageButtonStyle">
         <item name="android:layout_width">30sp</item>
         <item name="android:layout_height">30sp</item>

@@ -47,7 +47,6 @@ configurations {
             force("androidx.recyclerview:recyclerview:1.2.1")
             force("androidx.annotation:annotation:1.2.0")
         }
-
     }
 }
 
@@ -56,6 +55,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.android.material:material:1.10.0")
     implementation("com.polidea.rxandroidble2:rxandroidble:1.17.2")
+    implementation("com.github.skydoves:powerspinner:1.2.7")
     implementation(files("./libs/isoparser-1.9.56.jar"))
     implementation(files("./libs/muxer-1.9.56.jar"))
     implementation(files("./libs/slf4j-simple-2.0.9.jar"))

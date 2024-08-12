@@ -16,27 +16,23 @@ import android.widget.Spinner;
 import android.widget.VideoView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.skydoves.powerspinner.DefaultSpinnerAdapter;
+import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
+import com.skydoves.powerspinner.PowerSpinnerView;
 import com.tanujn45.a11y.CSVEditor.CSVFile;
-import com.tanujn45.a11y.KMeans.KMeans;
-
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
-import weka.classifiers.evaluation.output.prediction.CSV;
-
-//Todo: Update the UI to not have a separate set filter activity
 
 public class VisualizationActivity extends AppCompatActivity {
     List<String> gestureNamesList = new ArrayList<>();
@@ -49,14 +45,13 @@ public class VisualizationActivity extends AppCompatActivity {
     ImageButton playBothVideosButton;
     ImageView gestureOneThumbnail, gestureTwoThumbnail;
     LineChart accChart;
-    ArrayAdapter<String> adapterOne, adapterTwo;
+    ArrayAdapter<String> adapterOne, adapterTwo, adapterFilter;
     String gestureOneVideoPath, gestureTwoVideoPath;
     String gestureOneCSVPath, gestureTwoCSVPath;
     String gestureOneCategory, gestureTwoCategory;
     String gestureOneInstance, gestureTwoInstance;
-    boolean videoOneIsFinished;
-    boolean videoTwoIsFinished;
-    boolean arePlaying;
+    String currFilter;
+    PowerSpinnerView filterSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +62,7 @@ public class VisualizationActivity extends AppCompatActivity {
 
         gestureOneSpinner = findViewById(R.id.gestureOneSpinner);
         gestureTwoSpinner = findViewById(R.id.gestureTwoSpinner);
+        filterSpinner = findViewById(R.id.filterSpinner);
         gestureOneThumbnail = findViewById(R.id.videoThumbnailOne);
         gestureTwoThumbnail = findViewById(R.id.videoThumbnailTwo);
         playBothVideosButton = findViewById(R.id.playBothVideos);
@@ -81,9 +77,7 @@ public class VisualizationActivity extends AppCompatActivity {
         initVideoViews();
         setPlayBothVideosButtonWidth();
 
-        videoOneIsFinished = false;
-        videoTwoIsFinished = false;
-        arePlaying = false;
+        currFilter = "acc";
     }
 
     private void setChart(LineChart chart, String filter, CSVFile instanceOneData, CSVFile instanceTwoData) {
@@ -150,13 +144,10 @@ public class VisualizationActivity extends AppCompatActivity {
         chart.setData(lineData);
         chart.getDescription().setEnabled(false);
         chart.setDrawMarkers(false);
-
-        chart.animateX(2000);
         chart.invalidate();
     }
 
-
-    private void setupGraph() {
+    private void setupGraph(String filter) {
         if (gestureOneCSVPath == null || gestureTwoCSVPath == null) {
             return;
         }
@@ -168,9 +159,8 @@ public class VisualizationActivity extends AppCompatActivity {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        setChart(accChart, "acc", instanceOneData, instanceTwoData);
+        setChart(accChart, filter, instanceOneData, instanceTwoData);
     }
-
 
     private void setPlayBothVideosButtonWidth() {
         playBothVideosButton.post(new Runnable() {
@@ -253,8 +243,7 @@ public class VisualizationActivity extends AppCompatActivity {
                 gestureOneCSVPath = path;
                 gestureOneVideoPath = path.replace(".csv", ".mp4");
                 videoView1.setVideoPath(gestureOneVideoPath);
-                resetVideos();
-                setupGraph();
+                setupGraph(currFilter);
                 setVideoThumbnail(gestureOneThumbnail, gestureOneVideoPath);
             }
 
@@ -278,8 +267,7 @@ public class VisualizationActivity extends AppCompatActivity {
                 gestureTwoCSVPath = path;
                 gestureTwoVideoPath = path.replace(".csv", ".mp4");
                 videoView2.setVideoPath(gestureTwoVideoPath);
-                resetVideos();
-                setupGraph();
+                setupGraph(currFilter);
                 setVideoThumbnail(gestureTwoThumbnail, gestureTwoVideoPath);
             }
 
@@ -288,6 +276,19 @@ public class VisualizationActivity extends AppCompatActivity {
                 // Do nothing
             }
         });
+
+        DefaultSpinnerAdapter adapterFilter = new DefaultSpinnerAdapter(filterSpinner);
+        List<CharSequence> items = Arrays.asList("Acc", "Acc MA", "Gyro");
+        adapterFilter.setItems(items);
+        filterSpinner.setSpinnerAdapter(adapterFilter);
+        filterSpinner.selectItemByIndex(0);
+
+        filterSpinner.setOnSpinnerItemSelectedListener((OnSpinnerItemSelectedListener<String>) (oldIndex, oldItem, newIndex, newItem) -> {
+            newItem = newItem.toLowerCase().replace(" ", "_");
+            currFilter = newItem;
+            setupGraph(currFilter);
+        });
+
     }
 
     private Bitmap getVideoThumbnail(String videoPath) throws IOException {
@@ -312,36 +313,12 @@ public class VisualizationActivity extends AppCompatActivity {
         });
 
         videoView1.setOnCompletionListener(mp -> {
-            videoOneIsFinished = true;
-            videoView1.seekTo(0);
-            startVideos();
+            instanceOneVideoLayout.setVisibility(View.VISIBLE);
         });
 
         videoView2.setOnCompletionListener(mp -> {
-            videoTwoIsFinished = true;
-            videoView2.seekTo(0);
-            startVideos();
+            instanceTwoVideoLayout.setVisibility(View.VISIBLE);
         });
-    }
-
-    private void startVideos() {
-        if (videoOneIsFinished && videoTwoIsFinished) {
-            videoView1.start();
-            videoView2.start();
-            videoOneIsFinished = false;
-            videoTwoIsFinished = false;
-        }
-    }
-
-    private void resetVideos() {
-        videoView1.pause();
-        videoView2.pause();
-        videoView1.seekTo(0);
-        videoView2.seekTo(0);
-        videoView1.start();
-        videoView2.start();
-        videoOneIsFinished = false;
-        videoTwoIsFinished = false;
     }
 
     private void setVideoThumbnail(ImageView imageView, String videoPath) {
@@ -372,20 +349,13 @@ public class VisualizationActivity extends AppCompatActivity {
     }
 
     public void playBothVideos(View view) {
-        if (!arePlaying) {
-            videoView1.start();
-            videoView2.start();
-            arePlaying = true;
-            instanceOneVideoLayout.setVisibility(View.INVISIBLE);
-            instanceTwoVideoLayout.setVisibility(View.INVISIBLE);
-            playBothVideosButton.setImageResource(R.drawable.pause);
-        } else {
-            videoView1.stopPlayback();
-            videoView2.stopPlayback();
-            arePlaying = false;
-            instanceOneVideoLayout.setVisibility(View.VISIBLE);
-            instanceTwoVideoLayout.setVisibility(View.VISIBLE);
-            playBothVideosButton.setImageResource(R.drawable.play);
-        }
+        int maxDuration = Math.max(videoView1.getDuration(), videoView2.getDuration());
+        videoView1.seekTo(0);
+        videoView2.seekTo(0);
+        videoView1.start();
+        videoView2.start();
+        instanceOneVideoLayout.setVisibility(View.INVISIBLE);
+        instanceTwoVideoLayout.setVisibility(View.INVISIBLE);
+        accChart.animateX(maxDuration);
     }
 }

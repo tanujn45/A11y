@@ -74,6 +74,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mPreviouslyConnectedListView = findViewById(R.id.previouslyConnectedListView);
         disconnectButton = findViewById(R.id.disconnectButton);
 
+        // Code to bypass bluetooth connection
+        Intent intent = new Intent(this, HomeActivity.class);
+        startActivity(intent);
+
 //        // Initialize the Mds object
 //        initMds();
 //

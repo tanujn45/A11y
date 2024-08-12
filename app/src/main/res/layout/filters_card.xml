@@ -7,7 +7,7 @@
     <androidx.cardview.widget.CardView
         android:id="@+id/loadModelCardView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:backgroundTint="@color/theme2_darker"
         app:cardCornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -24,8 +24,10 @@
                 style="@style/spinnerStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/rounded_corner"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -42,7 +44,6 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -58,6 +59,17 @@
                             android:text="Acc"
                             android:textColor="@color/white"
                             android:textSize="17sp" />
+
+                        <EditText
+                            android:id="@+id/accEditText"
+                            android:layout_width="70dp"
+                            android:layout_height="wrap_content"
+                            android:digits="0123456789"
+                            android:imeOptions="actionDone"
+                            android:inputType="number"
+                            android:textColor="@color/white"
+                            android:textSize="20sp" />
+
                     </LinearLayout>
 
                     <com.google.android.material.slider.Slider
@@ -75,7 +87,6 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -91,6 +102,16 @@
                             android:text="Acc Moving Average"
                             android:textColor="@color/white"
                             android:textSize="17sp" />
+
+                        <EditText
+                            android:id="@+id/accMAEditText"
+                            android:layout_width="70dp"
+                            android:layout_height="wrap_content"
+                            android:digits="0123456789"
+                            android:imeOptions="actionDone"
+                            android:inputType="number"
+                            android:textColor="@color/white"
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <com.google.android.material.slider.Slider
@@ -124,6 +145,16 @@
                             android:text="Gyro"
                             android:textColor="@color/white"
                             android:textSize="17sp" />
+
+                        <EditText
+                            android:id="@+id/gyroEditText"
+                            android:layout_width="70dp"
+                            android:layout_height="wrap_content"
+                            android:digits="0123456789"
+                            android:imeOptions="actionDone"
+                            android:inputType="number"
+                            android:textColor="@color/white"
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <com.google.android.material.slider.Slider
@@ -204,6 +235,75 @@
                     android:backgroundTint="@color/red"
                     android:text="Delete" />
             </LinearLayout>
+
+
         </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/visualizationButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="@color/theme2_darker"
+        app:cardCornerRadius="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/loadModelCardView">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/updateDeleteLayout">
+
+            <Button
+                android:id="@+id/similarityButton"
+                style="@style/ButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="7dp"
+                android:layout_weight="1"
+                android:text="Similarity" />
+
+            <Button
+                android:id="@+id/heatmapButton"
+                style="@style/ButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="7dp"
+                android:layout_weight="1"
+                android:text="Heatmap" />
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/heatmapCardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="@color/theme2_darker"
+        app:cardCornerRadius="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/visualizationButtons">
+
+        <HorizontalScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:fillViewport="true">
+
+            <GridLayout
+                android:id="@+id/gridLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:columnCount="1"
+                android:padding="4dp"
+                android:rowCount="1" />
+        </HorizontalScrollView>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

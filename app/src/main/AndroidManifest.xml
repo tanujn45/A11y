@@ -31,9 +31,6 @@
             android:name=".RawVideoActivity"
             android:exported="false" />
         <activity
-            android:name=".FilterActivity"
-            android:exported="false" />
-        <activity
             android:name=".VisualizationActivity"
             android:exported="false" />
         <activity
@@ -58,13 +55,7 @@
             android:name=".AnnotationActivity"
             android:exported="false" />
         <activity
-            android:name=".DialogActivity"
-            android:exported="false" />
-        <activity
             android:name=".AccessibleActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LoadActivity"
             android:exported="false" />
         <activity
             android:name=".HomeActivity"

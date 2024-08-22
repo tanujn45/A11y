@@ -1,6 +1,5 @@
 package com.tanujn45.a11y;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
@@ -255,8 +254,5 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
 
     public void editDialogButtonClicked(View view) {
         toggleRecognition.setChecked(false);
-        Intent intent = new Intent(AccessibleActivity.this, DialogActivity.class);
-        startActivity(intent);
-        finish();
     }
 }

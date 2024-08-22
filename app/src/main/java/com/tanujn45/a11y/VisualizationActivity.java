@@ -26,6 +26,7 @@ import com.skydoves.powerspinner.DefaultSpinnerAdapter;
 import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
 import com.skydoves.powerspinner.PowerSpinnerView;
 import com.tanujn45.a11y.CSVEditor.CSVFile;
+import com.tanujn45.a11y.filters.Filters;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class VisualizationActivity extends AppCompatActivity {
     String gestureOneInstance, gestureTwoInstance;
     String currFilter;
     PowerSpinnerView filterSpinner;
+    Filters filters;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +73,7 @@ public class VisualizationActivity extends AppCompatActivity {
         videoView1 = findViewById(R.id.videoView1);
         videoView2 = findViewById(R.id.videoView2);
         accChart = findViewById(R.id.accLineChart);
+        filters = findViewById(R.id.filters);
 
         initGestureDict();
         initSpinners();
@@ -226,6 +229,12 @@ public class VisualizationActivity extends AppCompatActivity {
                 }
             }
         }
+
+        if (gestureNamesList.size() == 0) {
+            Intent intent = new Intent(this, GestureCategoryActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 
     private void initSpinners() {
@@ -237,6 +246,7 @@ public class VisualizationActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedItem = (String) parent.getItemAtPosition(position);
                 selectedItem = selectedItem.replace(" ", "_").toLowerCase();
+                filters.setGesture1(selectedItem);
                 gestureOneInstance = selectedItem;
                 gestureOneCategory = instanceNameToGestureName.get(selectedItem);
                 String path = gestureNameToPath.get(selectedItem);
@@ -261,6 +271,7 @@ public class VisualizationActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedItem = (String) parent.getItemAtPosition(position);
                 selectedItem = selectedItem.replace(" ", "_").toLowerCase();
+                filters.setGesture2(selectedItem);
                 gestureTwoInstance = selectedItem;
                 gestureTwoCategory = instanceNameToGestureName.get(selectedItem);
                 String path = gestureNameToPath.get(selectedItem);
@@ -350,12 +361,16 @@ public class VisualizationActivity extends AppCompatActivity {
 
     public void playBothVideos(View view) {
         int maxDuration = Math.max(videoView1.getDuration(), videoView2.getDuration());
-        videoView1.seekTo(0);
-        videoView2.seekTo(0);
-        videoView1.start();
-        videoView2.start();
         instanceOneVideoLayout.setVisibility(View.INVISIBLE);
         instanceTwoVideoLayout.setVisibility(View.INVISIBLE);
+
+        videoView1.seekTo(0);
+        videoView2.seekTo(0);
+
+        videoView1.start();
+        videoView2.start();
+
         accChart.animateX(maxDuration);
+
     }
 }

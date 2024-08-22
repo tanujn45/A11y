@@ -312,6 +312,11 @@ public class KMeans {
         return newData;
     }
 
+    public String[] getCSVFileNames() {
+        Arrays.sort(this.csvFileNames);
+        return this.csvFileNames;
+    }
+
     // Perform KMeans clustering on the combined data and assign cluster IDs to instances
     public void getKMeans() throws Exception {
         combineData();
@@ -386,7 +391,6 @@ public class KMeans {
             for (int i = 0; i < this.prefixes.length; i++) {
                 String prefix = this.prefixes[i];
                 List<String> columns = new ArrayList<>();
-
 
                 columns.add(prefix + "_x");
                 columns.add(prefix + "_y");

@@ -8,8 +8,7 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
-
-    LinearLayout recordDataCardView, recognizeGestureCardView, accessibleGesturesCardView, loadModelDataCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView;
+    LinearLayout recordDataCardView, recognizeGestureCardView, accessibleGesturesCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,7 +18,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         recordDataCardView = findViewById(R.id.recordDataCardView);
         recognizeGestureCardView = findViewById(R.id.recognizeGesturesCardView);
         accessibleGesturesCardView = findViewById(R.id.accessibleGesturesCardView);
-        loadModelDataCardView = findViewById(R.id.loadModelDataCardView);
         annotateGestureCardView = findViewById(R.id.annotateGestureCardView);
         visualizeGestureCardView = findViewById(R.id.visualizeGestureCardView);
         rawVideoActivityCardView = findViewById(R.id.rawVideoCardView);
@@ -28,7 +26,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         recordDataCardView.setOnClickListener(this);
         recognizeGestureCardView.setOnClickListener(this);
         accessibleGesturesCardView.setOnClickListener(this);
-        loadModelDataCardView.setOnClickListener(this);
         annotateGestureCardView.setOnClickListener(this);
         visualizeGestureCardView.setOnClickListener(this);
         rawVideoActivityCardView.setOnClickListener(this);
@@ -46,10 +43,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         } else if (v.getId() == R.id.accessibleGesturesCardView) {
             i = new Intent(this, AccessibleActivity.class);
             startActivity(i);
-        } else if (v.getId() == R.id.loadModelDataCardView) {
-            i = new Intent(this, LoadActivity.class);
-            startActivity(i);
-        } else if (v.getId() == R.id.annotateGestureCardView) {
+        }  else if (v.getId() == R.id.annotateGestureCardView) {
             i = new Intent(this, GestureCategoryActivity.class);
             startActivity(i);
         } else if (v.getId() == R.id.visualizeGestureCardView) {

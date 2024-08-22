@@ -16,22 +16,30 @@ import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.slider.Slider;
+import com.skydoves.powerspinner.DefaultSpinnerAdapter;
+import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
+import com.skydoves.powerspinner.PowerSpinnerView;
 import com.tanujn45.a11y.CSVEditor.CSVFile;
 import com.tanujn45.a11y.KMeans.KMeans;
 import com.tanujn45.a11y.R;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Filters extends ConstraintLayout {
     Slider acc, accMa, gyro;
@@ -43,17 +51,24 @@ public class Filters extends ConstraintLayout {
     Button similarityButton;
     Button heatmapButton;
     LinearLayout updateDeleteLayout;
+    CardView heatmapCardView;
+    PowerSpinnerView heatmapTypeSpinner;
     private float value;
     Spinner modelSpinner;
     GridLayout gridLayout;
+    TableLayout heatmapTableLayout;
+    TextView threshold;
     ArrayAdapter<String> modelAdapter;
     List<String> models = new ArrayList<>();
     String modelPath;
     String[] prefixes;
     double[] weights;
+    String[] csvFileNames;
     HashMap<String, Slider> prefixToSlider = new HashMap<>();
     HashMap<Slider, String> sliderToPrefix = new HashMap<>();
     HashMap<String, String> prefixToWeight = new HashMap<>();
+    String gesture1, gesture2;
+    String heatmapType;
     double[][] heatmap;
 
     public Filters(Context context, AttributeSet attrs) {
@@ -85,11 +100,16 @@ public class Filters extends ConstraintLayout {
         similarityButton = findViewById(R.id.similarityButton);
         heatmapButton = findViewById(R.id.heatmapButton);
         gridLayout = findViewById(R.id.gridLayout);
+        heatmapTableLayout = findViewById(R.id.heatmapTableLayout);
+        heatmapCardView = findViewById(R.id.heatmapCardView);
+        heatmapTypeSpinner = findViewById(R.id.heatmapTypeSpinner);
+        threshold = findViewById(R.id.thresholdTextView);
 
         updateDeleteLayout.setVisibility(View.INVISIBLE);
         saveModelButton.setVisibility(View.VISIBLE);
 
         value = 0;
+        heatmapType = "Instance";
 
         File directory = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         modelPath = directory.getAbsolutePath() + "/models";
@@ -99,15 +119,15 @@ public class Filters extends ConstraintLayout {
         setSlider(gyro, gyroEditText);
 
         prefixToSlider.put("acc", acc);
-        prefixToSlider.put("accMa", accMa);
+        prefixToSlider.put("acc_ma", accMa);
         prefixToSlider.put("gyro", gyro);
 
         sliderToPrefix.put(acc, "acc");
-        sliderToPrefix.put(accMa, "accMa");
+        sliderToPrefix.put(accMa, "acc_ma");
         sliderToPrefix.put(gyro, "gyro");
 
         prefixToWeight.put("acc", "0");
-        prefixToWeight.put("accMa", "0");
+        prefixToWeight.put("acc_ma", "0");
         prefixToWeight.put("gyro", "0");
 
         loadModels();
@@ -117,7 +137,9 @@ public class Filters extends ConstraintLayout {
         saveModelButton.setOnClickListener(v -> saveModel());
         deleteModelButton.setOnClickListener(v -> deleteModel());
         similarityButton.setOnClickListener(v -> getSimilarity());
-        heatmapButton.setOnClickListener(v -> generateHeatmap());
+        heatmapButton.setOnClickListener(v -> generateHeatmapOfType());
+
+        initHeatmapTypeSpinner();
 
         // set heatmap to random values between 0 and 1
 //        int val = 5;
@@ -160,6 +182,14 @@ public class Filters extends ConstraintLayout {
         modelSpinner.setAdapter(modelAdapter);
     }
 
+    public void setGesture1(String gesture1) {
+        this.gesture1 = gesture1;
+    }
+
+    public void setGesture2(String gesture2) {
+        this.gesture2 = gesture2;
+    }
+
     // Reset all sliders to 0
     private void setSlidersToZero() {
         moveSlider(acc, 0);
@@ -192,6 +222,18 @@ public class Filters extends ConstraintLayout {
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
+        });
+    }
+
+    private void initHeatmapTypeSpinner() {
+        DefaultSpinnerAdapter heatmapTypeSpinnerAdapter = new DefaultSpinnerAdapter(heatmapTypeSpinner);
+        List<CharSequence> items = Arrays.asList("Instance", "Gesture");
+        heatmapTypeSpinnerAdapter.setItems(items);
+        heatmapTypeSpinner.setSpinnerAdapter(heatmapTypeSpinnerAdapter);
+        heatmapTypeSpinner.selectItemByIndex(0);
+
+        heatmapTypeSpinner.setOnSpinnerItemSelectedListener((OnSpinnerItemSelectedListener<String>) (oldIndex, oldItem, newIndex, newItem) -> {
+            heatmapType = newItem;
         });
     }
 
@@ -377,6 +419,15 @@ public class Filters extends ConstraintLayout {
         alertDialog.show();
     }
 
+    private void generateHeatmapOfType() {
+        if (heatmapType.equals("Instance")) {
+            generateHeatmap();
+        } else {
+            generateHeatmapGesture();
+        }
+        Toast.makeText(this.getContext(), "Heatmap generated", Toast.LENGTH_SHORT).show();
+    }
+
     private void updateModel() {
         View dialogView = LayoutInflater.from(this.getContext()).inflate(R.layout.custom_alert_dialog, null);
 
@@ -386,10 +437,11 @@ public class Filters extends ConstraintLayout {
         Button cancelButton = dialogView.findViewById(R.id.cancelButton);
         Button deleteButton = dialogView.findViewById(R.id.deleteButton);
 
-        deleteButton.setVisibility(View.INVISIBLE);
+        deleteButton.setVisibility(View.GONE);
         saveButton.setText("Update");
-        modelName.setVisibility(View.INVISIBLE);
+        modelName.setVisibility(View.GONE);
         dialogTitle.setText("Overwrite the model?");
+        dialogTitle.setPadding(0, 0, 0, 20);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this.getContext());
         builder.setView(dialogView);
@@ -397,23 +449,15 @@ public class Filters extends ConstraintLayout {
 
         saveButton.setOnClickListener(v -> {
             try {
-                CSVFile modelCSV = new CSVFile(modelPath + "/" + modelSpinner.getSelectedItem().toString());
-                modelCSV.clearData();
-                modelCSV.addRow(new String[]{"prefix", "weight"});
-                for (String prefix : prefixes) {
-                    Slider slider = prefixToSlider.get(prefix);
-                    double weight = slider.getValue() / 100;
-                    weight = Math.round(weight * 100.0) / 100.0;
-                    if (weight == 0.0) {
-                        continue;
-                    }
-                    modelCSV.addRow(new String[]{prefix, String.valueOf(weight)});
-                }
-                modelCSV.save();
+                String currModelName = modelSpinner.getSelectedItem().toString();
+                deleteModel(true);
+                createModelFile(currModelName);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
+            updateModelButton.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.theme2));
+            updateModelButton.setEnabled(false);
             alertDialog.dismiss();
         });
 
@@ -424,8 +468,20 @@ public class Filters extends ConstraintLayout {
         alertDialog.show();
     }
 
+    private void deleteModel(boolean updateSig) {
+        File model = new File(modelPath + "/" + modelSpinner.getSelectedItem().toString() + ".csv");
+        if (updateSig) {
+            if (model.delete()) {
+                return;
+            } else {
+                Toast.makeText(this.getContext(), "Failed to update model", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private void deleteModel() {
         File model = new File(modelPath + "/" + modelSpinner.getSelectedItem().toString() + ".csv");
+
         if (model.delete()) {
             Toast.makeText(this.getContext(), "Model deleted", Toast.LENGTH_SHORT).show();
             loadModels();
@@ -445,10 +501,23 @@ public class Filters extends ConstraintLayout {
                 modelCSV.addRow(new String[]{prefix, String.valueOf(weightValue)});
             });
             modelCSV.save();
-            loadModels();
+            if (!name.equals("tempModelCacheA11y")) {
+                loadModels();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void createTempModelFile() {
+        File tempFile = new File(modelPath + "/tempModelCacheA11y.csv");
+        if (tempFile.exists()) {
+            if (tempFile.delete()) {
+                System.out.println("Deleted temp model file");
+            }
+        }
+
+        createModelFile("tempModelCacheA11y");
     }
 
     private void getSimilarity() {
@@ -456,15 +525,100 @@ public class Filters extends ConstraintLayout {
             Toast.makeText(this.getContext(), "Total value should be 100", Toast.LENGTH_SHORT).show();
             return;
         }
-        createModelFile("tempModelCacheA11y");
+
+        if (modelSpinner.getSelectedItem().toString().equals("Choose a model")) {
+            createTempModelFile();
+        }
+
+        getHeatmapData();
+
+        gesture1 = gesture1 + ".csv";
+        gesture2 = gesture2 + ".csv";
+
+        int x = 0, y = 0;
+        for (int i = 0; i < csvFileNames.length; i++) {
+            if (csvFileNames[i].equals(gesture1)) {
+                x = i;
+            }
+            if (csvFileNames[i].equals(gesture2)) {
+                y = i;
+            }
+        }
+
+        double similarity = heatmap[x][y];
+        threshold.setText(String.valueOf(similarity));
     }
 
+
     private void generateHeatmap() {
+        if (value != 100.0) {
+            Toast.makeText(this.getContext(), "Total value should be 100", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (modelSpinner.getSelectedItem().toString().equals("Choose a model")) {
+            createTempModelFile();
+        }
+
+        heatmapCardView.setVisibility(View.VISIBLE);
+        gridLayout.removeAllViews();
+        heatmapTableLayout.removeAllViews();
+
+        getHeatmapData();
         int numRows = heatmap.length;
         int numCols = heatmap[0].length;
 
         gridLayout.setRowCount(numRows);
         gridLayout.setColumnCount(numCols);
+
+        // Create the first row for indices
+        heatmapTableLayout.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.red));
+        heatmapTableLayout.setBackground(ContextCompat.getDrawable(this.getContext(), R.drawable.rounded_corner));
+        heatmapTableLayout.setClipToOutline(true);
+
+        TableRow row = new TableRow(this.getContext());
+        heatmapTableLayout.addView(row);
+
+        TableRow.LayoutParams params = new TableRow.LayoutParams();
+
+        for (int i = 0; i < csvFileNames.length; i++) {
+            TextView textView = new TextView(this.getContext());
+            textView.setText(String.valueOf(i + 1)); // Set indices as text
+            textView.setTextSize(18);
+            textView.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.black));
+            textView.setPadding(16, 25, 16, 25);
+
+            params = new TableRow.LayoutParams();
+            if (i != 0) {
+                params.setMarginStart(8);
+            }
+            params.setMargins(0, 0, 0, 8);
+            textView.setLayoutParams(params);
+            row.addView(textView);
+        }
+
+
+        TableRow row2 = new TableRow(this.getContext());
+        params = new TableRow.LayoutParams();
+        row2.setLayoutParams(params);
+        heatmapTableLayout.addView(row2);
+
+        for (int i = 0; i < csvFileNames.length; i++) {
+            TextView textView = new TextView(this.getContext());
+            String name = csvFileNames[i].replace(".csv", "").replace("_", " ");
+            textView.setText(name); // Set file names as text
+            textView.setTextSize(18);
+            textView.setPadding(16, 25, 16, 25);
+            textView.setGravity(Gravity.CENTER);
+            textView.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.black));
+
+            params = new TableRow.LayoutParams();
+            if (i != 0) {
+                params.setMarginStart(8);
+            }
+            textView.setLayoutParams(params);
+            row2.addView(textView);
+        }
 
         int cellSize = 150;  // Size in pixels for each cell
 
@@ -476,35 +630,176 @@ public class Filters extends ConstraintLayout {
                 textView.setGravity(Gravity.CENTER);
                 textView.setTextSize(18);
                 textView.setBackgroundColor(getColorForValue((float) heatmap[i][j]));
-
-                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-                params.width = cellSize;
-                params.height = cellSize;
-                params.setMargins(8, 8, 8, 8);
-                textView.setLayoutParams(params);
+                GridLayout.LayoutParams gParams = new GridLayout.LayoutParams();
+                gParams.width = cellSize;
+                gParams.height = cellSize;
+//                params.setMargins(8, 8, 8, 8);
+                textView.setLayoutParams(gParams);
 
                 gridLayout.addView(textView);
             }
         }
+
+        gridLayout.setBackground(ContextCompat.getDrawable(this.getContext(), R.drawable.rounded_corner));
+        gridLayout.setClipToOutline(true);
+    }
+
+    public void generateHeatmapGesture() {
+        if (value != 100.0) {
+            Toast.makeText(this.getContext(), "Total value should be 100", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (modelSpinner.getSelectedItem().toString().equals("Choose a model")) {
+            createTempModelFile();
+        }
+
+        heatmapCardView.setVisibility(View.VISIBLE);
+        gridLayout.removeAllViews();
+        heatmapTableLayout.removeAllViews();
+
+        getHeatmapData();
+
+        Map<String, List<Integer>> gestureGroups = new HashMap<>();
+
+        for (int i = 0; i < csvFileNames.length; i++) {
+            String gestureCategory = csvFileNames[i].substring(0, csvFileNames[i].lastIndexOf("_"));
+            gestureGroups.computeIfAbsent(gestureCategory, k -> new ArrayList<>()).add(i);
+        }
+
+        int size = gestureGroups.size();
+        double[][] gestureWiseMatrix = new double[size][size];
+
+        int rowIndex = size - 1;
+        for (String group1 : gestureGroups.keySet()) {
+            int colIndex = size - 1;
+            for (String group2 : gestureGroups.keySet()) {
+                double sum = 0;
+                int count = 0;
+
+                List<Integer> indices1 = gestureGroups.get(group1);
+
+                List<Integer> indices2 = gestureGroups.get(group2);
+
+                for (int i : indices1) {
+                    for (int j : indices2) {
+                        if (i == j) {
+                            continue;
+                        }
+                        double value = heatmap[i][j];
+                        sum += heatmap[i][j];
+                        count++;
+                    }
+                }
+
+                gestureWiseMatrix[rowIndex][colIndex] = sum / count;
+                colIndex--;
+            }
+            rowIndex--;
+        }
+        // Print the gesture-wise matrix
+        for (double[] row : gestureWiseMatrix) {
+            for (double value : row) {
+                System.out.printf("%.2f ", value);
+            }
+            System.out.println();
+        }
+
+        int numRows = gestureWiseMatrix.length;
+        int numCols = gestureWiseMatrix[0].length;
+
+        gridLayout.setRowCount(numRows);
+        gridLayout.setColumnCount(numCols);
+
+        String[] gestureNames = gestureGroups.keySet().toArray(new String[0]);
+
+        // Create the first row for indices
+        heatmapTableLayout.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.red));
+        heatmapTableLayout.setBackground(ContextCompat.getDrawable(this.getContext(), R.drawable.rounded_corner));
+        heatmapTableLayout.setClipToOutline(true);
+
+        TableRow row = new TableRow(this.getContext());
+        heatmapTableLayout.addView(row);
+
+        TableRow.LayoutParams params = new TableRow.LayoutParams();
+
+        for (int i = 0; i < gestureNames.length; i++) {
+            TextView textView = new TextView(this.getContext());
+            textView.setText(String.valueOf(i + 1)); // Set indices as text
+            textView.setTextSize(18);
+            textView.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.black));
+            textView.setPadding(16, 25, 16, 25);
+
+            params = new TableRow.LayoutParams();
+            if (i != 0) {
+                params.setMarginStart(8);
+            }
+            params.setMargins(0, 0, 0, 8);
+            textView.setLayoutParams(params);
+            row.addView(textView);
+        }
+
+
+        TableRow row2 = new TableRow(this.getContext());
+        params = new TableRow.LayoutParams();
+        row2.setLayoutParams(params);
+        heatmapTableLayout.addView(row2);
+
+        for (int i = 0; i < gestureNames.length; i++) {
+            TextView textView = new TextView(this.getContext());
+            String name = gestureNames[i].replace("_", " ");
+            textView.setText(name);
+            textView.setTextSize(18);
+            textView.setPadding(16, 25, 16, 25);
+            textView.setGravity(Gravity.CENTER);
+            textView.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.black));
+
+            params = new TableRow.LayoutParams();
+            if (i != 0) {
+                params.setMarginStart(8);
+            }
+            textView.setLayoutParams(params);
+            row2.addView(textView);
+        }
+
+        int cellSize = 150;
+
+        for (int i = 0; i < gestureWiseMatrix.length; i++) {
+            for (int j = 0; j < gestureWiseMatrix[i].length; j++) {
+                TextView textView = new TextView(this.getContext());
+                double rounded = Math.round(gestureWiseMatrix[i][j] * 100.0) / 100.0;
+                textView.setText(String.valueOf(rounded));
+                textView.setGravity(Gravity.CENTER);
+                textView.setTextSize(18);
+                textView.setBackgroundColor(getColorForValue((float) gestureWiseMatrix[i][j]));
+                GridLayout.LayoutParams gParams = new GridLayout.LayoutParams();
+                gParams.width = cellSize;
+                gParams.height = cellSize;
+//                params.setMargins(8, 8, 8, 8);
+                textView.setLayoutParams(gParams);
+
+                gridLayout.addView(textView);
+            }
+        }
+
+        gridLayout.setBackground(ContextCompat.getDrawable(this.getContext(), R.drawable.rounded_corner));
+        gridLayout.setClipToOutline(true);
     }
 
     public int getColorForValue(float value) {
-        // Ensure the value is within the range 0 to 1
         value = Math.max(0, Math.min(1, value));
 
-        // Define the start and end colors for the gradient
-        int colorStart = Color.rgb(0, 0, 255); // Blue for value 0
-        int colorEnd = Color.rgb(255, 0, 0);   // Red for value 1
+        int baseColor = Color.parseColor("#0057FF");
+        int black = Color.rgb(0, 0, 0);
 
-        // Interpolate between the start and end colors
-        int r = (int) (Color.red(colorStart) * (1 - value) + Color.red(colorEnd) * value);
-        int g = (int) (Color.green(colorStart) * (1 - value) + Color.green(colorEnd) * value);
-        int b = (int) (Color.blue(colorStart) * (1 - value) + Color.blue(colorEnd) * value);
+        int r = (int) (Color.red(black) * (1 - value) + Color.red(baseColor) * value);
+        int g = (int) (Color.green(black) * (1 - value) + Color.green(baseColor) * value);
+        int b = (int) (Color.blue(black) * (1 - value) + Color.blue(baseColor) * value);
 
         return Color.rgb(r, g, b);
     }
 
-    private double[][] getHeatmapData() {
+    private void getHeatmapData() {
         String currModel;
         if (modelSpinner.getSelectedItem().toString().equals("Choose a model")) {
             currModel = "tempModelCacheA11y.csv";
@@ -522,7 +817,6 @@ public class Filters extends ConstraintLayout {
             }
             System.out.println();
         }
-
-        return heatmap;
+        csvFileNames = kMeans.getCSVFileNames();
     }
 }

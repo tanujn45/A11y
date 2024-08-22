@@ -5,6 +5,7 @@
     android:layout_height="wrap_content">
 
     <androidx.cardview.widget.CardView
+        android:visibility="visible"
         android:id="@+id/loadModelCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -235,13 +236,11 @@
                     android:backgroundTint="@color/red"
                     android:text="Delete" />
             </LinearLayout>
-
-
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/visualizationButtons"
+        android:id="@+id/similarityCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
@@ -268,19 +267,19 @@
                 android:layout_weight="1"
                 android:text="Similarity" />
 
-            <Button
-                android:id="@+id/heatmapButton"
-                style="@style/ButtonStyle"
+            <TextView
+                android:id="@+id/thresholdTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="7dp"
                 android:layout_weight="1"
-                android:text="Heatmap" />
+                android:gravity="center"
+                 android:textColor="@color/white"
+                android:textSize="24sp" />
         </LinearLayout>
-
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
+        android:visibility="visible"
         android:id="@+id/heatmapCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -289,21 +288,80 @@
         app:cardCornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/visualizationButtons">
+        app:layout_constraintTop_toBottomOf="@id/similarityCardView">
 
-        <HorizontalScrollView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="20dp"
-            android:fillViewport="true">
+            android:orientation="vertical"
 
-            <GridLayout
-                android:id="@+id/gridLayout"
+            >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp">
+
+                <Button
+                    android:id="@+id/heatmapButton"
+                    style="@style/ButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="7dp"
+                    android:layout_weight="1"
+                    android:text="Compare" />
+
+                <com.skydoves.powerspinner.PowerSpinnerView
+                    android:id="@+id/heatmapTypeSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="7dp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rounded_corner"
+                    android:fontFamily="@font/roboto_medium"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="15dp"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:textSize="17sp"
+                    app:spinner_arrow_gravity="end"
+                    app:spinner_arrow_padding="8dp"
+                    app:spinner_arrow_tint="@color/white"
+                    app:spinner_divider_show="false"
+                    app:spinner_item_height="50dp"
+                    app:spinner_popup_animation="normal"
+                    app:spinner_popup_background="@color/black"
+                    app:spinner_popup_elevation="14dp" />
+
+            </LinearLayout>
+
+            <HorizontalScrollView
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:columnCount="1"
-                android:padding="4dp"
-                android:rowCount="1" />
-        </HorizontalScrollView>
+                android:layout_height="wrap_content"
+                android:fillViewport="true"
+                android:paddingHorizontal="20dp">
+
+                <TableLayout
+                    android:id="@+id/heatmapTableLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </HorizontalScrollView>
+
+            <HorizontalScrollView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fillViewport="true"
+                android:padding="20dp">
+
+                <GridLayout
+                    android:id="@+id/gridLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/rounded_corner"
+                    android:columnCount="1"
+                    android:rowCount="1" />
+            </HorizontalScrollView>
+        </LinearLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

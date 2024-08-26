@@ -39,7 +39,6 @@ public class AccItem extends ConstraintLayout {
         init(context);
     }
 
-
     private void init(Context context) {
         LayoutInflater inflator = LayoutInflater.from(context);
         inflator.inflate(R.layout.acc_item_view, this);
@@ -72,5 +71,9 @@ public class AccItem extends ConstraintLayout {
 
     public String getText2() {
         return textView2.getText().toString();
+    }
+
+    public void setCloseButtonVisibility(boolean visible) {
+        closeButton.setVisibility(visible ? VISIBLE : GONE);
     }
 }

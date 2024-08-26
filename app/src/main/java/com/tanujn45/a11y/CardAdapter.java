@@ -1,6 +1,5 @@
 package com.tanujn45.a11y;
 
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,45 +9,49 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder> {
-    private List<CardData> cardDataList;
+public class CardAdapter extends RecyclerView.Adapter<CardAdapter.ViewHolder> {
 
-    public static class CardViewHolder extends RecyclerView.ViewHolder {
-        public TextView nameTextView;
-        public TextView textToSpeakTextView;
-        public TextView descriptionTextView;
-        public TextView numOfGesturesTextView;
+    private final List<CardData> cardDataList;
+    private final OnItemClickListener listener;
 
-        public CardViewHolder(View itemView) {
-            super(itemView);
-            nameTextView = itemView.findViewById(R.id.nameTextView);
-            textToSpeakTextView = itemView.findViewById(R.id.textToSpeakTextView);
-            descriptionTextView = itemView.findViewById(R.id.descriptionTextView);
-            numOfGesturesTextView = itemView.findViewById(R.id.numOfGesturesTextView);
-        }
+    public interface OnItemClickListener {
+        void onItemClick(View view, int position);
     }
 
-    public CardAdapter(List<CardData> cardDataList) {
+    public CardAdapter(List<CardData> cardDataList, OnItemClickListener listener) {
         this.cardDataList = cardDataList;
+        this.listener = listener;
     }
 
     @Override
-    public CardViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view_item, parent, false);
-        return new CardViewHolder(view);
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.card_view_item, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(CardViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, int position) {
         CardData cardData = cardDataList.get(position);
-        holder.nameTextView.setText(cardData.getName());
+        holder.gestureTextView.setText(cardData.getName());
         holder.textToSpeakTextView.setText(cardData.getTextToSpeak());
-        holder.descriptionTextView.setText(cardData.getDescription());
-        holder.numOfGesturesTextView.setText(String.valueOf(cardData.getNumOfGestures()));
     }
 
     @Override
     public int getItemCount() {
         return cardDataList.size();
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        public TextView gestureTextView;
+        public TextView textToSpeakTextView;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            gestureTextView = itemView.findViewById(R.id.nameTextView);
+            textToSpeakTextView = itemView.findViewById(R.id.textToSpeakTextView);
+
+            itemView.setOnClickListener(v -> listener.onItemClick(v, getAdapterPosition()));
+        }
     }
 }

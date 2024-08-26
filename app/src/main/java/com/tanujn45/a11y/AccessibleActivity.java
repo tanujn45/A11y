@@ -1,33 +1,36 @@
 package com.tanujn45.a11y;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 import com.movesense.mds.Mds;
 import com.movesense.mds.MdsException;
 import com.movesense.mds.MdsNotificationListener;
 import com.movesense.mds.MdsSubscription;
+import com.tanujn45.a11y.CSVEditor.CSVFile;
 import com.tanujn45.a11y.KMeans.KMeans;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
-
-import weka.core.Attribute;
+import java.util.Objects;
 
 
 //Todo: Fix and optimize AAC activity
-public class AccessibleActivity extends AppCompatActivity implements View.OnClickListener, AccItem.OnItemRemovedListener {
+public class AccessibleActivity extends AppCompatActivity implements CardAdapter.OnItemClickListener, AccItem.OnItemRemovedListener {
     ArrayList<AccItem> accItems = new ArrayList<>();
     LinearLayout scrollableLayout;
     private TextToSpeech textToSpeech;
@@ -37,9 +40,11 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
     private MdsSubscription mdsSubscription;
     private String connectedSerial;
     Spinner modelSpinner;
-    GridLayout gridLayout;
+    private List<CardData> cardDataList;
+    RecyclerView recyclerView;
     SwitchCompat toggleRecognition;
     KMeans kMeans;
+    CSVFile masterFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,27 +57,37 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
             }
         });
 
+        File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        File master = new File(directory, "master.csv");
+        try {
+            masterFile = new CSVFile(master);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
         kMeans = new KMeans(this);
 
         modelSpinner = findViewById(R.id.modelSpinner);
-        modelSpinner.setEnabled(false);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, kMeans.getModelNames());
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        modelSpinner.setAdapter(adapter);
-        modelSpinner.setOnItemSelectedListener(itemSelectedListener);
-
-        gridLayout = findViewById(R.id.gridLayout);
-
+        recyclerView = findViewById(R.id.recyclerView);
         toggleRecognition = findViewById(R.id.enableRecognitionSwitch);
-
-        for (int i = 0; i < gridLayout.getChildCount(); i++) {
-            gridLayout.getChildAt(i).setOnClickListener(this);
-        }
-
         scrollableLayout = findViewById(R.id.scrollableLayout);
 
         connectedSerial = getConnectedSerial();
+        cardDataList = new ArrayList<>();
 
+        initModelSpinner();
+        initToggleRecognition();
+        populateGridLayout();
+
+
+//        for (int i = 0; i < gridLayout.getChildCount(); i++) {
+//            gridLayout.getChildAt(i).setOnClickListener(this);
+//        }
+    }
+
+    private void initToggleRecognition() {
+        toggleRecognition.setChecked(false);
         toggleRecognition.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 modelSpinner.setEnabled(true);
@@ -84,53 +99,73 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
         });
     }
 
+    private void initModelSpinner() {
+        modelSpinner = findViewById(R.id.modelSpinner);
+        modelSpinner.setEnabled(false);
+        List<String> modelNames = kMeans.getModelNames();
+
+        // Remove the temporary cache model from the spinner
+        int i;
+        boolean found = false;
+        for (i = 0; i < modelNames.size(); i++) {
+            if (modelNames.get(i).startsWith("tempModelCacheA11y")) {
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            modelNames.remove(i);
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, modelNames);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        modelSpinner.setAdapter(adapter);
+        modelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                unsubscribe();
+                String selectedModel = modelSpinner.getSelectedItem().toString();
+                kMeans.setModel(selectedModel);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
+        });
+    }
+
+    private void populateGridLayout() {
+        List<String[]> data = masterFile.getCSVData();
+        boolean firstRow = true;
+        for (String[] row : data) {
+            if (firstRow) {
+                firstRow = false;
+                continue;
+            }
+            if (Objects.equals(row[0], "Rest")) {
+                continue;
+            }
+            CardData cardData = new CardData();
+            cardData.setName(row[0]);
+            cardData.setTextToSpeak(row[1]);
+            cardDataList.add(cardData);
+        }
+
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        CardAdapter adapter = new CardAdapter(cardDataList, (CardAdapter.OnItemClickListener) this);
+        recyclerView.setAdapter(adapter);
+    }
+
     private String getConnectedSerial() {
         return getIntent().getStringExtra("serial");
     }
-
-    private ArrayList<Attribute> createAttributes() {
-        ArrayList<Attribute> attributes = new ArrayList<>();
-        attributes.add(new Attribute("timestamp"));
-        attributes.add(new Attribute("acc_x"));
-        attributes.add(new Attribute("acc_y"));
-        attributes.add(new Attribute("acc_z"));
-        attributes.add(new Attribute("gyro_x"));
-        attributes.add(new Attribute("gyro_y"));
-        attributes.add(new Attribute("gyro_z"));
-        attributes.add(new Attribute("magn_x"));
-        attributes.add(new Attribute("magn_y"));
-        attributes.add(new Attribute("magn_z"));
-        attributes.add(new Attribute("acc_diff_x"));
-        attributes.add(new Attribute("acc_diff_y"));
-        attributes.add(new Attribute("acc_diff_z"));
-        attributes.add(new Attribute("acc_ma_x"));
-        attributes.add(new Attribute("acc_ma_y"));
-        attributes.add(new Attribute("acc_ma_z"));
-        return attributes;
-    }
-
-
-    /**
-     * Listener for the model spinner
-     */
-    private AdapterView.OnItemSelectedListener itemSelectedListener = new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-            unsubscribe();
-            String selectedModel = modelSpinner.getSelectedItem().toString();
-
-            kMeans.setModel(selectedModel);
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> parentView) {
-        }
-    };
 
     private void subscribeToSensor(String connectedSerial) {
         if (mdsSubscription != null) {
             unsubscribe();
         }
+
+        connectedSerial = MainActivity.connectedSerial;
 
         String strContract = "{\"Uri\": \"" + connectedSerial + PATH + RATE + "\"}";
 
@@ -160,15 +195,14 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
                                     "  z: " +
                                     Math.round(arrAcc[i].getZ() * 100) / 100.0;
 
-                    kMeans.performKMeans(
-                            timestamp,
-                            arrAcc[i].getX(),
-                            arrAcc[i].getY(),
-                            arrAcc[i].getZ(),
-                            arrGyro[i].getX(),
-                            arrGyro[i].getY(),
-                            arrGyro[i].getZ()
-                    );
+                    String res = kMeans.performKMeans(timestamp, arrAcc[i].getX(), arrAcc[i].getY(), arrAcc[i].getZ(), arrGyro[i].getX(), arrGyro[i].getY(), arrGyro[i].getZ());
+
+//                    System.out.println(sensorMsgStr);
+
+                    if (res != null) {
+                        addAccItem(res);
+                        System.out.println(sensorMsgStr + " " + res);
+                    }
                 }
             }
 
@@ -179,6 +213,25 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
         });
     }
 
+    private void addAccItem(String res) {
+        if (res.equals("Rest")) {
+            return;
+        }
+        AccItem accItem = new AccItem(this);
+        accItem.setOnItemRemovedListener(this);
+
+        accItem.setText1(res);
+        for (int i = 0; i < cardDataList.size(); i++) {
+            if (cardDataList.get(i).getName().equals(res)) {
+                accItem.setText2(cardDataList.get(i).getTextToSpeak());
+                textToSpeech.speak(cardDataList.get(i).getTextToSpeak(), TextToSpeech.QUEUE_FLUSH, null, null);
+                break;
+            }
+        }
+
+        scrollableLayout.addView(accItem);
+        accItems.add(accItem);
+    }
 
     /**
      * Unsubscribe from the sensor
@@ -198,23 +251,6 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
      */
     private Mds getMds() {
         return MainActivity.mMds;
-    }
-
-
-    @Override
-    public void onClick(View v) {
-        LinearLayout layout = (LinearLayout) v;
-        TextView textView1 = (TextView) layout.getChildAt(0);
-        TextView textView2 = (TextView) layout.getChildAt(1);
-        String text1 = textView1.getText().toString();
-        String text2 = textView2.getText().toString();
-
-        AccItem accItem = new AccItem(this);
-        accItem.setOnItemRemovedListener(this);
-        accItem.setText1(text1);
-        accItem.setText2(text2);
-        scrollableLayout.addView(accItem);
-        accItems.add(accItem);
     }
 
 
@@ -252,7 +288,19 @@ public class AccessibleActivity extends AppCompatActivity implements View.OnClic
         accItems.remove(accItem);
     }
 
-    public void editDialogButtonClicked(View view) {
-        toggleRecognition.setChecked(false);
+    @Override
+    public void onItemClick(View view, int position) {
+        CardData cardData = cardDataList.get(position);
+        String name = cardData.getName();
+        String textToSpeak = cardData.getTextToSpeak();
+
+        AccItem accItem = new AccItem(this);
+        accItem.setOnItemRemovedListener(this);
+        accItem.setText1(name);
+        accItem.setText2(textToSpeak);
+
+        LinearLayout scrollableLayout = findViewById(R.id.scrollableLayout);
+        scrollableLayout.addView(accItem);
+        accItems.add(accItem);
     }
 }

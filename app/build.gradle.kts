@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.tanujn45.a11y"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.tanujn45.a11y"

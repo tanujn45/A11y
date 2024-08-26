@@ -20,7 +20,37 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 
-//Todo: Figure out why is data not being loaded by CSVLoaders
+/*
+Documentation:
+
+Set the model for performing the kMeans clustering
+
+The class is primarily used for two purposes.
+1. Generate similarity matrix for the purpose of generating heatmap.
+2. Perform kMeans clustering on unknown data and return the result.
+
+When we call the set model function. The class stores the prefixes
+and weights for the model and the perform kMeans to generate kMeans
+models for each prefix.
+So everytime we have to call the
+setModel() function.
+Now if we want to generate the similarity matrix we can call the
+we simply call
+performKMeans() function. This function will return a 2D similarity
+matrix after the gesture names are sorted in ascending order.
+
+If we want to perform kMeans on unknown data we can call the
+performKMeans() function with the data as the parameter.
+It accepts the data either in the form of a Weka instance or
+a list of values. These values are
+timestamp, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z
+
+Other important functions
+1. getCSVFileNames() - Returns the list of gesture names
+2. getModelNames() - Returns the list of model names
+3. setNClusters() - Sets the number of clusters for kMeans
+4. createInstance() - Creates a Weka instance
+ */
 
 // First set model
 // Set KMeans
@@ -375,17 +405,19 @@ public class KMeans {
         return instance;
     }
 
-    public void performKMeans(double timestamp, double acc_x, double acc_y, double acc_z, double gyro_x, double gyro_y, double gyro_z) {
+    public String performKMeans(double timestamp, double acc_x, double acc_y, double acc_z, double gyro_x, double gyro_y, double gyro_z) {
         DenseInstance instance = createInstance(timestamp, acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z);
 
         this.sensorInstances.add(instance);
         if (this.sensorInstances.size() == 100) {
-            this.performKMeans(this.sensorInstances);
+            String result = this.performKMeans(this.sensorInstances);
             this.sensorInstances.clear();
+            return result;
         }
+        return null;
     }
 
-    private void performKMeans(Instances unknownData) {
+    private String performKMeans(Instances unknownData) {
         try {
             double[] result = new double[this.csvFileNames.length];
             for (int i = 0; i < this.prefixes.length; i++) {
@@ -446,8 +478,12 @@ public class KMeans {
                     maxIndex = i;
                 }
             }
-
-            String resultFinal = this.csvFileNames[maxIndex].replaceAll("_", " ").replaceAll("[0-9]", "").trim();
+            String resultFinal = this.csvFileNames[maxIndex];
+            resultFinal = resultFinal.substring(0, resultFinal.length() - 4);
+            resultFinal = resultFinal.replace("_", " ");
+            resultFinal = resultFinal.replaceAll("[0-9]", "").trim();
+            resultFinal = resultFinal.substring(0, 1).toUpperCase() + resultFinal.substring(1);
+            return resultFinal;
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
             throw new RuntimeException(e);

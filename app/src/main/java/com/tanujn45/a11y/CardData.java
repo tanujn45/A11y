@@ -17,36 +17,6 @@ public class CardData {
         this.textToSpeak = textToSpeak;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public int getNumOfGestures() {
-        return numOfGestures;
-    }
-
-    public void setNumOfGestures(int numOfGestures) {
-        this.numOfGestures = numOfGestures;
-    }
-
     private String name;
     private String textToSpeak;
-    private String description;
-    private int numOfGestures;
-
 }
-
-/*
-########## Name ##########
-Name
-########## Text To Speak ##########
-ttsText
-########## Description ##########
-description
-########## Number of Gestures ##########
-nGestures
- */

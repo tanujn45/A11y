@@ -24,6 +24,15 @@ public class CSVFile {
         }
     }
 
+    public CSVFile(File file) throws Exception {
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(Files.newInputStream(file.toPath())));
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+            String[] row = line.split(",");
+            csvData.add(row);
+        }
+    }
+
     public CSVFile(String[] header, String path) {
         file = new File(path);
         if (file.exists()) {

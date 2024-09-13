@@ -2,8 +2,12 @@ package com.tanujn45.a11y.VideoTrimmer;
 
 import static com.tanujn45.a11y.VideoTrimmer.utils.TrimVideoUtils.stringForTime;
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -26,7 +30,18 @@ import android.widget.TextView;
 import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.utils.ViewPortHandler;
+import com.skydoves.powerspinner.DefaultSpinnerAdapter;
+import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
+import com.skydoves.powerspinner.PowerSpinnerView;
+import com.tanujn45.a11y.CSVEditor.CSVFile;
+import com.tanujn45.a11y.R;
 import com.tanujn45.a11y.VideoTrimmer.interfaces.OnProgressVideoListener;
 import com.tanujn45.a11y.VideoTrimmer.interfaces.OnRangeSeekBarListener;
 import com.tanujn45.a11y.VideoTrimmer.interfaces.OnTrimVideoListener;
@@ -38,11 +53,11 @@ import com.tanujn45.a11y.VideoTrimmer.view.ProgressBarView;
 import com.tanujn45.a11y.VideoTrimmer.view.RangeSeekBarView;
 import com.tanujn45.a11y.VideoTrimmer.view.Thumb;
 import com.tanujn45.a11y.VideoTrimmer.view.TimeLineView;
-import com.tanujn45.a11y.R;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class VideoTrimmer extends FrameLayout {
@@ -52,6 +67,7 @@ public class VideoTrimmer extends FrameLayout {
     private static final int SHOW_PROGRESS = 2;
 
     private SeekBar mHolderTopView;
+    private SeekBar mGraphHandler;
     private RangeSeekBarView mRangeSeekBarView;
     private RelativeLayout mLinearVideo;
     private View mTimeInfoContainer;
@@ -61,6 +77,10 @@ public class VideoTrimmer extends FrameLayout {
     private TextView mTextTimeFrame;
     private TextView mTextTime;
     private TimeLineView mTimeLineView;
+    private LineChart lineChart;
+    private PowerSpinnerView filterSpinner;
+    private String currFilter;
+    private ValueAnimator animator;
 
     private ProgressBarView mVideoProgressIndicator;
     private Uri mSrc;
@@ -95,6 +115,7 @@ public class VideoTrimmer extends FrameLayout {
         LayoutInflater.from(context).inflate(R.layout.view_time_line, this, true);
 
         mHolderTopView = findViewById(R.id.handlerTop);
+        mGraphHandler = findViewById(R.id.graphHandler);
         mVideoProgressIndicator = findViewById(R.id.timeVideoView);
         mRangeSeekBarView = findViewById(R.id.timeLineBar);
         mLinearVideo = findViewById(R.id.layout_surface_view);
@@ -105,9 +126,13 @@ public class VideoTrimmer extends FrameLayout {
         mTextTimeFrame = findViewById(R.id.textTimeSelection);
         mTextTime = findViewById(R.id.textTime);
         mTimeLineView = findViewById(R.id.timeLineView);
+        lineChart = findViewById(R.id.lineChart);
+        filterSpinner = findViewById(R.id.filterSpinner);
 
         setUpListeners();
         setUpMargins();
+        initSpinner();
+        adjustSeekBarThumbHeight();
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -145,6 +170,11 @@ public class VideoTrimmer extends FrameLayout {
             return true;
         });
 
+        mVideoView.setOnCompletionListener(mp -> {
+            mPlayView.setVisibility(View.VISIBLE);
+            mMessageHandler.removeMessages(SHOW_PROGRESS);
+        });
+
         mRangeSeekBarView.addOnRangeSeekBarListener(new OnRangeSeekBarListener() {
             @Override
             public void onCreate(RangeSeekBarView rangeSeekBarView, int index, float value) {
@@ -168,6 +198,24 @@ public class VideoTrimmer extends FrameLayout {
         });
         mRangeSeekBarView.addOnRangeSeekBarListener(mVideoProgressIndicator);
 
+        // this is to handle the graph
+        mGraphHandler.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                onPlayerIndicatorSeekChanged(progress, fromUser);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                onPlayerIndicatorSeekStart();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                onPlayerIndicatorSeekStop(seekBar);
+            }
+        });
+
         mHolderTopView.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -190,6 +238,42 @@ public class VideoTrimmer extends FrameLayout {
         mVideoView.setOnCompletionListener(mp -> onVideoCompleted());
     }
 
+    private void adjustSeekBarThumbHeight() {
+        // Add a listener to adjust the SeekBar thumb height when the chart is laid out
+        lineChart.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            // Get the height of the plot area
+            ViewPortHandler viewPortHandler = lineChart.getViewPortHandler();
+            float plotAreaHeight = viewPortHandler.getContentRect().height();
+
+            // Adjust the SeekBar thumb height
+            Drawable thumbDrawable = ContextCompat.getDrawable(this.getContext(), R.drawable.graph_seekbar);
+            if (thumbDrawable instanceof GradientDrawable) {
+                GradientDrawable gradientDrawable = (GradientDrawable) thumbDrawable;
+                gradientDrawable.setSize((int) dpToPx(3), (int) plotAreaHeight);
+                mGraphHandler.setThumb(gradientDrawable);
+            }
+        });
+    }
+
+    private float dpToPx(float dp) {
+        return dp * getResources().getDisplayMetrics().density;
+    }
+
+    private void initSpinner() {
+        currFilter = "acc";
+        DefaultSpinnerAdapter adapterFilter = new DefaultSpinnerAdapter(filterSpinner);
+        List<CharSequence> items = Arrays.asList("Acc", "Acc MA", "Gyro");
+        adapterFilter.setItems(items);
+        filterSpinner.setSpinnerAdapter(adapterFilter);
+        filterSpinner.selectItemByIndex(0);
+
+        filterSpinner.setOnSpinnerItemSelectedListener((OnSpinnerItemSelectedListener<String>) (oldIndex, oldItem, newIndex, newItem) -> {
+            newItem = newItem.toLowerCase().replace(" ", "_");
+            currFilter = newItem;
+            setGraph(mStartPosition, mEndPosition);
+        });
+    }
+
     private void setUpMargins() {
         int marge = mRangeSeekBarView.getThumbs().get(0).getWidthBitmap();
         int widthSeek = mHolderTopView.getThumb().getMinimumWidth() / 2;
@@ -209,7 +293,8 @@ public class VideoTrimmer extends FrameLayout {
 
     private void onSaveClicked() throws Exception {
         if (mStartPosition <= 0 && mEndPosition >= mDuration) {
-            if (mOnTrimVideoListener != null) mOnTrimVideoListener.getResult(mSrc, mStartPosition, mEndPosition);
+            if (mOnTrimVideoListener != null)
+                mOnTrimVideoListener.getResult(mSrc, mStartPosition, mEndPosition);
         } else {
             mPlayView.setVisibility(View.VISIBLE);
             mVideoView.pause();
@@ -398,15 +483,77 @@ public class VideoTrimmer extends FrameLayout {
             }
         }
         setProgressBarPosition(mStartPosition);
+        mGraphHandler.setProgress(0);
 
         setTimeFrames();
         mTimeVideo = mEndPosition - mStartPosition;
+    }
+
+    private void setGraph(int mStartPosition, int mEndPosition) {
+        // mStartPosition is the start position
+        // mEndPosition is the end position
+        // mSrc is the video uri
+
+        float start = (float) mStartPosition / 1000;
+        float end = (float) mEndPosition / 1000;
+
+        String path = mSrc.getPath();
+        assert path != null;
+        path = path.replace(".mp4", ".csv").replace("Videos", "Data");
+
+        try {
+            CSVFile csvFile = new CSVFile(path);
+            if (!csvFile.checkIfHeaderExists("Time")) {
+                csvFile.applyTime();
+            }
+            if (!csvFile.checkIfHeaderExists("acc_ma_x")) {
+                csvFile.applyMovingAverage();
+            }
+
+            List<String> accX = csvFile.getColumnData(currFilter + "_x", start, end);
+            List<String> accY = csvFile.getColumnData(currFilter + "_y", start, end);
+            List<String> accZ = csvFile.getColumnData(currFilter + "_z", start, end);
+
+            List<Entry> entriesX = new ArrayList<>();
+            List<Entry> entriesY = new ArrayList<>();
+            List<Entry> entriesZ = new ArrayList<>();
+
+            for (int i = 0; i < accX.size(); i++) {
+                entriesX.add(new Entry(i, Float.parseFloat(accX.get(i))));
+                entriesY.add(new Entry(i, Float.parseFloat(accY.get(i))));
+                entriesZ.add(new Entry(i, Float.parseFloat(accZ.get(i))));
+            }
+
+            LineDataSet dataSetX = new LineDataSet(entriesX, "Acc X");
+            dataSetX.setColor(Color.RED);
+            dataSetX.setDrawCircles(false);
+
+            LineDataSet dataSetY = new LineDataSet(entriesY, "Acc Y");
+            dataSetY.setColor(Color.GREEN);
+            dataSetY.setDrawCircles(false);
+
+            LineDataSet dataSetZ = new LineDataSet(entriesZ, "Acc Z");
+            dataSetZ.setColor(Color.BLUE);
+            dataSetZ.setDrawCircles(false);
+
+            LineData lineData = new LineData(dataSetX, dataSetY, dataSetZ);
+
+            lineChart.setData(lineData);
+            lineChart.getDescription().setEnabled(false);
+            lineChart.setDrawMarkers(false);
+            lineChart.invalidate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void onStopSeekThumbs() {
         mMessageHandler.removeMessages(SHOW_PROGRESS);
         mVideoView.pause();
         mPlayView.setVisibility(View.VISIBLE);
+
+        // Todo: This is where we have to call the function to set the graph
+        setGraph(mStartPosition, mEndPosition);
     }
 
     private void onVideoCompleted() {
@@ -431,6 +578,8 @@ public class VideoTrimmer extends FrameLayout {
             return;
         }
 
+        System.out.println("Time: " + time + " mEndPosition: " + mEndPosition);
+
         if (time >= mEndPosition) {
             mMessageHandler.removeMessages(SHOW_PROGRESS);
             mVideoView.pause();
@@ -439,10 +588,10 @@ public class VideoTrimmer extends FrameLayout {
             return;
         }
 
-        if (mHolderTopView != null) {
-            // use long to avoid overflow
+        if (mHolderTopView != null && mGraphHandler != null) {
             setProgressBarPosition(time);
         }
+
         setTimeVideo(time);
     }
 
@@ -450,8 +599,14 @@ public class VideoTrimmer extends FrameLayout {
         if (mDuration > 0) {
             long pos = 1000L * position / mDuration;
             mHolderTopView.setProgress((int) pos);
+
+            if (mTimeVideo != 0) {
+                long graphPos = 1000L * (position - mStartPosition) / mTimeVideo;
+                mGraphHandler.setProgress((int) graphPos);
+            }
         }
     }
+
 
     /**
      * Set video information visibility.

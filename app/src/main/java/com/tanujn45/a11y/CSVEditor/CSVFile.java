@@ -73,6 +73,15 @@ public class CSVFile {
         return false;
     }
 
+    public boolean checkIfHeaderExists(String header) {
+        for (String cell : csvData.get(0)) {
+            if (cell.equals(header)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean deleteRowWithData(String data) {
         for (String[] row : csvData) {
             for (String cell : row) {

@@ -546,7 +546,9 @@ public class Filters extends ConstraintLayout {
         }
 
         double similarity = heatmap[x][y];
-        threshold.setText(String.valueOf(similarity));
+        similarity = Math.round(similarity * 100.0);
+        String text = similarity + "%";
+        threshold.setText(text);
     }
 
 

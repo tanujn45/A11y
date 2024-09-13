@@ -59,34 +59,6 @@
             app:layout_constraintTop_toTopOf="parent" />
     </LinearLayout>
 
-
-    <LinearLayout
-        android:id="@+id/recognizeGesturesCardView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:gravity="center"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recordDataCardView">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:src="@drawable/eye" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/roboto_bold"
-            android:text="Recognize Gestures"
-            android:textColor="@color/white"
-            android:textSize="25sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-    </LinearLayout>
-
     <LinearLayout
         android:id="@+id/accessibleGesturesCardView"
         android:layout_width="wrap_content"
@@ -94,7 +66,7 @@
         android:layout_marginTop="30dp"
         android:gravity="center"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recognizeGesturesCardView">
+        app:layout_constraintTop_toBottomOf="@+id/recordDataCardView">
 
         <ImageView
             android:layout_width="wrap_content"

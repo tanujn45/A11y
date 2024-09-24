@@ -65,8 +65,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        permissionsGranted = requestNeededPermissions();
-
         // UI elements
         connectButton = findViewById(R.id.connectButton);
         homeButton = findViewById(R.id.homeButton);
@@ -74,19 +72,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mPreviouslyConnectedListView = findViewById(R.id.previouslyConnectedListView);
         disconnectButton = findViewById(R.id.disconnectButton);
 
-        // Code to bypass bluetooth connection
-        // Intent intent = new Intent(this, VisualizationActivity.class);
-        // startActivity(intent);
-
-        // Initialize the Mds object
-        initMds();
-
-        // Initialize the scan result adapter
-        initMScanResAdapter();
-        initPreviouslyConnectedAdapter();
-
-        // Load previously connected devices
-        loadPreviouslyConnectedDevices();
+        while (!permissionsGranted) {
+            permissionsGranted = requestNeededPermissions();
+        }
     }
 
     @Override

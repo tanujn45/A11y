@@ -43,4 +43,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
 
+    <TextView
+        android:id="@+id/empty_view"
+        android:text="No recorded data found. Record more data to see them here."
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -32,7 +32,7 @@
                 style="@style/HeaderFont"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Visualization Tool" />
+                android:text="Create Model" />
         </LinearLayout>
 
         <LinearLayout

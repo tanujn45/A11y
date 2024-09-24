@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -23,6 +24,7 @@ import java.util.List;
 
 public class VideoListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
+    private TextView emptyTextView;
     private VideoAdapter videoAdapter;
     private List<Video> videoList;
     private File directory;
@@ -34,6 +36,7 @@ public class VideoListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_video_list);
 
         recyclerView = findViewById(R.id.recycler_view);
+        emptyTextView = findViewById(R.id.empty_view);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
 
@@ -48,6 +51,11 @@ public class VideoListActivity extends AppCompatActivity {
 
         try {
             videoList = getVideosFromFolder();
+            if (videoList.isEmpty()) {
+                emptyTextView.setVisibility(View.VISIBLE);
+            } else {
+                emptyTextView.setVisibility(View.GONE);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -52,7 +52,24 @@ public class GestureCategoryActivity extends AppCompatActivity {
             }
         }
 
+        makeRestCategory();
         setGestureList();
+    }
+
+    /*
+        Rest category is a special category which is always present and cannot be deleted.
+        It is used to represent the rest state of the user.
+    */
+    void makeRestCategory() {
+        if (master.checkIfDataExistsInARow("Rest")) {
+            return;
+        }
+        File gestureCategoryFolder = new File(directory, "trimmedData/rest");
+        if (!gestureCategoryFolder.exists()) {
+            gestureCategoryFolder.mkdirs();
+        }
+        master.addRow(new String[]{"Rest", "", gestureCategoryFolder.getAbsolutePath(), "0"});
+        master.save();
     }
 
     /*

@@ -24,6 +24,7 @@ import java.util.List;
 
 public class RawVideoActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
+    private TextView emptyTextView;
     private VideoAdapter videoAdapter;
     private List<Video> videoList;
     private File directory;
@@ -34,11 +35,17 @@ public class RawVideoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_raw_video);
 
         recyclerView = findViewById(R.id.recycler_view);
+        emptyTextView = findViewById(R.id.empty_view);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
 
         try {
             videoList = getVideosFromFolder();
+            if (videoList.isEmpty()) {
+                emptyTextView.setVisibility(View.VISIBLE);
+            } else {
+                emptyTextView.setVisibility(View.GONE);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -52,9 +52,6 @@
             android:name=".VideoListActivity"
             android:exported="false" />
         <activity
-            android:name=".AnnotationActivity"
-            android:exported="false" />
-        <activity
             android:name=".AccessibleActivity"
             android:exported="false" />
         <activity

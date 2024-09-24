@@ -65,7 +65,6 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
             e.printStackTrace();
         }
 
-
         kMeans = new KMeans(this);
 
         modelSpinner = findViewById(R.id.modelSpinner);
@@ -126,6 +125,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
                 unsubscribe();
                 String selectedModel = modelSpinner.getSelectedItem().toString();
                 kMeans.setModel(selectedModel);
+                subscribeToSensor(connectedSerial);
             }
 
             @Override
@@ -196,8 +196,11 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
                                     Math.round(arrAcc[i].getZ() * 100) / 100.0;
 
                     String res = kMeans.performKMeans(timestamp, arrAcc[i].getX(), arrAcc[i].getY(), arrAcc[i].getZ(), arrGyro[i].getX(), arrGyro[i].getY(), arrGyro[i].getZ());
+                    if (res != null) {
+                        System.out.println(res);
+                    }
 
-//                    System.out.println(sensorMsgStr);
+                    // System.out.println(sensorMsgStr);
 
                     if (res != null) {
                         addAccItem(res);
@@ -222,7 +225,8 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
 
         accItem.setText1(res);
         for (int i = 0; i < cardDataList.size(); i++) {
-            if (cardDataList.get(i).getName().equals(res)) {
+//            System.out.println(cardDataList.get(i).getName() + " test " + res);
+            if (cardDataList.get(i).getName().toLowerCase().equals(res.toLowerCase())) {
                 accItem.setText2(cardDataList.get(i).getTextToSpeak());
                 textToSpeech.speak(cardDataList.get(i).getTextToSpeak(), TextToSpeech.QUEUE_FLUSH, null, null);
                 break;

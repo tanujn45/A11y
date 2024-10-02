@@ -5,11 +5,11 @@
     android:layout_height="wrap_content">
 
     <androidx.cardview.widget.CardView
-        android:visibility="visible"
         android:id="@+id/loadModelCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/theme2_darker"
+        android:visibility="visible"
         app:cardCornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -228,9 +228,9 @@
                 <Button
                     android:id="@+id/deleteModelButton"
                     style="@style/ButtonStyle"
-                    android:layout_marginStart="7dp"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="7dp"
                     android:layout_marginTop="10dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/red"
@@ -273,18 +273,19 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center"
+                android:text="N/A"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
-        android:visibility="visible"
         android:id="@+id/heatmapCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:backgroundTint="@color/theme2_darker"
+        android:visibility="visible"
         app:cardCornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

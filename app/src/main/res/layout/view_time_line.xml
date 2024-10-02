@@ -15,6 +15,36 @@
         android:gravity="center"
         android:orientation="vertical">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:elevation="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:background="@color/transparent"
+                android:onClick="backButtonClicked"
+                android:src="@drawable/back" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/btSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/transparent"
+                android:src="@drawable/save" />
+        </LinearLayout>
+
         <VideoView
             android:id="@+id/video_loader"
             android:layout_width="match_parent"
@@ -43,6 +73,7 @@
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChart"
             android:layout_width="match_parent"
+            android:layout_gravity="center_horizontal"
             android:layout_height="200dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -58,10 +89,22 @@
             android:progressDrawable="@android:color/transparent"
             android:secondaryProgress="0"
             android:thumb="@drawable/graph_seekbar"
+            android:layout_marginHorizontal="4dp"
+            android:thumbOffset="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/graphBox"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:layout_marginStart="16dp"
+            android:background="@color/black_translucent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -105,6 +148,7 @@
                 android:layout_alignTop="@+id/timeLineView"
                 tools:ignore="SpeakableTextPresentCheck" />
 
+            <!--
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -159,9 +203,71 @@
                     android:text="@string/save"
                     android:textColor="@android:color/white"
                     tools:ignore="VisualLintButtonSize" />
-
             </LinearLayout>
+            -->
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/timeLineBar"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+
+                <com.skydoves.powerspinner.PowerSpinnerView
+                    android:id="@+id/filterSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/black_border"
+                    android:backgroundTint="@color/off_white"
+                    android:fontFamily="@font/roboto_medium"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="15dp"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/black"
+                    android:textSize="17sp"
+                    app:spinner_arrow_gravity="end"
+                    app:spinner_arrow_padding="8dp"
+                    app:spinner_arrow_tint="@color/white"
+                    app:spinner_divider_show="false"
+                    app:spinner_item_height="50dp"
+                    app:spinner_popup_animation="normal"
+                    app:spinner_popup_background="@color/black"
+                    app:spinner_popup_elevation="14dp" />
+
+                <EditText
+                    android:id="@+id/timeStartEditText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme2"
+                    android:digits="0123456789"
+                    android:hint="Time Start"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    tools:ignore="VisualLintButtonSize" />
+
+                <EditText
+                    android:id="@+id/timeEndEditText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/theme2"
+                    android:digits="0123456789"
+                    android:hint="Time End"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    tools:ignore="VisualLintButtonSize" />
+            </LinearLayout>
         </RelativeLayout>
     </LinearLayout>
 

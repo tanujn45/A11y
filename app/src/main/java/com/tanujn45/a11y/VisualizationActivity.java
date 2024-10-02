@@ -373,4 +373,8 @@ public class VisualizationActivity extends AppCompatActivity {
         accChart.animateX(maxDuration);
 
     }
+
+    public void backButtonClicked(View view) {
+        finish();
+    }
 }

@@ -22,6 +22,9 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -30,6 +33,7 @@ import android.widget.TextView;
 import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -76,11 +80,14 @@ public class VideoTrimmer extends FrameLayout {
     private TextView mTextSize;
     private TextView mTextTimeFrame;
     private TextView mTextTime;
+    private EditText startTime;
+    private EditText endTime;
     private TimeLineView mTimeLineView;
     private LineChart lineChart;
     private PowerSpinnerView filterSpinner;
     private String currFilter;
     private ValueAnimator animator;
+    private View graphBox;
 
     private ProgressBarView mVideoProgressIndicator;
     private Uri mSrc;
@@ -96,10 +103,11 @@ public class VideoTrimmer extends FrameLayout {
     private int mTimeVideo = 0;
     private int mStartPosition = 0;
     private int mEndPosition = 0;
+    private int viewWidth = 0;
 
     private long mOriginSizeFile;
     private boolean mResetSeekBar = true;
-    private final com.tanujn45.a11y.VideoTrimmer.VideoTrimmer.MessageHandler mMessageHandler = new com.tanujn45.a11y.VideoTrimmer.VideoTrimmer.MessageHandler(Looper.getMainLooper(), this);
+    private final MessageHandler mMessageHandler = new MessageHandler(Looper.getMainLooper(), this);
 
 
     public VideoTrimmer(@NonNull Context context, AttributeSet attrs) {
@@ -128,11 +136,24 @@ public class VideoTrimmer extends FrameLayout {
         mTimeLineView = findViewById(R.id.timeLineView);
         lineChart = findViewById(R.id.lineChart);
         filterSpinner = findViewById(R.id.filterSpinner);
+        startTime = findViewById(R.id.timeStartEditText);
+        endTime = findViewById(R.id.timeEndEditText);
+        graphBox = findViewById(R.id.graphBox);
+
+        // testing the graph viewport
+        lineChart.setViewPortOffsets(55f, 40f, 55f, 40f);
 
         setUpListeners();
         setUpMargins();
         initSpinner();
         adjustSeekBarThumbHeight();
+        initEditTextViews();
+    }
+
+    private void getViewWidth() {
+        //get view width of the mGraphHandler
+        mGraphHandler.post(() -> viewWidth = mGraphHandler.getWidth());
+        System.out.println("View Width: " + viewWidth);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -236,14 +257,18 @@ public class VideoTrimmer extends FrameLayout {
         mVideoView.setOnPreparedListener(this::onVideoPrepared);
 
         mVideoView.setOnCompletionListener(mp -> onVideoCompleted());
+        //setGraph(mStartPosition, mEndPosition);
     }
 
+    /*
     private void adjustSeekBarThumbHeight() {
         // Add a listener to adjust the SeekBar thumb height when the chart is laid out
         lineChart.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
             // Get the height of the plot area
             ViewPortHandler viewPortHandler = lineChart.getViewPortHandler();
             float plotAreaHeight = viewPortHandler.getContentRect().height();
+            viewWidth = (int) viewPortHandler.getContentRect().width();
+            System.out.println("View Width: " + viewWidth);
 
             // Adjust the SeekBar thumb height
             Drawable thumbDrawable = ContextCompat.getDrawable(this.getContext(), R.drawable.graph_seekbar);
@@ -253,6 +278,99 @@ public class VideoTrimmer extends FrameLayout {
                 mGraphHandler.setThumb(gradientDrawable);
             }
         });
+    }
+*/
+    private void adjustSeekBarThumbHeight() {
+        lineChart.post(() -> {
+            // Get the height of the plot area after the layout has been properly measured
+            ViewPortHandler viewPortHandler = lineChart.getViewPortHandler();
+            if (viewPortHandler == null) {
+                return; // Exit if the ViewPortHandler is not available
+            }
+
+            float plotAreaHeight = viewPortHandler.getContentRect().height();
+            viewWidth = (int) viewPortHandler.getContentRect().width();
+            System.out.println("View Width: " + viewWidth);
+
+            // Adjust the viewBox height
+            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) graphBox.getLayoutParams();
+            params.height = (int) plotAreaHeight;
+            graphBox.setLayoutParams(params);
+
+            // Adjust the SeekBar thumb height
+            Drawable thumbDrawable = ContextCompat.getDrawable(getContext(), R.drawable.graph_seekbar);
+            if (thumbDrawable instanceof GradientDrawable) {
+                GradientDrawable gradientDrawable = (GradientDrawable) thumbDrawable;
+                int thumbWidth = (int) dpToPx(3);
+                gradientDrawable.setSize(thumbWidth, (int) plotAreaHeight);
+                mGraphHandler.setThumb(gradientDrawable);
+            }
+        });
+    }
+
+
+    private void initEditTextViews() {
+        startTime.setText(String.valueOf(mStartPosition));
+        startTime.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                hideKeyboard(getContext(), startTime);
+                String text = startTime.getText().toString();
+                if (text.isEmpty()) {
+                    return true;
+                }
+                int time = Integer.parseInt(text);
+                if (time < 0) {
+                    time = 0;
+                } else if (time > mDuration) {
+                    time = mDuration;
+                }
+                mStartPosition = time;
+                mVideoView.seekTo(mStartPosition);
+                setProgressBarPosition(mStartPosition);
+                setTimeFrames();
+                mRangeSeekBarView.setThumbValue(0, (mStartPosition * 100) / mDuration);
+                mTimeVideo = mEndPosition - mStartPosition;
+                startTime.setText(String.valueOf(mStartPosition));
+                updateViewBox();
+                return true;
+            }
+            return false;
+        });
+
+        endTime.setText(String.valueOf(mEndPosition));
+        endTime.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                hideKeyboard(getContext(), endTime);
+                String text = endTime.getText().toString();
+                if (text.isEmpty()) {
+                    return true;
+                }
+                int time = Integer.parseInt(text);
+                if (time < 0) {
+                    time = 0;
+                } else if (time > mDuration) {
+                    time = mDuration;
+                } else if (time < mStartPosition) {
+                    time = mStartPosition;
+                }
+                mEndPosition = time;
+                setProgressBarPosition(mEndPosition);
+                setTimeFrames();
+                mRangeSeekBarView.setThumbValue(1, (mEndPosition * 100) / mDuration);
+                mTimeVideo = mEndPosition - mStartPosition;
+                endTime.setText(String.valueOf(mEndPosition));
+                updateViewBox();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    public static void hideKeyboard(Context context, View view) {
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        }
     }
 
     private float dpToPx(float dp) {
@@ -383,6 +501,8 @@ public class VideoTrimmer extends FrameLayout {
             } else if (duration > mEndPosition) {
                 setProgressBarPosition(mEndPosition);
                 duration = mEndPosition;
+            } else {
+                setProgressBarPosition(duration);
             }
             setTimeVideo(duration);
         }
@@ -404,6 +524,8 @@ public class VideoTrimmer extends FrameLayout {
         mVideoView.seekTo(duration);
         setTimeVideo(duration);
         notifyProgressUpdate(false);
+
+        setProgressBarPosition(duration);
     }
 
     private void onVideoPrepared(@NonNull MediaPlayer mp) {
@@ -437,6 +559,11 @@ public class VideoTrimmer extends FrameLayout {
         if (mVideoListener != null) {
             mVideoListener.onVideoPrepared();
         }
+
+        updateViewBox();
+        setGraph(mStartPosition, mEndPosition);
+        startTime.setText(String.valueOf(mStartPosition));
+        endTime.setText(String.valueOf(mEndPosition));
     }
 
     private void setSeekBarPosition() {
@@ -475,18 +602,37 @@ public class VideoTrimmer extends FrameLayout {
             case Thumb.LEFT: {
                 mStartPosition = (int) ((mDuration * value) / 100L);
                 mVideoView.seekTo(mStartPosition);
+                startTime.setText(String.valueOf(mStartPosition));
                 break;
             }
             case Thumb.RIGHT: {
                 mEndPosition = (int) ((mDuration * value) / 100L);
+                endTime.setText(String.valueOf(mEndPosition));
                 break;
             }
         }
+
+        updateViewBox();
+
         setProgressBarPosition(mStartPosition);
-        mGraphHandler.setProgress(0);
+        // Change here
+        // mGraphHandler.setProgress(0);
 
         setTimeFrames();
         mTimeVideo = mEndPosition - mStartPosition;
+    }
+
+    private void updateViewBox() {
+        System.out.println("View Width: " + viewWidth);
+        System.out.println("Start Position: " + mStartPosition + " End Position: " + mEndPosition + " Duration: " + mDuration);
+        float viewStartPosition = (float) mStartPosition / mDuration * viewWidth;
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) graphBox.getLayoutParams();
+        params.setMarginStart((int) viewStartPosition + (int) dpToPx(20));
+
+        float viewEndPosition = (float) (mEndPosition - mStartPosition) / mDuration * viewWidth;
+        params.width = (int) viewEndPosition;
+
+        graphBox.setLayoutParams(params);
     }
 
     private void setGraph(int mStartPosition, int mEndPosition) {
@@ -497,6 +643,9 @@ public class VideoTrimmer extends FrameLayout {
         float start = (float) mStartPosition / 1000;
         float end = (float) mEndPosition / 1000;
 
+        if (mSrc == null) {
+            return;
+        }
         String path = mSrc.getPath();
         assert path != null;
         path = path.replace(".mp4", ".csv").replace("Videos", "Data");
@@ -510,9 +659,9 @@ public class VideoTrimmer extends FrameLayout {
                 csvFile.applyMovingAverage();
             }
 
-            List<String> accX = csvFile.getColumnData(currFilter + "_x", start, end);
-            List<String> accY = csvFile.getColumnData(currFilter + "_y", start, end);
-            List<String> accZ = csvFile.getColumnData(currFilter + "_z", start, end);
+            List<String> accX = csvFile.getColumnData(currFilter + "_x");
+            List<String> accY = csvFile.getColumnData(currFilter + "_y");
+            List<String> accZ = csvFile.getColumnData(currFilter + "_z");
 
             List<Entry> entriesX = new ArrayList<>();
             List<Entry> entriesY = new ArrayList<>();
@@ -551,9 +700,6 @@ public class VideoTrimmer extends FrameLayout {
         mMessageHandler.removeMessages(SHOW_PROGRESS);
         mVideoView.pause();
         mPlayView.setVisibility(View.VISIBLE);
-
-        // Todo: This is where we have to call the function to set the graph
-        setGraph(mStartPosition, mEndPosition);
     }
 
     private void onVideoCompleted() {
@@ -599,11 +745,12 @@ public class VideoTrimmer extends FrameLayout {
         if (mDuration > 0) {
             long pos = 1000L * position / mDuration;
             mHolderTopView.setProgress((int) pos);
+            mGraphHandler.setProgress((int) pos);
 
-            if (mTimeVideo != 0) {
-                long graphPos = 1000L * (position - mStartPosition) / mTimeVideo;
-                mGraphHandler.setProgress((int) graphPos);
-            }
+            // if (mTimeVideo != 0) {
+            //     long graphPos = 1000L * (position - mStartPosition) / mTimeVideo;
+            //     mGraphHandler.setProgress((int) graphPos);
+            // }
         }
     }
 
@@ -696,6 +843,12 @@ public class VideoTrimmer extends FrameLayout {
         mVideoView.requestFocus();
 
         mTimeLineView.setVideo(mSrc);
+
+        // Set the graph (changed here)
+        // setGraph(mStartPosition, mEndPosition);
+        startTime.setText(String.valueOf(mStartPosition));
+        endTime.setText(String.valueOf(mEndPosition));
+
     }
 
     private static class MessageHandler extends Handler {

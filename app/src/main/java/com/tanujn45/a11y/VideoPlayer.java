@@ -3,6 +3,7 @@ package com.tanujn45.a11y;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.MediaController;
 import android.widget.VideoView;
 
@@ -31,6 +32,10 @@ public class VideoPlayer extends AppCompatActivity implements MediaPlayer.OnComp
 
     @Override
     public void onCompletion(MediaPlayer mp) {
+        finish();
+    }
+
+    public void backButtonClicked(View view) {
         finish();
     }
 }

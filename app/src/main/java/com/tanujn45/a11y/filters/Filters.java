@@ -523,6 +523,7 @@ public class Filters extends ConstraintLayout {
     private void getSimilarity() {
         if (value != 100.0) {
             Toast.makeText(this.getContext(), "Total value should be 100", Toast.LENGTH_SHORT).show();
+            threshold.setText("N/A");
             return;
         }
 
@@ -570,8 +571,8 @@ public class Filters extends ConstraintLayout {
         int numRows = heatmap.length;
         int numCols = heatmap[0].length;
 
-        gridLayout.setRowCount(numRows);
-        gridLayout.setColumnCount(numCols);
+        gridLayout.setRowCount(numRows + 1);
+        gridLayout.setColumnCount(numCols + 1);
 
         // Create the first row for indices
         heatmapTableLayout.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.red));
@@ -585,7 +586,7 @@ public class Filters extends ConstraintLayout {
 
         for (int i = 0; i < csvFileNames.length; i++) {
             TextView textView = new TextView(this.getContext());
-            textView.setText(String.valueOf(i + 1)); // Set indices as text
+            textView.setText(String.valueOf(i + 1));
             textView.setTextSize(18);
             textView.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.black));
             textView.setPadding(16, 25, 16, 25);
@@ -608,7 +609,7 @@ public class Filters extends ConstraintLayout {
         for (int i = 0; i < csvFileNames.length; i++) {
             TextView textView = new TextView(this.getContext());
             String name = csvFileNames[i].replace(".csv", "").replace("_", " ");
-            textView.setText(name); // Set file names as text
+            textView.setText(name);
             textView.setTextSize(18);
             textView.setPadding(16, 25, 16, 25);
             textView.setGravity(Gravity.CENTER);
@@ -624,14 +625,26 @@ public class Filters extends ConstraintLayout {
 
         int cellSize = 150;  // Size in pixels for each cell
 
-        for (int i = 0; i < heatmap.length; i++) {
-            for (int j = 0; j < heatmap[i].length; j++) {
+        for (int i = -1; i < numRows; i++) {
+            for (int j = -1; j < numCols; j++) {
                 TextView textView = new TextView(this.getContext());
-                double rounded = Math.round(heatmap[i][j] * 100.0) / 100.0;
-                textView.setText(String.valueOf(rounded));
+                if (i == -1 && j == -1) {
+                    textView.setText(String.valueOf(0));
+                } else if (i == -1) {
+                    textView.setText(String.valueOf(j + 1));
+                } else if (j == -1) {
+                    textView.setText(String.valueOf(i + 1));
+                } else {
+                    double rounded = Math.round(heatmap[i][j] * 100.0) / 100.0;
+                    textView.setText(String.valueOf(rounded));
+                }
                 textView.setGravity(Gravity.CENTER);
                 textView.setTextSize(18);
-                textView.setBackgroundColor(getColorForValue((float) heatmap[i][j]));
+                if (i == -1 || j == -1) {
+                    textView.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.green));
+                } else {
+                    textView.setBackgroundColor(getColorForValue((float) heatmap[i][j]));
+                }
                 GridLayout.LayoutParams gParams = new GridLayout.LayoutParams();
                 gParams.width = cellSize;
                 gParams.height = cellSize;
@@ -700,18 +713,18 @@ public class Filters extends ConstraintLayout {
             rowIndex--;
         }
         // Print the gesture-wise matrix
-        for (double[] row : gestureWiseMatrix) {
-            for (double value : row) {
-                System.out.printf("%.2f ", value);
-            }
-            System.out.println();
-        }
+        // for (double[] row : gestureWiseMatrix) {
+        //    for (double value : row) {
+        //        System.out.printf("%.2f ", value);
+        //    }
+        //    System.out.println();
+        // }
 
         int numRows = gestureWiseMatrix.length;
         int numCols = gestureWiseMatrix[0].length;
 
-        gridLayout.setRowCount(numRows);
-        gridLayout.setColumnCount(numCols);
+        gridLayout.setRowCount(numRows + 1);
+        gridLayout.setColumnCount(numCols + 1);
 
         String[] gestureNames = gestureGroups.keySet().toArray(new String[0]);
 
@@ -766,18 +779,30 @@ public class Filters extends ConstraintLayout {
 
         int cellSize = 150;
 
-        for (int i = 0; i < gestureWiseMatrix.length; i++) {
-            for (int j = 0; j < gestureWiseMatrix[i].length; j++) {
+        for (int i = -1; i < numRows; i++) {
+            for (int j = -1; j < numCols; j++) {
                 TextView textView = new TextView(this.getContext());
-                double rounded = Math.round(gestureWiseMatrix[i][j] * 100.0) / 100.0;
-                textView.setText(String.valueOf(rounded));
+                if (i == -1 && j == -1) {
+                    textView.setText(String.valueOf(0));
+                } else if (i == -1) {
+                    textView.setText(String.valueOf(j + 1));
+                } else if (j == -1) {
+                    textView.setText(String.valueOf(i + 1));
+                } else {
+                    double rounded = Math.round(gestureWiseMatrix[i][j] * 100.0) / 100.0;
+                    textView.setText(String.valueOf(rounded));
+                }
                 textView.setGravity(Gravity.CENTER);
                 textView.setTextSize(18);
-                textView.setBackgroundColor(getColorForValue((float) gestureWiseMatrix[i][j]));
+                if (i == -1 || j == -1) {
+                    textView.setBackgroundColor(ContextCompat.getColor(this.getContext(), R.color.green));
+                } else {
+                    textView.setBackgroundColor(getColorForValue((float) gestureWiseMatrix[i][j]));
+                }
                 GridLayout.LayoutParams gParams = new GridLayout.LayoutParams();
                 gParams.width = cellSize;
                 gParams.height = cellSize;
-//                params.setMargins(8, 8, 8, 8);
+                // params.setMargins(8, 8, 8, 8);
                 textView.setLayoutParams(gParams);
 
                 gridLayout.addView(textView);

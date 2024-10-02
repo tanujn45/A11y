@@ -249,4 +249,8 @@ public class GestureInstanceActivity extends AppCompatActivity {
         // play the text to speech
         tts.speak(speakableTextTextView.getText(), TextToSpeech.QUEUE_FLUSH, null, null);
     }
+
+    public void backButtonClicked(View view) {
+        finish();
+    }
 }

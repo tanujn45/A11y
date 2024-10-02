@@ -72,6 +72,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mPreviouslyConnectedListView = findViewById(R.id.previouslyConnectedListView);
         disconnectButton = findViewById(R.id.disconnectButton);
 
+        // bypass for testing
+         Intent intent = new Intent(this, HomeActivity.class);
+         startActivity(intent);
+
         while (!permissionsGranted) {
             permissionsGranted = requestNeededPermissions();
         }

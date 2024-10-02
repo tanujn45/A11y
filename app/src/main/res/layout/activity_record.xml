@@ -36,6 +36,18 @@
         app:layout_constraintStart_toStartOf="parent"
         android:contentDescription="Record" />
 
+    <ImageButton
+        android:id="@+id/turnCameraButton"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="55dp"
+        android:backgroundTint="@color/transparent"
+        android:onClick="turnCameraButtonClicked"
+        android:src="@drawable/turncamera"
+        android:layout_marginStart="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:contentDescription="turnCamera" />
 
     <TextView
         android:id="@+id/sensorMsg"
@@ -51,6 +63,18 @@
         app:layout_constraintBottom_toTopOf="@+id/recordWholeButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="15dp"
+        android:background="@color/transparent"
+        android:onClick="backButtonClicked"
+        android:src="@drawable/back" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

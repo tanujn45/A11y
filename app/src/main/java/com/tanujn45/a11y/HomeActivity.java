@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
-    LinearLayout recordDataCardView, recognizeGestureCardView, accessibleGesturesCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView;
+    LinearLayout recordDataCardView, accessibleGesturesCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView, getHelpCardView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +20,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         annotateGestureCardView = findViewById(R.id.annotateGestureCardView);
         visualizeGestureCardView = findViewById(R.id.visualizeGestureCardView);
         rawVideoActivityCardView = findViewById(R.id.rawVideoCardView);
+        getHelpCardView = findViewById(R.id.getHelpCardView);
 
 
         recordDataCardView.setOnClickListener(this);
@@ -27,6 +28,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         annotateGestureCardView.setOnClickListener(this);
         visualizeGestureCardView.setOnClickListener(this);
         rawVideoActivityCardView.setOnClickListener(this);
+        getHelpCardView.setOnClickListener(this);
     }
 
     @Override
@@ -46,6 +48,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(i);
         } else if (v.getId() == R.id.rawVideoCardView) {
             i = new Intent(this, RawVideoActivity.class);
+            startActivity(i);
+        } else if (v.getId() == R.id.getHelpCardView) {
+            i = new Intent(this, HelpActivity.class);
             startActivity(i);
         }
     }

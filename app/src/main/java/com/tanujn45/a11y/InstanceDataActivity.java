@@ -24,10 +24,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-//Todo:
-
 public class InstanceDataActivity extends AppCompatActivity {
-    private LineChart accChart, accMAChart, accDiffChart, gyroChart;
+    private LineChart accChart, accMAChart, gyroChart;
     private TextView instanceNameTextView;
     private ImageView instanceImageView;
     private ImageButton deleteInstanceImageButton;
@@ -95,12 +93,10 @@ public class InstanceDataActivity extends AppCompatActivity {
 
         accChart = findViewById(R.id.accLineChart);
         accMAChart = findViewById(R.id.accMALineChart);
-        accDiffChart = findViewById(R.id.accDiffLineChart);
         gyroChart = findViewById(R.id.gyroLineChart);
 
         setChart(accChart, "acc");
         setChart(accMAChart, "acc_ma");
-        setChart(accDiffChart, "acc_diff");
         setChart(gyroChart, "gyro");
     }
 
@@ -181,5 +177,9 @@ public class InstanceDataActivity extends AppCompatActivity {
         Intent intent = new Intent(this, VideoPlayer.class);
         intent.putExtra("videoPath", videoPath);
         startActivity(intent);
+    }
+
+    public void backButtonClicked(View view) {
+        finish();
     }
 }

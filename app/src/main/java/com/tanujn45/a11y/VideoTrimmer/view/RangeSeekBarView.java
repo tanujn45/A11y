@@ -20,7 +20,7 @@ import java.util.List;
 
 public class RangeSeekBarView extends View {
     private int mHeightTimeLine;
-    private List<com.tanujn45.a11y.VideoTrimmer.view.Thumb> mThumbs;
+    private List<Thumb> mThumbs;
     private List<OnRangeSeekBarListener> mListeners;
     private float mMaxWidth;
     private float mThumbWidth;
@@ -44,9 +44,9 @@ public class RangeSeekBarView extends View {
     }
 
     private void init() {
-        mThumbs = com.tanujn45.a11y.VideoTrimmer.view.Thumb.initThumbs(getResources());
-        mThumbWidth = com.tanujn45.a11y.VideoTrimmer.view.Thumb.getWidthBitmap(mThumbs);
-        mThumbHeight = com.tanujn45.a11y.VideoTrimmer.view.Thumb.getHeightBitmap(mThumbs);
+        mThumbs = Thumb.initThumbs(getResources());
+        mThumbWidth = Thumb.getWidthBitmap(mThumbs);
+        mThumbHeight = Thumb.getHeightBitmap(mThumbs);
 
         mScaleRangeMax = 100;
         mHeightTimeLine = getContext().getResources().getDimensionPixelOffset(R.dimen.frames_video_height);
@@ -91,7 +91,7 @@ public class RangeSeekBarView extends View {
 
         if (mFirstRun) {
             for (int i = 0; i < mThumbs.size(); i++) {
-                com.tanujn45.a11y.VideoTrimmer.view.Thumb th = mThumbs.get(i);
+                Thumb th = mThumbs.get(i);
                 th.setVal(mScaleRangeMax * i);
                 th.setPos(mPixelRangeMax * i);
             }
@@ -118,8 +118,8 @@ public class RangeSeekBarView extends View {
 
 //    @Override
 //    public boolean onTouchEvent(@NonNull MotionEvent ev) {
-//        final com.tanujn45.a11y.VideoTrimmer.view.Thumb mThumb;
-//        final com.tanujn45.a11y.VideoTrimmer.view.Thumb mThumb2;
+//        final Thumb mThumb;
+//        final Thumb mThumb2;
 //        final float coordinate = ev.getX();
 //        final int action = ev.getAction();
 //
@@ -198,8 +198,8 @@ public class RangeSeekBarView extends View {
 
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent ev) {
-        final com.tanujn45.a11y.VideoTrimmer.view.Thumb mThumb;
-        final com.tanujn45.a11y.VideoTrimmer.view.Thumb mThumb2;
+        final Thumb mThumb;
+        final Thumb mThumb2;
         final float coordinate = ev.getX();
         final int action = ev.getAction();
 
@@ -279,7 +279,7 @@ public class RangeSeekBarView extends View {
     }
 
 
-    private void checkPositionThumb(@NonNull com.tanujn45.a11y.VideoTrimmer.view.Thumb mThumbLeft, @NonNull com.tanujn45.a11y.VideoTrimmer.view.Thumb mThumbRight, float dx, boolean isLeftMove) {
+    private void checkPositionThumb(@NonNull Thumb mThumbLeft, @NonNull Thumb mThumbRight, float dx, boolean isLeftMove) {
         if (isLeftMove && dx < 0) {
             if ((mThumbRight.getPos() - (mThumbLeft.getPos() + dx)) > mMaxWidth) {
                 mThumbRight.setPos(mThumbLeft.getPos() + dx + mMaxWidth);
@@ -297,7 +297,7 @@ public class RangeSeekBarView extends View {
         int unstuck = 0;
         float lastVal = mThumbs.get(index).getVal();
         for (int i = index - 1; i >= 0; i--) {
-            com.tanujn45.a11y.VideoTrimmer.view.Thumb th = mThumbs.get(i);
+            Thumb th = mThumbs.get(i);
             if (th.getVal() != lastVal)
                 return i + 1;
         }
@@ -328,7 +328,7 @@ public class RangeSeekBarView extends View {
 
     private void calculateThumbValue(int index) {
         if (index < mThumbs.size() && !mThumbs.isEmpty()) {
-            com.tanujn45.a11y.VideoTrimmer.view.Thumb th = mThumbs.get(index);
+            Thumb th = mThumbs.get(index);
             th.setVal(pixelToScale(index, th.getPos()));
             onSeek(this, index, th.getVal());
         }
@@ -336,7 +336,7 @@ public class RangeSeekBarView extends View {
 
     private void calculateThumbPos(int index) {
         if (index < mThumbs.size() && !mThumbs.isEmpty()) {
-            com.tanujn45.a11y.VideoTrimmer.view.Thumb th = mThumbs.get(index);
+            Thumb th = mThumbs.get(index);
             th.setPos(scaleToPixel(index, th.getVal()));
         }
     }
@@ -376,7 +376,7 @@ public class RangeSeekBarView extends View {
     private void drawShadow(@NonNull Canvas canvas) {
         if (!mThumbs.isEmpty()) {
 
-            for (com.tanujn45.a11y.VideoTrimmer.view.Thumb th : mThumbs) {
+            for (Thumb th : mThumbs) {
                 if (th.getIndex() == 0) {
                     final float x = th.getPos() + getPaddingLeft();
                     if (x > mPixelRangeMin) {
@@ -397,7 +397,7 @@ public class RangeSeekBarView extends View {
     private void drawThumbs(@NonNull Canvas canvas) {
 
         if (!mThumbs.isEmpty()) {
-            for (com.tanujn45.a11y.VideoTrimmer.view.Thumb th : mThumbs) {
+            for (Thumb th : mThumbs) {
                 if (th.getIndex() == 0) {
                     canvas.drawBitmap(th.getBitmap(), th.getPos() + getPaddingLeft(), getPaddingTop() + mHeightTimeLine, null);
                 } else {
@@ -452,7 +452,7 @@ public class RangeSeekBarView extends View {
         }
     }
 
-    public List<com.tanujn45.a11y.VideoTrimmer.view.Thumb> getThumbs() {
+    public List<Thumb> getThumbs() {
         return mThumbs;
     }
 }

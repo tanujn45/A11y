@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class VideoListActivity extends AppCompatActivity {
@@ -76,11 +78,14 @@ public class VideoListActivity extends AppCompatActivity {
         File[] files = rawVideos.listFiles();
 
         if (files != null) {
+            // sort files by name
+            Arrays.sort(files, Comparator.comparing(File::getName));
+
             for (File file : files) {
                 if (isVideoFile(file)) {
                     Bitmap thumbnail = generateThumbnail(file);
                     String title = file.getName().replaceFirst("[.][^.]+$", "");
-                    videos.add(new Video(file.getPath(), thumbnail, title, false));
+                    videos.add(new Video(file.getPath(), thumbnail, title, false, false));
                 }
             }
         }
@@ -145,5 +150,9 @@ public class VideoListActivity extends AppCompatActivity {
             retriever.release();
         }
         return thumbnail;
+    }
+
+    public void backButtonClicked(View view) {
+        finish();
     }
 }

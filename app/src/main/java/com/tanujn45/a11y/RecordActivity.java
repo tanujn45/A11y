@@ -255,6 +255,15 @@ public class RecordActivity extends AppCompatActivity {
         }
     }
 
+    public void turnCameraButtonClicked(View view) {
+        if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
+            cameraFacing = CameraSelector.LENS_FACING_FRONT;
+        } else {
+            cameraFacing = CameraSelector.LENS_FACING_BACK;
+        }
+        startCamera(cameraFacing);
+    }
+
 
     /**
      * Subscribe to the sensor data
@@ -274,19 +283,35 @@ public class RecordActivity extends AppCompatActivity {
             @Override
             public void onNotification(String data) {
                 ImuModel imuModel = new Gson().fromJson(data, ImuModel.class);
+                if (imuModel == null) {
+                    return;
+                }
+                ImuModel.Body body = imuModel.getBody();
+                if (body == null) {
+                    return;
+                }
+                if (body.getArrayAcc() == null || body.getArrayGyro() == null) {
+                    return;
+                }
+                if (body.getArrayAcc().length == 0 || body.getArrayGyro().length == 0) {
+                    return;
+                }
 
-                if (imuModel != null && imuModel.getBody().getArrayAcc().length > 0 && imuModel.getBody().getArrayGyro().length > 0) {
-                    for (int i = 0; i < imuModel.getBody().getArrayAcc().length; i++) {
-                        String resultStrRecord = String.format(Locale.getDefault(), "%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f", (imuModel.getBody().getTimestamp() + i * 20L), imuModel.getBody().getArrayAcc()[i].getX(), imuModel.getBody().getArrayAcc()[i].getY(), imuModel.getBody().getArrayAcc()[i].getZ(), imuModel.getBody().getArrayGyro()[i].getX(), imuModel.getBody().getArrayGyro()[i].getY(), imuModel.getBody().getArrayGyro()[i].getZ(), imuModel.getBody().getArrayMag()[i].getX(), imuModel.getBody().getArrayMag()[i].getY(), imuModel.getBody().getArrayMag()[i].getZ());
-                        String sensorMsgStr = "x: " + Math.round(imuModel.getBody().getArrayAcc()[i].getX() * 100) / 100.0 + "  y: " + Math.round(imuModel.getBody().getArrayAcc()[i].getY() * 100) / 100.0 + "  z: " + Math.round(imuModel.getBody().getArrayAcc()[i].getZ() * 100) / 100.0;
-                        sensorMsg.setText(sensorMsgStr);
+                ImuModel.ArrayAcc[] arrayAcc = body.getArrayAcc();
+                ImuModel.ArrayGyro[] arrayGyro = body.getArrayGyro();
+                ImuModel.ArrayMag[] arrayMag = body.getArrayMag();
+                long timestamp = imuModel.getBody().getTimestamp();
 
-                        if (isRecording) {
-                            try {
-                                writer.append(resultStrRecord).append("\n");
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
+                for (int i = 0; i < arrayAcc.length; i++) {
+                    String resultStrRecord = String.format(Locale.getDefault(), "%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f", (timestamp + i * 20L), arrayAcc[i].getX(), arrayAcc[i].getY(), arrayAcc[i].getZ(), arrayGyro[i].getX(), arrayGyro[i].getY(), arrayGyro[i].getZ(), arrayMag[i].getX(), arrayMag[i].getY(), arrayMag[i].getZ());
+                    String sensorMsgStr = "x: " + Math.round(arrayAcc[i].getX() * 100) / 100.0 + "  y: " + Math.round(arrayAcc[i].getY() * 100) / 100.0 + "  z: " + Math.round(arrayAcc[i].getZ() * 100) / 100.0;
+                    sensorMsg.setText(sensorMsgStr);
+
+                    if (isRecording) {
+                        try {
+                            writer.append(resultStrRecord).append("\n");
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
                     }
                 }
@@ -380,5 +405,9 @@ public class RecordActivity extends AppCompatActivity {
         }
         // Unsubscribe from sensor data when activity is destroyed
         unsubscribe();
+    }
+
+    public void backButtonClicked(View view) {
+        finish();
     }
 }

@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class RawVideoActivity extends AppCompatActivity {
@@ -49,12 +51,21 @@ public class RawVideoActivity extends AppCompatActivity {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        videoAdapter = new VideoAdapter(videoList, video -> {
+        videoAdapter = new VideoAdapter(videoList, null, video -> {
             String videoPath = video.getPath();
             System.out.println("Video path:: " + videoPath);
             editRawVideoDialog(videoPath);
+        }, video -> {
+            String videoPath = video.getPath();
+            playVideo(videoPath);
         });
         recyclerView.setAdapter(videoAdapter);
+    }
+
+    private void playVideo(String videoPath) {
+        Intent intent = new Intent(this, VideoPlayer.class);
+        intent.putExtra("videoPath", videoPath);
+        startActivity(intent);
     }
 
     private List<Video> getVideosFromFolder() throws IOException {
@@ -64,6 +75,8 @@ public class RawVideoActivity extends AppCompatActivity {
         File[] files = rawVideos.listFiles();
 
         if (files != null) {
+            // sort files by name
+            Arrays.sort(files, Comparator.comparing(File::getName));
             for (File file : files) {
                 if (isVideoFile(file)) {
                     Bitmap thumbnail = generateThumbnail(file);
@@ -183,5 +196,9 @@ public class RawVideoActivity extends AppCompatActivity {
             retriever.release();
         }
         return thumbnail;
+    }
+
+    public void backButtonClicked(View view) {
+        finish();
     }
 }

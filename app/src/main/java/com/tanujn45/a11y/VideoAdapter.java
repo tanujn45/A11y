@@ -5,21 +5,40 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHolder> {
     private List<Video> videoList;
-    private  OnItemClickListener listener;
+    private OnItemClickListener listener;
+    private OnEditClickListener editListener;
+    private OnPlayClickListener playListener;
 
     public interface OnItemClickListener {
         void onItemClick(Video video);
     }
 
+    public interface OnEditClickListener {
+        void onEditClick(Video video);
+    }
+
+    public interface OnPlayClickListener {
+        void onPlayClick(Video video);
+    }
+
     public VideoAdapter(List<Video> videoList, OnItemClickListener listener) {
         this.videoList = videoList;
         this.listener = listener;
+    }
+
+    public VideoAdapter(List<Video> videoList, OnItemClickListener listener, OnEditClickListener editListener, OnPlayClickListener playListener) {
+        this.videoList = videoList;
+        this.listener = listener;
+        this.editListener = editListener;
+        this.playListener = playListener;
     }
 
     @NonNull
@@ -37,6 +56,11 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         } else {
             holder.editButton.setVisibility(View.GONE);
         }
+        if (video.getShowPlayButton()) {
+            holder.playButton.setVisibility(View.VISIBLE);
+        } else {
+            holder.playButton.setVisibility(View.GONE);
+        }
         // Bind thumbnail image to ImageView
         holder.thumbnailImageView.setImageBitmap(video.getThumbnail());
         // Bind title to TextView
@@ -53,18 +77,42 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         TextView titleTextView;
 
         ImageView editButton;
+        ImageView playButton;
 
         public VideoViewHolder(@NonNull View itemView) {
             super(itemView);
             thumbnailImageView = itemView.findViewById(R.id.image_thumbnail);
             titleTextView = itemView.findViewById(R.id.text_title);
             editButton = itemView.findViewById(R.id.edit_button);
+            playButton = itemView.findViewById(R.id.play_button);
 
             itemView.setOnClickListener(v -> {
                 int position = getBindingAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
                     Video video = videoList.get(position);
-                    listener.onItemClick(video);
+                    if (listener != null) {
+                        listener.onItemClick(video);
+                    }
+                }
+            });
+
+            editButton.setOnClickListener(v -> {
+                int position = getBindingAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    Video video = videoList.get(position);
+                    if (editListener != null) {
+                        editListener.onEditClick(video);
+                    }
+                }
+            });
+
+            playButton.setOnClickListener(v -> {
+                int position = getBindingAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    Video video = videoList.get(position);
+                    if (playListener != null) {
+                        playListener.onPlayClick(video);
+                    }
                 }
             });
         }

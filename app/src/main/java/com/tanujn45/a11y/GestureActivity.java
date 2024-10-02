@@ -500,4 +500,8 @@ public class GestureActivity extends AppCompatActivity {
         super.onDestroy();
         unsubscribe();
     }
+
+    public void backButtonClicked(View view) {
+        finish();
+    }
 }

@@ -149,4 +149,8 @@ public class GestureCategoryActivity extends AppCompatActivity {
         System.out.println("Adding gesture category");
         startGestureInstanceActivityWithDialog();
     }
+
+    public void backButtonClicked(View view) {
+        finish();
+    }
 }

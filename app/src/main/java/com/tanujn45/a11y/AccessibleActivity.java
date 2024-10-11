@@ -8,6 +8,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -45,6 +46,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
     SwitchCompat toggleRecognition;
     KMeans kMeans;
     CSVFile masterFile;
+    boolean noModels = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,8 +61,24 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
 
         File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         File master = new File(directory, "master.csv");
+        if (!master.exists()) {
+            Toast.makeText(this, "No gestures found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
         try {
             masterFile = new CSVFile(master);
+            int cnt = masterFile.getRowCount();
+            if (cnt == 1) {
+                Toast.makeText(this, "No gestures found", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+            if (cnt == 2) {
+                Toast.makeText(this, "No active gestures found", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,6 +107,11 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         toggleRecognition.setChecked(false);
         toggleRecognition.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
+                if (noModels) {
+                    Toast.makeText(this, "No models found", Toast.LENGTH_SHORT).show();
+                    toggleRecognition.setChecked(false);
+                    return;
+                }
                 modelSpinner.setEnabled(true);
                 subscribeToSensor(connectedSerial);
             } else {
@@ -114,6 +137,10 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         }
         if (found) {
             modelNames.remove(i);
+        }
+
+        if (modelNames.size() == 0) {
+            noModels = true;
         }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, modelNames);

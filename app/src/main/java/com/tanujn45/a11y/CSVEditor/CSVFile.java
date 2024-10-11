@@ -43,6 +43,10 @@ public class CSVFile {
         save();
     }
 
+    public int getRowCount() {
+        return csvData.size();
+    }
+
     public void printData(int row) {
         for (String cell : csvData.get(row)) {
             System.out.print(cell + " ");

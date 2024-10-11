@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -243,8 +244,7 @@ public class VisualizationActivity extends AppCompatActivity {
         }
 
         if (gestureNamesList.size() == 0) {
-            Intent intent = new Intent(this, GestureCategoryActivity.class);
-            startActivity(intent);
+            Toast.makeText(this, "No gestures found", Toast.LENGTH_SHORT).show();
             finish();
         }
     }

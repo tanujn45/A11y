@@ -58,4 +58,6 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="help">• Connection Errors: If you encounter issues while recording data, running the model, or connecting to the sensor, restart the application and attempt to reconnect. If the problem persists, contact the developer.\n\n• Model Requirements: To execute a model, ensure you have gestures defined beyond the default 'Rest' gesture.\n\n• The 'Rest' gesture represents the hand's resting state and is essential for accurate modeling.\n\n• Deleting the App: If you delete the app, all data will also be permanently deleted.\n\nFor further assistance, email us at tpn5218@psu.edu."
+</string>
 </resources>

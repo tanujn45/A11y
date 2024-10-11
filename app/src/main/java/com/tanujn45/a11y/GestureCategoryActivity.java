@@ -117,7 +117,7 @@ public class GestureCategoryActivity extends AppCompatActivity {
                 return;
             }
             String gestureCategoryName = gestureCategoryNameEditText.getText().toString().trim();
-            String speakableText = speakableTextEditText.getText().toString().trim();
+            String speakableText = speakableTextEditText.getText().toString().trim().replace(",", "|");
 
             if (master.checkIfDataExistsInARow(gestureCategoryName)) {
                 Toast.makeText(this, "Gesture Category already exists", Toast.LENGTH_SHORT).show();
@@ -139,9 +139,9 @@ public class GestureCategoryActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-    private void startInstanceIntent(String gestureCategoreyName, String speakableText) {
+    private void startInstanceIntent(String gestureCategoryName, String speakableText) {
         Intent intent = new Intent(GestureCategoryActivity.this, GestureInstanceActivity.class);
-        intent.putExtra("gestureCategoryName", gestureCategoreyName);
+        intent.putExtra("gestureCategoryName", gestureCategoryName);
         startActivity(intent);
     }
 

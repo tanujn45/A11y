@@ -82,6 +82,13 @@ public class RecordActivity extends AppCompatActivity {
 
         // Get the connected serial
         String connectedSerial = getConnectedSerial();
+        if (connectedSerial == null) {
+            Toast.makeText(this, "No device connected", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(RecordActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
         setCurrentTimeToSensor(connectedSerial);
         subscribeToSensor(connectedSerial);
 

@@ -34,6 +34,7 @@ public class GestureInstanceActivity extends AppCompatActivity {
     ArrayAdapter<String> instanceAdapter;
     CSVFile master, subMaster;
     TextToSpeech tts;
+    boolean noSpeakableText = false;
 
     // Expects GestureCategoryName as extra intent
 
@@ -95,8 +96,10 @@ public class GestureInstanceActivity extends AppCompatActivity {
         gestureCategoryNameTextView.setText(gestureName);
         if (speakableText == null || speakableText.isEmpty()) {
             speakableTextTextView.setText("No speakable text provided");
+            noSpeakableText = true;
             speakableTextTextView.setTextColor(ContextCompat.getColor(this, R.color.theme));
         } else {
+            speakableText = speakableText.replace("|", ",");
             speakableTextTextView.setText(speakableText);
         }
 
@@ -144,6 +147,10 @@ public class GestureInstanceActivity extends AppCompatActivity {
         Button cancelButton = dialogView.findViewById(R.id.cancelButton);
         Button saveButton = dialogView.findViewById(R.id.saveButton);
         Button deleteButton = dialogView.findViewById(R.id.deleteButton);
+        gestureCategoryNameEditText.setText(gestureName);
+        if (!noSpeakableText) {
+            speakableTextEditText.setText(speakableText);
+        }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(dialogView);
@@ -188,7 +195,7 @@ public class GestureInstanceActivity extends AppCompatActivity {
 
             String[] rowData = master.getRowWithData(gestureName);
             rowData[0] = gestureCategoryNameEditText.getText().toString().trim();
-            rowData[1] = speakableTextEditText.getText().toString().trim();
+            rowData[1] = speakableTextEditText.getText().toString().trim().replace(",", "|");
             rowData[2] = path;
             master.save();
 

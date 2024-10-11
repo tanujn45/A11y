@@ -104,6 +104,7 @@ public class VideoTrimmer extends FrameLayout {
     private int mStartPosition = 0;
     private int mEndPosition = 0;
     private int viewWidth = 0;
+    private int totalDataPoints = 0;
 
     private long mOriginSizeFile;
     private boolean mResetSeekBar = true;
@@ -147,7 +148,6 @@ public class VideoTrimmer extends FrameLayout {
         setUpMargins();
         initSpinner();
         adjustSeekBarThumbHeight();
-        initEditTextViews();
     }
 
     private void getViewWidth() {
@@ -310,7 +310,8 @@ public class VideoTrimmer extends FrameLayout {
 
 
     private void initEditTextViews() {
-        startTime.setText(String.valueOf(mStartPosition));
+        startTime.setText(String.valueOf(mStartPosition * totalDataPoints / mDuration));
+        endTime.setText(String.valueOf(mEndPosition * totalDataPoints / mDuration));
         startTime.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 hideKeyboard(getContext(), startTime);
@@ -319,10 +320,13 @@ public class VideoTrimmer extends FrameLayout {
                     return true;
                 }
                 int time = Integer.parseInt(text);
+                time = time * mDuration / totalDataPoints;
                 if (time < 0) {
                     time = 0;
                 } else if (time > mDuration) {
                     time = mDuration;
+                } else if (time > mEndPosition) {
+                    time = mEndPosition;
                 }
                 mStartPosition = time;
                 mVideoView.seekTo(mStartPosition);
@@ -330,14 +334,13 @@ public class VideoTrimmer extends FrameLayout {
                 setTimeFrames();
                 mRangeSeekBarView.setThumbValue(0, (mStartPosition * 100) / mDuration);
                 mTimeVideo = mEndPosition - mStartPosition;
-                startTime.setText(String.valueOf(mStartPosition));
+                startTime.setText(String.valueOf(mStartPosition * totalDataPoints / mDuration));
                 updateViewBox();
                 return true;
             }
             return false;
         });
 
-        endTime.setText(String.valueOf(mEndPosition));
         endTime.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 hideKeyboard(getContext(), endTime);
@@ -346,6 +349,7 @@ public class VideoTrimmer extends FrameLayout {
                     return true;
                 }
                 int time = Integer.parseInt(text);
+                time = time * mDuration / totalDataPoints;
                 if (time < 0) {
                     time = 0;
                 } else if (time > mDuration) {
@@ -358,7 +362,7 @@ public class VideoTrimmer extends FrameLayout {
                 setTimeFrames();
                 mRangeSeekBarView.setThumbValue(1, (mEndPosition * 100) / mDuration);
                 mTimeVideo = mEndPosition - mStartPosition;
-                endTime.setText(String.valueOf(mEndPosition));
+                endTime.setText(String.valueOf(mEndPosition * totalDataPoints / mDuration));
                 updateViewBox();
                 return true;
             }
@@ -562,8 +566,11 @@ public class VideoTrimmer extends FrameLayout {
 
         updateViewBox();
         setGraph(mStartPosition, mEndPosition);
-        startTime.setText(String.valueOf(mStartPosition));
-        endTime.setText(String.valueOf(mEndPosition));
+        if (mDuration > 0) {
+            startTime.setText(String.valueOf(mStartPosition * totalDataPoints / mDuration));
+            endTime.setText(String.valueOf(mEndPosition * totalDataPoints / mDuration));
+        }
+        initEditTextViews();
     }
 
     private void setSeekBarPosition() {
@@ -602,12 +609,16 @@ public class VideoTrimmer extends FrameLayout {
             case Thumb.LEFT: {
                 mStartPosition = (int) ((mDuration * value) / 100L);
                 mVideoView.seekTo(mStartPosition);
-                startTime.setText(String.valueOf(mStartPosition));
+                if (mDuration > 0) {
+                    startTime.setText(String.valueOf(mStartPosition * totalDataPoints / mDuration));
+                }
                 break;
             }
             case Thumb.RIGHT: {
                 mEndPosition = (int) ((mDuration * value) / 100L);
-                endTime.setText(String.valueOf(mEndPosition));
+                if (mDuration > 0) {
+                    endTime.setText(String.valueOf(mEndPosition * totalDataPoints / mDuration));
+                }
                 break;
             }
         }
@@ -623,13 +634,16 @@ public class VideoTrimmer extends FrameLayout {
     }
 
     private void updateViewBox() {
-        System.out.println("View Width: " + viewWidth);
-        System.out.println("Start Position: " + mStartPosition + " End Position: " + mEndPosition + " Duration: " + mDuration);
         float viewStartPosition = (float) mStartPosition / mDuration * viewWidth;
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) graphBox.getLayoutParams();
         params.setMarginStart((int) viewStartPosition + (int) dpToPx(20));
 
+//        System.out.println("Start position" + mStartPosition + " End position" + mEndPosition + " Duration" + mDuration);
         float viewEndPosition = (float) (mEndPosition - mStartPosition) / mDuration * viewWidth;
+        System.out.println("View End Position: " + viewEndPosition);
+        if (viewEndPosition <= 0) {
+            viewEndPosition = 1;
+        }
         params.width = (int) viewEndPosition;
 
         graphBox.setLayoutParams(params);
@@ -675,15 +689,20 @@ public class VideoTrimmer extends FrameLayout {
 
             LineDataSet dataSetX = new LineDataSet(entriesX, "Acc X");
             dataSetX.setColor(Color.RED);
+            dataSetX.setLineWidth(1.5f);
             dataSetX.setDrawCircles(false);
 
             LineDataSet dataSetY = new LineDataSet(entriesY, "Acc Y");
             dataSetY.setColor(Color.GREEN);
+            dataSetY.setLineWidth(1.5f);
             dataSetY.setDrawCircles(false);
 
             LineDataSet dataSetZ = new LineDataSet(entriesZ, "Acc Z");
             dataSetZ.setColor(Color.BLUE);
+            dataSetZ.setLineWidth(1.5f);
             dataSetZ.setDrawCircles(false);
+
+            totalDataPoints = accX.size();
 
             LineData lineData = new LineData(dataSetX, dataSetY, dataSetZ);
 
@@ -846,9 +865,10 @@ public class VideoTrimmer extends FrameLayout {
 
         // Set the graph (changed here)
         // setGraph(mStartPosition, mEndPosition);
-        startTime.setText(String.valueOf(mStartPosition));
-        endTime.setText(String.valueOf(mEndPosition));
-
+        if (mDuration > 0) {
+            startTime.setText(String.valueOf(mStartPosition * totalDataPoints / mDuration));
+            endTime.setText(String.valueOf(mEndPosition * totalDataPoints / mDuration));
+        }
     }
 
     private static class MessageHandler extends Handler {

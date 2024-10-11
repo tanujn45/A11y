@@ -73,8 +73,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         disconnectButton = findViewById(R.id.disconnectButton);
 
         // bypass for testing
-         Intent intent = new Intent(this, HomeActivity.class);
-         startActivity(intent);
+//         Intent intent = new Intent(this, HomeActivity.class);
+//         startActivity(intent);
 
         while (!permissionsGranted) {
             permissionsGranted = requestNeededPermissions();

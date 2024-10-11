@@ -13,10 +13,11 @@
 
     <ImageButton
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="45dp"
         android:layout_marginStart="30dp"
         android:layout_marginTop="30dp"
-        android:layout_marginEnd="15dp"
+        android:paddingEnd="15dp"
+        android:paddingStart="0dp"
         android:background="@color/transparent"
         android:onClick="backButtonClicked"
         android:src="@drawable/back"

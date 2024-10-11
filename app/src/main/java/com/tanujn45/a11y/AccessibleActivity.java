@@ -147,7 +147,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
             }
             CardData cardData = new CardData();
             cardData.setName(row[0]);
-            cardData.setTextToSpeak(row[1]);
+            cardData.setTextToSpeak(row[1].replace("|", ","));
             cardDataList.add(cardData);
         }
 
@@ -306,5 +306,9 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         LinearLayout scrollableLayout = findViewById(R.id.scrollableLayout);
         scrollableLayout.addView(accItem);
         accItems.add(accItem);
+    }
+
+    public void backButtonClicked(View view) {
+        finish();
     }
 }

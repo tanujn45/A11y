@@ -125,22 +125,34 @@ public class VisualizationActivity extends AppCompatActivity {
 
         LineDataSet xOneDataSet = new LineDataSet(xOneEntries, "X_1");
         xOneDataSet.setColor(Color.RED);
+        xOneDataSet.setLineWidth(2f);
         xOneDataSet.setDrawCircles(false);
         LineDataSet yOneDataSet = new LineDataSet(yOneEntries, "Y_1");
         yOneDataSet.setColor(Color.GREEN);
+        yOneDataSet.setLineWidth(2f);
         yOneDataSet.setDrawCircles(false);
         LineDataSet zOneDataSet = new LineDataSet(zOneEntries, "Z_1");
         zOneDataSet.setColor(Color.BLUE);
+        zOneDataSet.setLineWidth(2f);
         zOneDataSet.setDrawCircles(false);
 
         LineDataSet xTwoDataSet = new LineDataSet(xTwoEntries, "X_2");
-        xTwoDataSet.setColor(Color.rgb(255, 165, 0));
+        xTwoDataSet.enableDashedLine(50f, 30f, 0f);
+        xTwoDataSet.setColor(Color.RED);
+        xTwoDataSet.setLineWidth(2f);
+//        xTwoDataSet.setColor(Color.rgb(255, 165, 0));
         xTwoDataSet.setDrawCircles(false);
         LineDataSet yTwoDataSet = new LineDataSet(yTwoEntries, "Y_2");
-        yTwoDataSet.setColor(Color.rgb(128, 0, 128));
+        yTwoDataSet.enableDashedLine(50f, 30f, 0f);
+        yTwoDataSet.setColor(Color.GREEN);
+        yTwoDataSet.setLineWidth(2f);
+//        yTwoDataSet.setColor(Color.rgb(128, 0, 128));
         yTwoDataSet.setDrawCircles(false);
         LineDataSet zTwoDataSet = new LineDataSet(zTwoEntries, "Z_2");
-        zTwoDataSet.setColor(Color.rgb(0, 255, 255));
+        zTwoDataSet.enableDashedLine(50f, 30f, 0f);
+        zTwoDataSet.setColor(Color.BLUE);
+        zTwoDataSet.setLineWidth(2f);
+//        zTwoDataSet.setColor(Color.rgb(0, 255, 255));
         zTwoDataSet.setDrawCircles(false);
 
         LineData lineData = new LineData(xOneDataSet, yOneDataSet, zOneDataSet, xTwoDataSet, yTwoDataSet, zTwoDataSet);

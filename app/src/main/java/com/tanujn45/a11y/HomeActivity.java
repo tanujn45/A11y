@@ -2,13 +2,16 @@ package com.tanujn45.a11y;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.File;
+
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
-    LinearLayout recordDataCardView, accessibleGesturesCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView, getHelpCardView;
+    LinearLayout recordDataCardView, accessibleGesturesCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView, getHelpCardView, bluetoothCardView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +24,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         visualizeGestureCardView = findViewById(R.id.visualizeGestureCardView);
         rawVideoActivityCardView = findViewById(R.id.rawVideoCardView);
         getHelpCardView = findViewById(R.id.getHelpCardView);
+        bluetoothCardView = findViewById(R.id.bluetoothCardView);
 
 
         recordDataCardView.setOnClickListener(this);
@@ -29,6 +33,33 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         visualizeGestureCardView.setOnClickListener(this);
         rawVideoActivityCardView.setOnClickListener(this);
         getHelpCardView.setOnClickListener(this);
+        bluetoothCardView.setOnClickListener(this);
+
+        createDirectories();
+    }
+
+    public void createDirectories() {
+        File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        File rawData = new File(directory, "rawData");
+        File trimmedData = new File(directory, "trimmedData");
+        File models = new File(directory, "models");
+        File rawVideos = new File(directory, "rawVideos");
+
+        if (!rawData.exists()) {
+            rawData.mkdirs();
+        }
+
+        if (!trimmedData.exists()) {
+            trimmedData.mkdirs();
+        }
+
+        if (!models.exists()) {
+            models.mkdirs();
+        }
+
+        if (!rawVideos.exists()) {
+            rawVideos.mkdirs();
+        }
     }
 
     @Override
@@ -51,6 +82,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(i);
         } else if (v.getId() == R.id.getHelpCardView) {
             i = new Intent(this, HelpActivity.class);
+            startActivity(i);
+        } else if (v.getId() == R.id.bluetoothCardView) {
+            i = new Intent(this, BluetoothActivity.class);
             startActivity(i);
         }
     }

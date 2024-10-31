@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.TooltipCompat;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
@@ -637,6 +638,17 @@ public class Filters extends ConstraintLayout {
                 } else {
                     double rounded = Math.round(heatmap[i][j] * 100.0) / 100.0;
                     textView.setText(String.valueOf(rounded));
+
+                    int finalI = i;
+                    int finalJ = j;
+                    textView.setOnClickListener(view -> {
+                        String xName = csvFileNames[finalI].replace(".csv", "").replace("_", " ");
+                        String yName = csvFileNames[finalJ].replace(".csv", "").replace("_", " ");
+
+                        String tooltipText = "X: " + xName + ", Y: " + yName + "\nSimilarity: " + rounded;
+                        TooltipCompat.setTooltipText(textView, tooltipText);
+                        textView.performLongClick();
+                    });
                 }
                 textView.setGravity(Gravity.CENTER);
                 textView.setTextSize(18);
@@ -648,7 +660,6 @@ public class Filters extends ConstraintLayout {
                 GridLayout.LayoutParams gParams = new GridLayout.LayoutParams();
                 gParams.width = cellSize;
                 gParams.height = cellSize;
-//                params.setMargins(8, 8, 8, 8);
                 textView.setLayoutParams(gParams);
 
                 gridLayout.addView(textView);
@@ -791,6 +802,16 @@ public class Filters extends ConstraintLayout {
                 } else {
                     double rounded = Math.round(gestureWiseMatrix[i][j] * 100.0) / 100.0;
                     textView.setText(String.valueOf(rounded));
+                    int finalI = i;
+                    int finalJ = j;
+                    textView.setOnClickListener(view -> {
+                        String xName = gestureNames[finalI].replace("_", " ");
+                        String yName = gestureNames[finalJ].replace("_", " ");
+
+                        String tooltipText = "X: " + xName + ", Y: " + yName + "\nSimilarity: " + rounded;
+                        TooltipCompat.setTooltipText(textView, tooltipText);
+                        textView.performLongClick();
+                    });
                 }
                 textView.setGravity(Gravity.CENTER);
                 textView.setTextSize(18);

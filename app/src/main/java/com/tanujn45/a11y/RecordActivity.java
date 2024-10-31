@@ -84,8 +84,8 @@ public class RecordActivity extends AppCompatActivity {
         String connectedSerial = getConnectedSerial();
         if (connectedSerial == null) {
             Toast.makeText(this, "No device connected", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(RecordActivity.this, MainActivity.class);
-            startActivity(intent);
+//            Intent intent = new Intent(RecordActivity.this, MainActivity.class);
+//            startActivity(intent);
             finish();
             return;
         }
@@ -211,6 +211,9 @@ public class RecordActivity extends AppCompatActivity {
      * @return Mds
      */
     private Mds getMds() {
+        if (MainActivity.mMds == null) {
+            return BluetoothActivity.mMds;
+        }
         return MainActivity.mMds;
     }
 
@@ -221,6 +224,9 @@ public class RecordActivity extends AppCompatActivity {
      * @return String
      */
     private String getConnectedSerial() {
+        if (MainActivity.connectedSerial == null) {
+            return BluetoothActivity.connectedSerial;
+        }
         return MainActivity.connectedSerial;
     }
 

@@ -28,6 +28,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.A11y">
         <activity
+            android:name=".BluetoothActivity"
+            android:launchMode="singleTask"
+            android:exported="false" />
+        <activity
             android:name=".HelpActivity"
             android:exported="false" />
         <activity

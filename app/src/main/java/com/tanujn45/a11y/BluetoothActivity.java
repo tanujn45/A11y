@@ -8,17 +8,20 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,15 +36,14 @@ import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.scan.ScanSettings;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 import io.reactivex.disposables.Disposable;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
-    private static final String LOG_TAG = MainActivity.class.getSimpleName();
+public class BluetoothActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+    private static final String LOG_TAG = BluetoothActivity.class.getSimpleName();
     public static Mds mMds;
     public static String connectedSerial;
     private static RxBleClient mBleClient;
@@ -54,66 +56,201 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private final ArrayList<MyScanResult> mNewDeviceArrayList = new ArrayList<>();
     private ArrayAdapter<MyScanResult> mNewDeviceAdapter;
-    private Button connectButton, homeButton, disconnectButton;
+    private Button connectButton, disconnectButton;
     ListView mScanResultListView, mPreviouslyConnectedListView;
     private final ArrayList<MyScanResult> selectedDevices = new ArrayList<>();
     private boolean scanning = false;
     private boolean permissionsGranted = false;
+    private int permissionRequestCount = 0;
+    private SharedPreferences permissionPrefs;
+    private boolean beingGranted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_bluetooth);
 
         // UI elements
         connectButton = findViewById(R.id.connectButton);
-        homeButton = findViewById(R.id.homeButton);
         mScanResultListView = findViewById(R.id.newDevicesListView);
         mPreviouslyConnectedListView = findViewById(R.id.previouslyConnectedListView);
         disconnectButton = findViewById(R.id.disconnectButton);
 
-        // bypass for testing
-         Intent intent = new Intent(this, HomeActivity.class);
-         startActivity(intent);
-         finish();
-         return;
+        permissionPrefs = getSharedPreferences("permissions", Context.MODE_PRIVATE);
+        permissionRequestCount = permissionPrefs.getInt("permissionRequestCount", 0);
 
-//        while (!permissionsGranted) {
-//            permissionsGranted = requestNeededPermissions();
-//        }
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent(BluetoothActivity.this, HomeActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        if (hasPermissions(this, getNeededPermissions())) {
+            permissionsGranted = true;
+            initMScanResAdapter();
+            initPreviouslyConnectedAdapter();
+            loadPreviouslyConnectedDevices();
+            markConnectedDevices();
+            return;
+        }
+
+        managePermissions();
     }
+
+    private String[] getNeededPermissions() {
+        return new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
+    }
+
+    private void managePermissions() {
+        if (hasPermissions(this, getNeededPermissions())) {
+            return;
+        }
+        if (permissionRequestCount >= 2) {
+            createAlertDialogForSettings();
+        } else {
+            if (permissionRequestCount > 0) {
+                createAlertDialogForPermissions();
+            } else {
+                requestNeededPermissions();
+            }
+        }
+    }
+
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        beingGranted = false;
         if (hasPermissions(this, permissions)) {
-            initializeBluetoothFeatures(); // Initialize Bluetooth operations after permissions are granted
+            initializeBluetoothFeatures();
+        } else {
+            managePermissions();
         }
     }
 
-    public void createDirectories() {
-        File directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-        File rawData = new File(directory, "rawData");
-        File trimmedData = new File(directory, "trimmedData");
-        File models = new File(directory, "models");
-        File rawVideos = new File(directory, "rawVideos");
+    private void createAlertDialogForSettings() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.custom_alert_dialog, null);
 
-        if (!rawData.exists()) {
-            rawData.mkdirs();
-        }
+        TextView dialogTitle = dialogView.findViewById(R.id.alertTitle);
+        EditText editText = dialogView.findViewById(R.id.fileNameEditText);
+        Button saveButton = dialogView.findViewById(R.id.saveButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        Button deleteButton = dialogView.findViewById(R.id.deleteButton);
+        deleteButton.setVisibility(View.INVISIBLE);
+        editText.setVisibility(View.INVISIBLE);
+        saveButton.setText("Settings");
 
-        if (!trimmedData.exists()) {
-            trimmedData.mkdirs();
-        }
+        dialogTitle.setText("Following Permissions are required for the app to function properly: \n" + "1. Location\n" + "2. Bluetooth\n" + "3. Camera\n" + "4. Record Audio\n" + "Do you want to open settings to grant permissions?");
+        dialogTitle.setTextSize(18);
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        androidx.appcompat.app.AlertDialog alertDialog = builder.create();
 
-        if (!models.exists()) {
-            models.mkdirs();
-        }
+        saveButton.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            openAppPermissions();
+        });
 
-        if (!rawVideos.exists()) {
-            rawVideos.mkdirs();
+        cancelButton.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            finish();
+        });
+
+        alertDialog.show();
+    }
+
+    private void openAppPermissions() {
+        Intent intent = new Intent(Settings.ACTION_SETTINGS);
+        startActivity(intent);
+    }
+
+
+    private void createAlertDialogForPermissions() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.custom_alert_dialog, null);
+
+        TextView dialogTitle = dialogView.findViewById(R.id.alertTitle);
+        EditText editText = dialogView.findViewById(R.id.fileNameEditText);
+        Button saveButton = dialogView.findViewById(R.id.saveButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        Button deleteButton = dialogView.findViewById(R.id.deleteButton);
+        deleteButton.setVisibility(View.INVISIBLE);
+        editText.setVisibility(View.INVISIBLE);
+        saveButton.setText("Request");
+
+        dialogTitle.setText("Following Permissions are required for the app to function properly: \n" + "1. Location\n" + "2. Bluetooth\n" + "3. Camera\n" + "4. Record Audio\n" + "Do you want to request permissions?");
+        dialogTitle.setTextSize(18);
+
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        androidx.appcompat.app.AlertDialog alertDialog = builder.create();
+
+        saveButton.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            requestNeededPermissions();
+        });
+
+        cancelButton.setOnClickListener(v -> {
+            alertDialog.dismiss();
+            finish();
+        });
+
+        alertDialog.show();
+    }
+
+    private void initializeBluetoothFeatures() {
+        // Check if the necessary permissions are granted before proceeding with Bluetooth operations
+        if (mMds == null && hasBluetoothPermissions()) {
+            // Initialize all Bluetooth features here
+            initMds();
+
+        } else {
+            Log.d(LOG_TAG, "Bluetooth features already initialized, skipping reinitialization.");
         }
     }
+
+
+    /**
+     * Check if the app has the necessary permissions
+     * If the app does not have the necessary permissions, return false
+     * If the app has the necessary permissions, return true
+     * Log the permissions that are granted and not granted
+     */
+    private boolean hasPermissions(Context context, String... permissions) {
+        if (context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    // System.out.println("Permission not granted: " + permission);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * Request permissions needed for the app to function
+     * Request the necessary permissions
+     * Call hasPermissions() to confirm check if the app has the necessary permissions
+     * Return true if the app has the necessary permissions
+     */
+    private boolean requestNeededPermissions() {
+        beingGranted = true;
+        int PERMISSION_ALL = 1;
+
+        // Permissions needed for the app to function
+        String[] PERMISSIONS = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO,};
+
+        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+        permissionRequestCount++;
+        permissionPrefs.edit().putInt("permissionRequestCount", permissionRequestCount).apply();
+
+        // Call hasPermissions() to confirm check if the app has the necessary permissions
+        return hasPermissions(this, PERMISSIONS);
+    }
+
 
     /**
      * Load previously connected devices
@@ -196,32 +333,35 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mScanResultListView.setOnItemClickListener(this);
     }
 
-    private void initializeBluetoothFeatures() {
-        // Check if the necessary permissions are granted before proceeding with Bluetooth operations
-        if (hasBluetoothPermissions()) {
-            // Initialize all Bluetooth features here
-            createDirectories();
-            initMds();
-            initMScanResAdapter();
-            initPreviouslyConnectedAdapter();
-            loadPreviouslyConnectedDevices();
-        }
-    }
 
     private boolean hasBluetoothPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // For Android 12 (API level 31) and above
-            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
         } else {
             // For Android versions below 12
-            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
         }
     }
 
+    private void markConnectedDevices() {
+        Set<RxBleDevice> connectedPeripherals = getBleClient().getConnectedPeripherals();
+        System.out.println("Connected peripherals: " + connectedPeripherals.size());
+
+        for (MyScanResult device : mPreviousDeviceArrayList) {
+            for (RxBleDevice connectedPeripheral : connectedPeripherals) {
+                if (device.macAddress.equals(connectedPeripheral.getMacAddress())) {
+                    device.markConnected(device.name);
+                    selectedDevices.add(device);
+                    mPreviousDeviceAdapter.notifyDataSetChanged();
+                }
+            }
+        }
+        if (selectedDevices.size() > 0) {
+            disconnectButton.setEnabled(true);
+            disconnectButton.setBackgroundColor(ContextCompat.getColor(BluetoothActivity.this, R.color.theme));
+        }
+    }
 
 
     /**
@@ -244,51 +384,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     private void initMds() {
         mMds = Mds.builder().build(this);
-    }
-
-
-    /**
-     * Check if the app has the necessary permissions
-     * If the app does not have the necessary permissions, return false
-     * If the app has the necessary permissions, return true
-     * Log the permissions that are granted and not granted
-     */
-    private boolean hasPermissions(Context context, String... permissions) {
-        if (context != null && permissions != null) {
-            for (String permission : permissions) {
-                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                    System.out.println("Permission not granted: " + permission);
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-
-    /**
-     * Request permissions needed for the app to function
-     * Request the necessary permissions
-     * Call hasPermissions() to confirm check if the app has the necessary permissions
-     * Return true if the app has the necessary permissions
-     */
-    private boolean requestNeededPermissions() {
-        int PERMISSION_ALL = 1;
-
-        // Permissions needed for the app to function
-        String[] PERMISSIONS = new String[]{
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO,
-        };
-
-        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
-
-        // Call hasPermissions() to confirm check if the app has the necessary permissions
-        return hasPermissions(this, PERMISSIONS);
     }
 
 
@@ -350,11 +445,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      * Connects to the BLE device that was clicked
      * If the device is not connected, connect to the device
      *
-     * @param parent: The AdapterView where the click happened
-     * @param view: The view within the AdapterView that was clicked
+     * @param parent:   The AdapterView where the click happened
+     * @param view:     The view within the AdapterView that was clicked
      * @param position: The position of the view in the adapter
-     * @param id: The row id of the item that was clicked
-     *
+     * @param id:       The row id of the item that was clicked
      */
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -425,16 +519,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 connectedSerial = serial;
 
                 connectButton.setText("Scan");
-
                 connectButton.setEnabled(true);
-                homeButton.setEnabled(true);
 
                 // Set home button background tint
-                homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme));
                 selectedDevices.add(device);
 
                 disconnectButton.setEnabled(true);
-                disconnectButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme));
+                disconnectButton.setBackgroundColor(ContextCompat.getColor(BluetoothActivity.this, R.color.theme));
             }
 
             @Override
@@ -498,20 +589,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             if (selectedDevice != null && selectedDevice.isConnected()) {
                 Log.d(LOG_TAG, "Disconnecting from device: " + selectedDevice.macAddress);
 
-                if (mMds != null)
-                    mMds.disconnect(selectedDevice.macAddress);
+                if (mMds != null) mMds.disconnect(selectedDevice.macAddress);
 
                 selectedDevice.markDisconnected();
                 Log.d(LOG_TAG, "Disconnected successfully.");
+                mPreviousDeviceAdapter.notifyDataSetChanged();
+                connectedSerial = null;
             } else {
                 Log.d(LOG_TAG, "Cannot disconnect. mMds is null or selectedDevice is not connected.");
             }
         }
         selectedDevices.clear();
         disconnectButton.setEnabled(false);
-        disconnectButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
-        homeButton.setEnabled(false);
-        homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
+        disconnectButton.setBackgroundColor(ContextCompat.getColor(BluetoothActivity.this, R.color.theme2));
     }
 
 
@@ -546,32 +636,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     public void connectButtonClicked(View view) {
         // Check if the required permissions are granted
+        if (!hasPermissions(this, getNeededPermissions())) {
+            managePermissions();
+            return;
+        }
         if (!permissionsGranted) {
             permissionsGranted = requestNeededPermissions();
             System.out.println("Permissions granted: " + permissionsGranted);
         } else {
             scanning = !scanning;
-            if(scanning) {
-                homeButton.setEnabled(false);
-                homeButton.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.theme2));
+            if (scanning) {
                 startScan();
             } else {
                 stopScan();
                 connectButton.setText("Scan");
             }
         }
-    }
-
-
-    /**
-     * Called when the home button is clicked
-     *
-     * @param view: The view that was clicked
-     */
-    public void homeButtonClicked(View view) {
-        // Go to the HomeActivity
-        Intent intent = new Intent(this, HomeActivity.class);
-        startActivity(intent);
     }
 
 
@@ -590,12 +670,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      * Get the BLE client
      * Print the number of connected peripherals
      */
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mBleClient = getBleClient();
-        System.out.println(mBleClient.getConnectedPeripherals().size());
-    }
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        mBleClient = getBleClient();
+//        Set<RxBleDevice> connectedPeripherals = mBleClient.getConnectedPeripherals();
+//        System.out.println(mBleClient.getConnectedPeripherals().size());
+//    }
 
 
     /**
@@ -607,5 +688,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onDestroy();
 
         disconnectBLEDevice();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!permissionsGranted  && !beingGranted) {
+            managePermissions();
+        }
+    }
+
+    public void backButtonClicked(View view) {
+        Intent intent = new Intent(this, HomeActivity.class);
+        startActivity(intent);
     }
 }

@@ -52,7 +52,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/homeWelcomeText"
-            android:text="@string/help" />
+            android:text="• Connection Errors: If you encounter issues while recording data, running the model, or connecting to the sensor, restart the application and attempt to reconnect. If the problem persists, contact the developer.\n\n• Model Requirements: To execute a model, ensure you have gestures defined beyond the default \'Rest\' gesture.\n\n• The \'Rest\' gesture represents the hand's resting state and is essential for accurate modeling.\n\n• Deleting the App: If you delete the app, all data will also be permanently deleted.\n\nFor further assistance, email us at tpn5218@psu.edu." />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

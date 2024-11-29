@@ -3,6 +3,7 @@ package com.tanujn45.a11y;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.Voice;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -25,9 +26,11 @@ import com.tanujn45.a11y.KMeans.KMeans;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 
 //Todo: Fix and optimize AAC activity
@@ -47,15 +50,100 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
     KMeans kMeans;
     CSVFile masterFile;
     boolean noModels = false;
+    private List<Voice> voiceList = new ArrayList<>();
+    Spinner voiceSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_accessible);
 
+        voiceSpinner = findViewById(R.id.voiceSpinner);
         textToSpeech = new TextToSpeech(this, status -> {
-            if (status != TextToSpeech.ERROR) {
-                textToSpeech.setLanguage(Locale.US);
+            if (status == TextToSpeech.SUCCESS) {
+                // Fetch available voices
+                textToSpeech.setLanguage(Locale.ENGLISH);
+                Set<Voice> voices = textToSpeech.getVoices();
+                if (voices != null) {
+                    voiceList.clear();
+                    for (Voice voice : voices) {
+                        if (voice.getLocale().getLanguage().startsWith("en")) {
+                            voiceList.add(voice); // Add only English voices
+                        }
+                    }
+
+                    // Populate spinner with voice names
+                    List<String> voiceNames = new ArrayList<>();
+                    for (Voice voice : voiceList) {
+                        voiceNames.add(voice.getName());
+                    }
+
+//                    new Thread(() -> {
+//                        for (Voice voice : voiceList) {
+//                            // Set the voice
+//                            textToSpeech.setVoice(voice);
+//
+//                            // Speak the test line
+//                            runOnUiThread(() -> {
+//                                textToSpeech.speak("Hello, this is a test line.", TextToSpeech.QUEUE_FLUSH, null, null);
+//                                Toast.makeText(AccessibleActivity.this, voice.getName(), Toast.LENGTH_SHORT).show();
+//                            });
+//
+//                            // Wait for the speech to finish before continuing to the next voice
+//                            try {
+//                                Thread.sleep(3000); // Adjust the delay as needed
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    }).start();
+
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(AccessibleActivity.this, android.R.layout.simple_spinner_item, Arrays.asList("Male", "Female"));
+
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    voiceSpinner.setAdapter(adapter);
+
+                    String maleVoice = "en-us-x-iol-local";
+                    String femaleVoice = "en-US-language";
+
+                    // Set listener for spinner selection
+                    voiceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
+                            boolean found = false;
+                            String selectedVoice = parent.getItemAtPosition(position).toString();
+                            if (selectedVoice == "Male") {
+                                for (Voice voice : voiceList) {
+                                    if (voice.getName().equals(maleVoice)) {
+                                        textToSpeech.setVoice(voice);
+                                        Toast.makeText(AccessibleActivity.this, "Male voice selected", Toast.LENGTH_SHORT).show();
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                for (Voice voice : voiceList) {
+                                    if (voice.getName().equals(femaleVoice)) {
+                                        textToSpeech.setVoice(voice);
+                                        Toast.makeText(AccessibleActivity.this, "Female voice selected", Toast.LENGTH_SHORT).show();
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!found) {
+                                Toast.makeText(AccessibleActivity.this, "Device doesn't support this voice. Switching to default", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {
+                            // Do nothing
+                        }
+                    });
+                }
+            } else {
+                Toast.makeText(AccessibleActivity.this, "TTS initialization failed!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -107,6 +195,11 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         toggleRecognition.setChecked(false);
         toggleRecognition.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
+                String connectedSerial = getConnectedSerial();
+                if (connectedSerial == null || BluetoothActivity.mMds == null) {
+                    Toast.makeText(this, "Connect to a bluetooth device", Toast.LENGTH_SHORT).show();
+                    toggleRecognition.setChecked(false);
+                }
                 if (noModels) {
                     Toast.makeText(this, "No models found", Toast.LENGTH_SHORT).show();
                     toggleRecognition.setChecked(false);
@@ -120,6 +213,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
             }
         });
     }
+
 
     private void initModelSpinner() {
         modelSpinner = findViewById(R.id.modelSpinner);
@@ -184,15 +278,16 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
     }
 
     private String getConnectedSerial() {
-        return getIntent().getStringExtra("serial");
+        if (MainActivity.connectedSerial == null) {
+            return BluetoothActivity.connectedSerial;
+        }
+        return MainActivity.connectedSerial;
     }
 
     private void subscribeToSensor(String connectedSerial) {
         if (mdsSubscription != null) {
             unsubscribe();
         }
-
-        connectedSerial = MainActivity.connectedSerial;
 
         String strContract = "{\"Uri\": \"" + connectedSerial + PATH + RATE + "\"}";
 

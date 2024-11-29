@@ -106,7 +106,7 @@ public class InstanceDataActivity extends AppCompatActivity {
     }
 
     public void deleteInstance(View view) throws Exception {
-        if (deleteFileOnPath(videoPath) && deleteFileOnPath(videoPath.replace(".mp4", ".csv"))) {
+        if (deleteFileOnPath(videoPath) && deleteFileOnPath(videoPath.replace(".mp4", ".csv")) && deleteFileOnPath(videoPath.replace(".mp4", "_handlandmarkerFile1234.csv"))) {
             subMaster.deleteRowWithData(instanceName);
             subMaster.save();
 

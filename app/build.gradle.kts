@@ -76,6 +76,9 @@ dependencies {
 //    implementation("nz.ac.waikato.cms.weka:weka-stable:3.8.0") {
 //        exclude(group = "nz.ac.waikato.cms.weka.thirdparty", module = "java-cup-11b-runtime")
 //    }
+
+    implementation("com.google.mediapipe:tasks-vision:latest.release")
+
     val camerax_version = "1.4.0-alpha04"
     implementation("androidx.camera:camera-core:${camerax_version}")
     implementation("androidx.camera:camera-camera2:${camerax_version}")

@@ -498,6 +498,9 @@ public class BluetoothActivity extends AppCompatActivity implements AdapterView.
         Log.i(LOG_TAG, "Connecting to BLE device: " + bleDevice.getMacAddress());
 
         stopScan();
+        if (mMds == null) {
+            initMds();
+        }
         mMds.connect(bleDevice.getMacAddress(), new MdsConnectionListener() {
             @Override
             public void onConnect(String s) {

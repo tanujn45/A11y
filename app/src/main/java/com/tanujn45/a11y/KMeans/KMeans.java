@@ -270,6 +270,10 @@ public class KMeans {
                     continue;
                 }
 
+                if (fileName.contains("handlandmarkerFile1234")) {
+                    continue;
+                }
+
                 if (file.isFile() && fileName.endsWith(".csv")) {
                     this.csvFiles.add(file);
                     tempCSVFileNames.add(fileName);
@@ -474,10 +478,17 @@ public class KMeans {
 
             int maxIndex = 0;
             for (int i = 1; i < result.length; i++) {
+                System.out.print(result[i] + " ");
                 if (result[i] > result[maxIndex]) {
                     maxIndex = i;
                 }
             }
+            System.out.println();
+
+            if (result[maxIndex] < 0.25) {
+                return "Rest";
+            }
+
             String resultFinal = this.csvFileNames[maxIndex];
             resultFinal = resultFinal.substring(0, resultFinal.length() - 4);
             resultFinal = resultFinal.replace("_", " ");

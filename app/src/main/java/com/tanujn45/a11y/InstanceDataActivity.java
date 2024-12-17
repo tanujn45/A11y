@@ -105,8 +105,12 @@ public class InstanceDataActivity extends AppCompatActivity {
         return file.delete();
     }
 
+
+    // Todo: HandlandmarkerFile1234 will be deleted here
     public void deleteInstance(View view) throws Exception {
-        if (deleteFileOnPath(videoPath) && deleteFileOnPath(videoPath.replace(".mp4", ".csv")) && deleteFileOnPath(videoPath.replace(".mp4", "_handlandmarkerFile1234.csv"))) {
+        if (deleteFileOnPath(videoPath) && deleteFileOnPath(videoPath.replace(".mp4", ".csv"))) {
+
+            //  && deleteFileOnPath(videoPath.replace(".mp4", "_handlandmarkerFile1234.csv"))
             subMaster.deleteRowWithData(instanceName);
             subMaster.save();
 

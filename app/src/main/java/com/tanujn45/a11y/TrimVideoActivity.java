@@ -150,7 +150,12 @@ public class TrimVideoActivity extends AppCompatActivity implements OnTrimVideoL
             throw new RuntimeException(e);
         }
 
-        processVideosAndGenerateCSV(newFile.getPath());
+//        processVideosAndGenerateCSV(newFile.getPath());
+
+        Intent intent = new Intent(this, GestureInstanceActivity.class);
+        intent.putExtra("gestureCategoryName", gestureName);
+        startActivity(intent);
+        finish();
     }
 
     public enum MediaType {
@@ -268,10 +273,10 @@ public class TrimVideoActivity extends AppCompatActivity implements OnTrimVideoL
                 Toast.makeText(this, "All videos processed", Toast.LENGTH_LONG).show();
             });
 
-            Intent intent = new Intent(this, GestureInstanceActivity.class);
-            intent.putExtra("gestureCategoryName", gestureName);
-            startActivity(intent);
-            finish();
+//            Intent intent = new Intent(this, GestureInstanceActivity.class);
+//            intent.putExtra("gestureCategoryName", gestureName);
+//            startActivity(intent);
+//            finish();
         });
     }
 

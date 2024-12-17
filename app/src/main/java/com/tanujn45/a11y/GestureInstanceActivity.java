@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 
 import com.tanujn45.a11y.CSVEditor.CSVFile;
@@ -23,6 +24,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class GestureInstanceActivity extends AppCompatActivity {
     private String gestureName, speakableText, path, folderName;
@@ -144,12 +146,18 @@ public class GestureInstanceActivity extends AppCompatActivity {
 
         EditText gestureCategoryNameEditText = dialogView.findViewById(R.id.gestureCategoryNameEditText);
         EditText speakableTextEditText = dialogView.findViewById(R.id.speakableTextEditText);
+        SwitchCompat ignoreGesture = dialogView.findViewById(R.id.ignoreGestureCategorySwitch);
         Button cancelButton = dialogView.findViewById(R.id.cancelButton);
         Button saveButton = dialogView.findViewById(R.id.saveButton);
         Button deleteButton = dialogView.findViewById(R.id.deleteButton);
         gestureCategoryNameEditText.setText(gestureName);
         if (!noSpeakableText) {
             speakableTextEditText.setText(speakableText);
+        }
+        ignoreGesture.setChecked(false);
+        String toIgnore = master.getRowWithData(gestureName)[4];
+        if (Objects.equals(toIgnore, "true")) {
+            ignoreGesture.setChecked(true);
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -197,6 +205,7 @@ public class GestureInstanceActivity extends AppCompatActivity {
             rowData[0] = gestureCategoryNameEditText.getText().toString().trim();
             rowData[1] = speakableTextEditText.getText().toString().trim().replace(",", "|");
             rowData[2] = path;
+            rowData[4] = String.valueOf(ignoreGesture.isChecked());
             master.save();
 
             alertDialog.dismiss();

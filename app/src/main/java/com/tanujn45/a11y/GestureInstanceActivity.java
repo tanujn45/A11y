@@ -127,11 +127,12 @@ public class GestureInstanceActivity extends AppCompatActivity {
         });
     }
 
+    // Todo: Fix this part of the code
     private void startInstanceIntent(String selectedItem) {
         Intent intent = new Intent(this, InstanceDataActivity.class);
         intent.putExtra("gestureCategoryName", gestureName);
         intent.putExtra("instanceName", selectedItem);
-        startActivity(intent);
+        startActivityForResult(intent, 100);
     }
 
     public void addGestureInstance(View view) {

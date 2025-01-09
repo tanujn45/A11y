@@ -76,14 +76,14 @@ public class TrimVideoActivity extends AppCompatActivity implements OnTrimVideoL
 
     private int getInstanceCount() {
         String[] row = master.getRowWithData(gestureName);
-        return Integer.parseInt(row[row.length - 1]);
+        return Integer.parseInt(row[row.length - 2]);
     }
 
     private void incrementInstanceCount() {
         String[] row = master.getRowWithData(gestureName);
-        int count = Integer.parseInt(row[row.length - 1]);
+        int count = Integer.parseInt(row[row.length - 2]);
         count++;
-        row[row.length - 1] = String.valueOf(count);
+        row[row.length - 2] = String.valueOf(count);
         if(master.editRowWithData(gestureName, row)) {
             master.save();
         }

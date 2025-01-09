@@ -203,7 +203,12 @@ public class BluetoothActivity extends AppCompatActivity implements AdapterView.
         // Check if the necessary permissions are granted before proceeding with Bluetooth operations
         if (mMds == null && hasBluetoothPermissions()) {
             // Initialize all Bluetooth features here
+            permissionsGranted = true;
             initMds();
+            initMScanResAdapter();
+            initPreviouslyConnectedAdapter();
+            loadPreviouslyConnectedDevices();
+            markConnectedDevices();
 
         } else {
             Log.d(LOG_TAG, "Bluetooth features already initialized, skipping reinitialization.");
@@ -398,7 +403,9 @@ public class BluetoothActivity extends AppCompatActivity implements AdapterView.
     public void startScan() {
         connectButton.setText("Scanning");
         mNewDeviceArrayList.clear();
-        mNewDeviceAdapter.notifyDataSetChanged();
+        if (mNewDeviceAdapter != null) {
+            mNewDeviceAdapter.notifyDataSetChanged();
+        }
 
         mScanSubscription = getBleClient().scanBleDevices(new ScanSettings.Builder().build()).subscribe(scanResult -> {
             Log.d(LOG_TAG, "scanResult: " + scanResult);

@@ -114,8 +114,8 @@ public class InstanceDataActivity extends AppCompatActivity {
             subMaster.deleteRowWithData(instanceName);
             subMaster.save();
 
-            Intent intent = new Intent(this, GestureCategoryActivity.class);
-            startActivity(intent);
+//            Intent intent = new Intent(this, GestureCategoryActivity.class);
+//            startActivity(intent);
             finish();
         } else {
             throw new Exception("Failed to delete the instance");

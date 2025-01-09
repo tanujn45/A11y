@@ -21,7 +21,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-// Todo: Create a No op gesture which cannot be deleted and is there when user enters this screen
 public class GestureCategoryActivity extends AppCompatActivity {
 
     private File directory;
@@ -69,7 +68,7 @@ public class GestureCategoryActivity extends AppCompatActivity {
         if (!gestureCategoryFolder.exists()) {
             gestureCategoryFolder.mkdirs();
         }
-        master.addRow(new String[]{"Rest", "", gestureCategoryFolder.getAbsolutePath(), "0"});
+        master.addRow(new String[]{"Rest", "", gestureCategoryFolder.getAbsolutePath(), "0", String.valueOf(true)});
         master.save();
     }
 

@@ -37,24 +37,24 @@ import java.util.Set;
 
 //Todo: Fix and optimize AAC activity
 public class AccessibleActivity extends AppCompatActivity implements CardAdapter.OnItemClickListener, AccItem.OnItemRemovedListener {
-    ArrayList<AccItem> accItems = new ArrayList<>();
-    LinearLayout scrollableLayout;
+    private ArrayList<AccItem> accItems = new ArrayList<>();
     private TextToSpeech textToSpeech;
     public static final String URI_EVENTLISTENER = "suunto://MDS/EventListener";
     private static final String PATH = "/Meas/IMU6/";
     private static final String RATE = "52";
     private MdsSubscription mdsSubscription;
     private String connectedSerial;
-    Spinner modelSpinner;
+    private LinearLayout scrollableLayout;
+    private Spinner modelSpinner;
     private List<CardData> cardDataList;
-    RecyclerView recyclerView;
-    SwitchCompat toggleRecognition;
+    private RecyclerView recyclerView;
+    private SwitchCompat toggleRecognition;
+    Spinner voiceSpinner;
+    TextView logText;
     KMeans kMeans;
     CSVFile masterFile;
     boolean noModels = false;
     private List<Voice> voiceList = new ArrayList<>();
-    Spinner voiceSpinner;
-    TextView logText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,30 +77,10 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
                     }
 
                     // Populate spinner with voice names
-                    List<String> voiceNames = new ArrayList<>();
+                    /* List<String> voiceNames = new ArrayList<>();
                     for (Voice voice : voiceList) {
                         voiceNames.add(voice.getName());
-                    }
-
-//                    new Thread(() -> {
-//                        for (Voice voice : voiceList) {
-//                            // Set the voice
-//                            textToSpeech.setVoice(voice);
-//
-//                            // Speak the test line
-//                            runOnUiThread(() -> {
-//                                textToSpeech.speak("Hello, this is a test line.", TextToSpeech.QUEUE_FLUSH, null, null);
-//                                Toast.makeText(AccessibleActivity.this, voice.getName(), Toast.LENGTH_SHORT).show();
-//                            });
-//
-//                            // Wait for the speech to finish before continuing to the next voice
-//                            try {
-//                                Thread.sleep(3000); // Adjust the delay as needed
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    }).start();
+                    } */
 
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(AccessibleActivity.this, android.R.layout.simple_spinner_item, Arrays.asList("Male", "Female"));
 

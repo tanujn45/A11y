@@ -116,6 +116,9 @@ public class InstanceDataActivity extends AppCompatActivity {
 
 //            Intent intent = new Intent(this, GestureCategoryActivity.class);
 //            startActivity(intent);
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("refresh", "refresh");
+            setResult(RESULT_OK, resultIntent);
             finish();
         } else {
             throw new Exception("Failed to delete the instance");

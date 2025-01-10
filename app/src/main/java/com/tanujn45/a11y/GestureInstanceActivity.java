@@ -13,6 +13,8 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -38,7 +40,40 @@ public class GestureInstanceActivity extends AppCompatActivity {
     TextToSpeech tts;
     boolean noSpeakableText = false;
 
-    // Expects GestureCategoryName as extra intent
+    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result.getResultCode() == RESULT_OK) {
+            Intent data = result.getData();
+            if (data != null) {
+                String instanceName = data.getStringExtra("refresh");
+                if (instanceName.equals("refresh")) {
+                    readSubMaster();
+                    instanceList.clear();
+                    setInstanceList();
+                }
+            }
+        }
+    });
+
+    private void readSubMaster() {
+        try {
+            File subMasterFile = new File(path, "master_" + folderName + ".csv");
+            if (!subMasterFile.exists()) {
+                try {
+                    subMaster = new CSVFile(new String[]{"Instance name", "Start time", "End time"}, subMasterFile.getAbsolutePath());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                try {
+                    subMaster = new CSVFile(subMasterFile.getAbsolutePath());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,12 +97,6 @@ public class GestureInstanceActivity extends AppCompatActivity {
         File subMasterFile = new File(path, "master_" + folderName + ".csv");
         File masterFile = new File(directory, "master.csv");
 
-        tts = new TextToSpeech(this, status -> {
-            if (status != TextToSpeech.ERROR) {
-                tts.setLanguage(Locale.US);
-            }
-        });
-
         if (!subMasterFile.exists()) {
             try {
                 subMaster = new CSVFile(new String[]{"Instance name", "Start time", "End time"}, subMasterFile.getAbsolutePath());
@@ -87,6 +116,12 @@ public class GestureInstanceActivity extends AppCompatActivity {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        tts = new TextToSpeech(this, status -> {
+            if (status != TextToSpeech.ERROR) {
+                tts.setLanguage(Locale.US);
+            }
+        });
 
         speakableText = master.getRowWithData(gestureName)[1];
 
@@ -127,12 +162,11 @@ public class GestureInstanceActivity extends AppCompatActivity {
         });
     }
 
-    // Todo: Fix this part of the code
     private void startInstanceIntent(String selectedItem) {
         Intent intent = new Intent(this, InstanceDataActivity.class);
         intent.putExtra("gestureCategoryName", gestureName);
         intent.putExtra("instanceName", selectedItem);
-        startActivityForResult(intent, 100);
+        activityResultLauncher.launch(intent);
     }
 
     public void addGestureInstance(View view) {
@@ -220,8 +254,8 @@ public class GestureInstanceActivity extends AppCompatActivity {
             master.deleteRowWithData(gestureName);
             master.save();
             alertDialog.dismiss();
-            Intent intent = new Intent(GestureInstanceActivity.this, GestureCategoryActivity.class);
-            startActivity(intent);
+//            Intent intent = new Intent(GestureInstanceActivity.this, GestureCategoryActivity.class);
+//            startActivity(intent);
             finish();
         });
 

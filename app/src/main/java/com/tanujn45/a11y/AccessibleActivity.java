@@ -1,12 +1,17 @@
 package com.tanujn45.a11y;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -27,6 +32,8 @@ import com.tanujn45.a11y.KMeans.KMeans;
 import com.tanujn45.a11y.KMeans.KMeansObj;
 
 import java.io.File;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,10 +58,14 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
     private SwitchCompat toggleRecognition;
     Spinner voiceSpinner;
     TextView logText;
+    EditText timeEditText;
     KMeans kMeans;
     CSVFile masterFile;
     boolean noModels = false;
     private List<Voice> voiceList = new ArrayList<>();
+    private int duration = 0;
+    LocalTime currentTime, prevTime;
+    SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +74,8 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
 
         voiceSpinner = findViewById(R.id.voiceSpinner);
         logText = findViewById(R.id.logText);
+        timeEditText = findViewById(R.id.timeEditText);
+
         textToSpeech = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 // Fetch available voices
@@ -180,6 +193,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         cardDataList = new ArrayList<>();
 
         initModelSpinner();
+        initSpeechTimer();
         initToggleRecognition();
         populateGridLayout();
 
@@ -187,6 +201,49 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
 //        for (int i = 0; i < gridLayout.getChildCount(); i++) {
 //            gridLayout.getChildAt(i).setOnClickListener(this);
 //        }
+    }
+
+    public static void hideKeyboard(Context context, View view) {
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    }
+
+    private void initSpeechTimer() {
+        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        int savedTimerValue = sharedPreferences.getInt("timer_value", 0);
+
+        if (savedTimerValue > 0) {
+            duration = savedTimerValue;
+        }
+
+        timeEditText.setText(String.valueOf(duration));
+
+        timeEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                hideKeyboard(this, timeEditText);
+                String text = timeEditText.getText().toString();
+                try {
+                    if (!text.isEmpty()) {
+                        duration = Integer.parseInt(text);
+                        // save duration to a shared preference
+                        // so that it can be used in the future
+                        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt("timer_value", duration);
+                        editor.apply();
+                    }
+
+                    voiceSpinner.requestFocus();
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+                return true;
+            }
+            return false;
+        });
+        prevTime = LocalTime.now();
     }
 
     private void initToggleRecognition() {
@@ -205,6 +262,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
                 }
                 modelSpinner.setEnabled(true);
                 subscribeToSensor(connectedSerial);
+                prevTime = LocalTime.now();
             } else {
                 modelSpinner.setEnabled(false);
                 unsubscribe();
@@ -350,16 +408,20 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         if (res.equals("Rest")) {
             return;
         }
+
         AccItem accItem = new AccItem(this);
         accItem.setOnItemRemovedListener(this);
 
         accItem.setText1(res);
         accItem.setText3(String.valueOf(conf));
         boolean isPresent = false;
+
+        String textToSpeak = "";
         for (int i = 0; i < cardDataList.size(); i++) {
             if (cardDataList.get(i).getName().toLowerCase().equals(res.toLowerCase())) {
                 accItem.setText2(cardDataList.get(i).getTextToSpeak());
-                textToSpeech.speak(cardDataList.get(i).getTextToSpeak(), TextToSpeech.QUEUE_FLUSH, null, null);
+                textToSpeak = cardDataList.get(i).getTextToSpeak();
+
                 isPresent = true;
                 break;
             }
@@ -368,6 +430,16 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         if (accItems.size() > 0) {
             AccItem lastItem = accItems.get(accItems.size() - 1);
             if (lastItem.getText1().equals(res)) {
+                lastItem.setText3(String.valueOf(conf));
+
+                // Speak if not spoken in the last "duration" seconds
+                currentTime = LocalTime.now();
+                Duration timePassed = Duration.between(prevTime, currentTime);
+                if (timePassed.getSeconds() > duration) {
+                    textToSpeech.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, null);
+                    prevTime = currentTime;
+                }
+
                 return;
             }
         }
@@ -375,6 +447,8 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         if (!isPresent) {
             return;
         }
+
+        textToSpeech.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, null);
 
         scrollableLayout.addView(accItem);
         accItems.add(accItem);
@@ -389,7 +463,6 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
             mdsSubscription = null;
         }
     }
-
 
     /**
      * Get the MDS instance
@@ -416,7 +489,6 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
 
         textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
     }
-
 
     @Override
     protected void onDestroy() {

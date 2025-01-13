@@ -446,7 +446,7 @@ public class BluetoothActivity extends AppCompatActivity implements AdapterView.
         }
     }
 
-
+    MyScanResult deviceConnecting = null;
     /**
      * onItemClick method for the mScanResultListView
      * Connects to the BLE device that was clicked
@@ -475,12 +475,13 @@ public class BluetoothActivity extends AppCompatActivity implements AdapterView.
         } else if (parent == mPreviouslyConnectedListView) {
             // Get the device that was clicked
             device = mPreviousDeviceArrayList.get(position);
-            if (device.isConnected()) {
+            if (device.isConnected() || device == deviceConnecting) {
                 return;
             }
         }
 
         if (device != null) {
+            deviceConnecting = device;
             connectBLEDevice(device, true);
         }
     }
@@ -536,6 +537,7 @@ public class BluetoothActivity extends AppCompatActivity implements AdapterView.
 
                 disconnectButton.setEnabled(true);
                 disconnectButton.setBackgroundColor(ContextCompat.getColor(BluetoothActivity.this, R.color.theme));
+                deviceConnecting = null;
             }
 
             @Override

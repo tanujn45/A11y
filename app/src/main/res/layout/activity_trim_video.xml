@@ -29,6 +29,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <androidx.core.widget.ContentLoadingProgressBar
         android:id="@+id/progress"
         style="?android:attr/progressBarStyle"
@@ -36,6 +37,7 @@
         android:layout_height="50dp"
         android:indeterminate="true"
         android:visibility="gone"
+        android:indeterminateTint="@color/theme"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -5,13 +5,18 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import java.io.File;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
     LinearLayout recordDataCardView, accessibleGesturesCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView, getHelpCardView, bluetoothCardView;
+    ProgressBar progressBar;
+    View overlay;
+    ConstraintLayout content;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +31,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         getHelpCardView = findViewById(R.id.getHelpCardView);
         bluetoothCardView = findViewById(R.id.bluetoothCardView);
 
+        progressBar = findViewById(R.id.progress);
+        overlay = findViewById(R.id.overlay);
+        content = findViewById(R.id.homeLayout);
 
         recordDataCardView.setOnClickListener(this);
         accessibleGesturesCardView.setOnClickListener(this);
@@ -64,6 +72,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
+        progressBar.setVisibility(View.VISIBLE);
+        content.setVisibility(View.GONE);
         Intent i;
         if (v.getId() == R.id.recordDataCardView) {
             i = new Intent(this, RecordActivity.class);
@@ -87,5 +97,12 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             i = new Intent(this, BluetoothActivity.class);
             startActivity(i);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        progressBar.setVisibility(View.GONE);
+        content.setVisibility(View.VISIBLE);
     }
 }

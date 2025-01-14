@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -39,6 +40,8 @@ public class GestureInstanceActivity extends AppCompatActivity {
     CSVFile master, subMaster;
     TextToSpeech tts;
     boolean noSpeakableText = false;
+    ProgressBar progressBar;
+    View overlay;
 
     private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
         if (result.getResultCode() == RESULT_OK) {
@@ -79,6 +82,9 @@ public class GestureInstanceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gesture_instance);
+
+        progressBar = findViewById(R.id.progress);
+        overlay = findViewById(R.id.overlay);
 
         Intent intent = getIntent();
         if (intent.hasExtra("gestureCategoryName")) {
@@ -170,6 +176,8 @@ public class GestureInstanceActivity extends AppCompatActivity {
     }
 
     public void addGestureInstance(View view) {
+        progressBar.setVisibility(View.VISIBLE);
+        overlay.setVisibility(View.VISIBLE);
         Intent intent = new Intent(this, VideoListActivity.class);
         intent.putExtra("gestureCategoryName", gestureName);
         startActivity(intent);

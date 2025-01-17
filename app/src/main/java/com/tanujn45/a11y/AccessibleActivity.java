@@ -7,12 +7,12 @@ import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,6 +58,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
     private SwitchCompat toggleRecognition;
     Spinner voiceSpinner;
     TextView logText;
+    RadioGroup radioGroup;
     EditText timeEditText;
     KMeans kMeans;
     CSVFile masterFile;
@@ -74,7 +75,8 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
 
         voiceSpinner = findViewById(R.id.voiceSpinner);
         logText = findViewById(R.id.logText);
-        timeEditText = findViewById(R.id.timeEditText);
+//        timeEditText = findViewById(R.id.timeEditText);
+        radioGroup = findViewById(R.id.radioGroup);
 
         textToSpeech = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
@@ -113,7 +115,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
                                 for (Voice voice : voiceList) {
                                     if (voice.getName().equals(maleVoice)) {
                                         textToSpeech.setVoice(voice);
-                                        Toast.makeText(AccessibleActivity.this, "Male voice selected", Toast.LENGTH_SHORT).show();
+//                                        Toast.makeText(AccessibleActivity.this, "Male voice selected", Toast.LENGTH_SHORT).show();
                                         found = true;
                                         break;
                                     }
@@ -122,7 +124,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
                                 for (Voice voice : voiceList) {
                                     if (voice.getName().equals(femaleVoice)) {
                                         textToSpeech.setVoice(voice);
-                                        Toast.makeText(AccessibleActivity.this, "Female voice selected", Toast.LENGTH_SHORT).show();
+//                                        Toast.makeText(AccessibleActivity.this, "Female voice selected", Toast.LENGTH_SHORT).show();
                                         found = true;
                                         break;
                                     }
@@ -216,33 +218,43 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
 
         if (savedTimerValue > 0) {
             duration = savedTimerValue;
+        } else {
+            duration = 0;
         }
 
-        timeEditText.setText(String.valueOf(duration));
+        switch (duration) {
+            case 0:
+                radioGroup.check(R.id.radioButton1);
+                break;
+            case 3:
+                radioGroup.check(R.id.radioButton2);
+                break;
+            case 5:
+                radioGroup.check(R.id.radioButton3);
+                break;
+            case 7:
+                radioGroup.check(R.id.radioButton4);
+                break;
+        }
 
-        timeEditText.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                hideKeyboard(this, timeEditText);
-                String text = timeEditText.getText().toString();
-                try {
-                    if (!text.isEmpty()) {
-                        duration = Integer.parseInt(text);
-                        // save duration to a shared preference
-                        // so that it can be used in the future
-                        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putInt("timer_value", duration);
-                        editor.apply();
-                    }
-
-                    voiceSpinner.requestFocus();
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
-                return true;
+        radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.radioButton1) {
+                duration = 0;
+            } else if (checkedId == R.id.radioButton2) {
+                duration = 3;
+            } else if (checkedId == R.id.radioButton3) {
+                duration = 5;
+            } else if (checkedId == R.id.radioButton4) {
+                duration = 7;
             }
-            return false;
+
+            SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt("timer_value", duration);
+            editor.apply();
         });
+
+
         prevTime = LocalTime.now();
     }
 

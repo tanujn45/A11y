@@ -1,7 +1,6 @@
 package com.tanujn45.a11y;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -62,13 +61,14 @@ public class RecordActivity extends AppCompatActivity {
     private File directory;
     FileOutputStream fos;
     OutputStreamWriter writer;
-    ImageButton recordButton;
+    ImageButton recordButton, turnCameraButton;
     TextView sensorMsg;
     ExecutorService service;
     Recording recording = null;
     VideoCapture<Recorder> videoCapture = null;
     PreviewView previewView;
     int cameraFacing = CameraSelector.LENS_FACING_BACK;
+    private CameraXVideoManager cameraManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +79,9 @@ public class RecordActivity extends AppCompatActivity {
         sensorMsg = findViewById(R.id.sensorMsg);
         recordButton = findViewById(R.id.recordWholeButton);
         previewView = findViewById(R.id.previewView);
+        turnCameraButton = findViewById(R.id.turnCameraButton);
+
+        cameraManager = new CameraXVideoManager(this);
 
         // Get the connected serial
         String connectedSerial = getConnectedSerial();
@@ -99,7 +102,7 @@ public class RecordActivity extends AppCompatActivity {
         createDirectories();
 
         // Start the camera
-        startCamera(cameraFacing);
+        cameraManager.initCamera(this, previewView, cameraFacing);
     }
 
     /**
@@ -239,32 +242,51 @@ public class RecordActivity extends AppCompatActivity {
      * @param view: The view that was clicked
      * @throws IOException : If the file cannot be written to
      */
-    public void recordGestureButtonClicked(View view) throws IOException {
-        isRecording = !isRecording;
+    public void recordGestureButtonClicked(View view) {
+        if (cameraManager.isTransitioning()) {
+            Toast.makeText(this, "Please wait...", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        if (isRecording) {
+        try {
+            if (!isRecording) {
+                // Starting recording
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault());
+                String currentDateTime = sdf.format(new Date());
+                fileNameSave = currentDateTime + FILE_TYPE;
 
-            captureVideo();
-            recordButton.setImageResource(R.drawable.recording);
+                File file = new File(directory + "/rawData/", fileNameSave);
+                fos = new FileOutputStream(file);
+                writer = new OutputStreamWriter(fos);
+                writer.append("Timestamp,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,magn_x,magn_y,magn_z").append("\n");
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault());
-            String currentDateTime = sdf.format(new Date());
-            fileNameSave = currentDateTime + FILE_TYPE;
+                File videoDirectory = new File(directory + "/rawVideos/");
+                cameraManager.toggleRecording(this, videoDirectory, error -> {
+                    Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                    // Reset UI if recording failed to start
+                    recordButton.setImageResource(R.drawable.record);
+                    isRecording = false;
+                });
 
-            File file = new File(directory + "/rawData/", fileNameSave);
-            fos = new FileOutputStream(file);
+                recordButton.setImageResource(R.drawable.recording);
+                turnCameraButton.setVisibility(View.GONE);
+                isRecording = true;
+            } else {
+                // Stopping recording
+                cameraManager.toggleRecording(this, null, error ->
+                        Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+                );
 
-            writer = new OutputStreamWriter(fos);
-            writer.append("Timestamp,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,magn_x,magn_y,magn_z").append("\n");
-        } else {
-            captureVideo();
-            writer.flush();
-            writer.close();
-            fos.close();
+                writer.flush();
+                writer.close();
+                fos.close();
 
-            // Toast.makeText(RecordActivity.this, "File saved as " + fileNameSave, Toast.LENGTH_SHORT).show();
-
-            recordButton.setImageResource(R.drawable.record);
+                turnCameraButton.setVisibility(View.VISIBLE);
+                recordButton.setImageResource(R.drawable.record);
+                isRecording = false;
+            }
+        } catch (IOException e) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -274,7 +296,7 @@ public class RecordActivity extends AppCompatActivity {
         } else {
             cameraFacing = CameraSelector.LENS_FACING_BACK;
         }
-        startCamera(cameraFacing);
+        cameraManager.initCamera(this, previewView, cameraFacing);
     }
 
 
@@ -349,17 +371,6 @@ public class RecordActivity extends AppCompatActivity {
         }
     }
 
-
-    /**
-     * When the activity is destroyed, unsubscribe from the sensor data
-     */
-    public void settingsButtonClicked(View view) {
-        Intent intent = new Intent(RecordActivity.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
-    }
-
-
     /**
      * Set the current time to the sensor
      * This is used to synchronize the time between the phone and the sensor
@@ -391,11 +402,7 @@ public class RecordActivity extends AppCompatActivity {
         super.onPause();
         // Stop recording if it's currently active
         if (isRecording) {
-            try {
-                recordGestureButtonClicked(null); // Call the method to stop recording
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            recordGestureButtonClicked(null); // Call the method to stop recording
         }
         // Unsubscribe from sensor data
         unsubscribe();
@@ -410,11 +417,7 @@ public class RecordActivity extends AppCompatActivity {
         super.onDestroy();
         // Stop recording if it's currently active
         if (isRecording) {
-            try {
-                recordGestureButtonClicked(null); // Call the method to stop recording
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            recordGestureButtonClicked(null); // Call the method to stop recording
         }
         // Unsubscribe from sensor data when activity is destroyed
         unsubscribe();

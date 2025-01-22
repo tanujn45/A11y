@@ -3,6 +3,8 @@ package com.tanujn45.a11y;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -11,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
     LinearLayout recordDataCardView, accessibleGesturesCardView, annotateGestureCardView, visualizeGestureCardView, rawVideoActivityCardView, getHelpCardView, bluetoothCardView;
@@ -44,6 +48,17 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         bluetoothCardView.setOnClickListener(this);
 
         createDirectories();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        executor.execute(() -> {
+            FilePairChecker.deleteUnmatchedFiles(this);
+
+            handler.post(() -> {
+                System.out.println("Unmatched files have been deleted.");
+            });
+        });
     }
 
     public void createDirectories() {

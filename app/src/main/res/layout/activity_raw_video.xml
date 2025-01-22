@@ -9,7 +9,7 @@
 
     <LinearLayout
         android:id="@+id/homeWelcomeText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/marginTop"
         android:gravity="center"
@@ -27,18 +27,22 @@
             android:onClick="backButtonClicked"
             android:src="@drawable/back" />
 
-<!--        <ImageView-->
-<!--            android:id="@+id/homeProfileImage"-->
-<!--            android:layout_width="30dp"-->
-<!--            android:layout_height="30dp"-->
-<!--            android:layout_marginEnd="15dp"-->
-<!--            android:src="@drawable/raw" />-->
-
         <TextView
             style="@style/HeaderFont"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="Raw Data"
+            android:layout_height="wrap_content" />
+
+        <ImageButton
+            android:id="@+id/deleteInstanceImageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Raw Data" />
+            android:layout_gravity="center"
+            android:background="@color/transparent"
+            android:onClick="deleteAllRawData"
+            android:padding="10dp"
+            android:src="@drawable/delete" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

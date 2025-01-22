@@ -278,4 +278,64 @@ public class RawVideoActivity extends AppCompatActivity {
         executorService.shutdown();
         finish();
     }
+
+    public void deleteAllRawData(View view) {
+        // Inflate the custom layout
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.custom_alert_dialog, null);
+
+        // Find views in the custom layout
+        TextView titleTextView = dialogView.findViewById(R.id.alertTitle);
+        EditText fileNameEditText = dialogView.findViewById(R.id.fileNameEditText);
+        Button renameButton = dialogView.findViewById(R.id.deleteButton);
+        Button deleteButton = dialogView.findViewById(R.id.saveButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+
+        titleTextView.setText("Are you sure you want to delete all raw data?");
+        titleTextView.setTextSize(22);
+        titleTextView.setPadding(0, 0, 0, 100);
+        deleteButton.setText("Delete");
+        renameButton.setVisibility(View.GONE);
+        fileNameEditText.setVisibility(View.GONE);
+        deleteButton.setBackgroundColor(ContextCompat.getColor(this, R.color.red));
+
+        // Create the AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        AlertDialog alertDialog = builder.create();
+
+        deleteButton.setOnClickListener(v -> {
+            File rawVideos = new File(directory, "rawVideos");
+            File rawData = new File(directory, "rawData");
+
+            if (rawVideos.exists()) {
+                deleteDirectory(rawVideos);
+            }
+
+            if (rawData.exists()) {
+                deleteDirectory(rawData);
+            }
+
+            Intent intent = getIntent();
+            finish();
+            startActivity(intent);
+        });
+
+        cancelButton.setOnClickListener(v -> alertDialog.dismiss());
+
+        alertDialog.show();
+    }
+
+    private void deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        directory.delete();
+    }
 }

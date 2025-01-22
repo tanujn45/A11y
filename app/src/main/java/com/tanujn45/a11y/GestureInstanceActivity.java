@@ -264,6 +264,10 @@ public class GestureInstanceActivity extends AppCompatActivity {
             alertDialog.dismiss();
 //            Intent intent = new Intent(GestureInstanceActivity.this, GestureCategoryActivity.class);
 //            startActivity(intent);
+            Intent intent = new Intent();
+            intent.putExtra("refresh", "refresh");
+            setResult(RESULT_OK, intent);
+            finish();
             finish();
         });
 

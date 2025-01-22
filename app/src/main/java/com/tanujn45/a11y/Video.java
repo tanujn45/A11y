@@ -25,6 +25,10 @@ public class Video {
         this.showPlayButton = showPlayButton;
     }
 
+    public void setThumbnail(Bitmap thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
     public String getPath() {
         return path;
     }

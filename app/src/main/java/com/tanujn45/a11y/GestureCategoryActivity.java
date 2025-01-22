@@ -11,6 +11,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -29,6 +31,20 @@ public class GestureCategoryActivity extends AppCompatActivity {
     private ArrayAdapter<String> categoryAdapter;
     ListView gestureCategoryListView;
 
+    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result.getResultCode() == RESULT_OK) {
+            Intent data = result.getData();
+            if (data != null) {
+                String instanceName = data.getStringExtra("refresh");
+                if (instanceName.equals("refresh")) {
+                    readMaster();
+                    categoryList.clear();
+                    setGestureList();
+                }
+            }
+        }
+    });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,6 +53,13 @@ public class GestureCategoryActivity extends AppCompatActivity {
         gestureCategoryListView = findViewById(R.id.gestureCategoryListView);
 
         directory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+
+        readMaster();
+        makeRestCategory();
+        setGestureList();
+    }
+
+    void readMaster() {
         File masterFile = new File(directory, "master.csv");
         if (!masterFile.exists()) {
             try {
@@ -51,9 +74,6 @@ public class GestureCategoryActivity extends AppCompatActivity {
                 throw new RuntimeException(e);
             }
         }
-
-        makeRestCategory();
-        setGestureList();
     }
 
     /*
@@ -144,7 +164,7 @@ public class GestureCategoryActivity extends AppCompatActivity {
     private void startInstanceIntent(String gestureCategoryName, String speakableText) {
         Intent intent = new Intent(GestureCategoryActivity.this, GestureInstanceActivity.class);
         intent.putExtra("gestureCategoryName", gestureCategoryName);
-        startActivity(intent);
+        activityResultLauncher.launch(intent);
     }
 
     public void addGestureCategory(View view) {

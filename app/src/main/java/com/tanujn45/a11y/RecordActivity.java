@@ -250,6 +250,11 @@ public class RecordActivity extends AppCompatActivity {
 
         try {
             if (!isRecording) {
+                File videoDirectory = new File(directory + "/rawVideos/");
+                cameraManager.toggleRecording(this, videoDirectory, error -> {
+                    Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                });
+
                 // Starting recording
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault());
                 String currentDateTime = sdf.format(new Date());
@@ -260,22 +265,14 @@ public class RecordActivity extends AppCompatActivity {
                 writer = new OutputStreamWriter(fos);
                 writer.append("Timestamp,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,magn_x,magn_y,magn_z").append("\n");
 
-                File videoDirectory = new File(directory + "/rawVideos/");
-                cameraManager.toggleRecording(this, videoDirectory, error -> {
-                    Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
-                    // Reset UI if recording failed to start
-                    recordButton.setImageResource(R.drawable.record);
-                    isRecording = false;
-                });
-
                 recordButton.setImageResource(R.drawable.recording);
                 turnCameraButton.setVisibility(View.GONE);
                 isRecording = true;
             } else {
                 // Stopping recording
-                cameraManager.toggleRecording(this, null, error ->
-                        Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
-                );
+                cameraManager.toggleRecording(this, null, error -> {
+                    Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                });
 
                 writer.flush();
                 writer.close();
@@ -421,9 +418,11 @@ public class RecordActivity extends AppCompatActivity {
         }
         // Unsubscribe from sensor data when activity is destroyed
         unsubscribe();
+        cameraManager.release();
     }
 
     public void backButtonClicked(View view) {
+        cameraManager.release();
         finish();
     }
 }

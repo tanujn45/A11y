@@ -2,27 +2,29 @@ package com.tanujn45.a11y;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Environment;
-import android.view.LayoutInflater;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class VideoListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -31,6 +33,8 @@ public class VideoListActivity extends AppCompatActivity {
     private List<Video> videoList;
     private File directory;
     private String gestureName;
+    private ExecutorService executorService;
+    private Handler mainHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,84 +50,137 @@ public class VideoListActivity extends AppCompatActivity {
         gestureName = intent.getStringExtra("gestureCategoryName");
 
         File trimmedVideosDir = new File(directory, "trimmedVideos");
-
         if (!trimmedVideosDir.exists()) {
             trimmedVideosDir.mkdirs();
         }
 
-        try {
-            videoList = getVideosFromFolder();
-            if (videoList.isEmpty()) {
-                emptyTextView.setVisibility(View.VISIBLE);
-            } else {
-                emptyTextView.setVisibility(View.GONE);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        videoAdapter = new VideoAdapter(videoList, video -> {
-            String videoPath = video.getPath();
-            System.out.println("Video path:: " + videoPath);
-            // startTrimActivityWithDialog(videoPath);
-            startTrimActivity(videoPath);
-        });
-        recyclerView.setAdapter(videoAdapter);
+        // Initialize thread handling
+        executorService = Executors.newFixedThreadPool(2);
+        mainHandler = new Handler(Looper.getMainLooper());
+
+        loadVideoList();
     }
 
-    private List<Video> getVideosFromFolder() throws IOException {
-        List<Video> videos = new ArrayList<>();
+    private void loadVideoList() {
+        executorService.execute(() -> {
+            try {
+                File rawVideos = new File(directory, "rawVideos");
+                File[] files = rawVideos.listFiles();
+                List<Video> videos = new ArrayList<>();
 
-        File rawVideos = new File(directory, "rawVideos");
+                if (files != null) {
+                    Arrays.sort(files, Comparator.comparing(File::getName));
 
-        File[] files = rawVideos.listFiles();
+                    // First pass: Create Video objects with null thumbnails
+                    for (File file : files) {
+                        if (isVideoFile(file)) {
+                            String title = file.getName().replaceFirst("[.][^.]+$", "");
+                            videos.add(new Video(file.getPath(), null, title, false, false));
+                        }
+                    }
 
-        if (files != null) {
-            // sort files by name
-            Arrays.sort(files, Comparator.comparing(File::getName));
+                    // Update UI with the list immediately
+                    mainHandler.post(() -> {
+                        if (videos.isEmpty()) {
+                            updateEmptyView(true);
+                        } else {
+                            updateEmptyView(false);
 
-            for (File file : files) {
-                if (isVideoFile(file)) {
-                    Bitmap thumbnail = generateThumbnail(file);
-                    String title = file.getName().replaceFirst("[.][^.]+$", "");
-                    videos.add(new Video(file.getPath(), thumbnail, title, false, false));
+                            videoAdapter = new VideoAdapter(videos, ContextCompat.getDrawable(this, R.drawable.placeholder), video -> startTrimActivity(video.getPath()));
+                            recyclerView.setAdapter(videoAdapter);
+
+                            // Start loading thumbnails
+                            loadThumbnails(videos);
+                        }
+                    });
+                } else {
+                    mainHandler.post(() -> updateEmptyView(true));
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                mainHandler.post(() -> showError("Error loading videos: " + e.getMessage()));
             }
-        }
-
-        return videos;
+        });
     }
 
+    private void loadThumbnails(List<Video> videos) {
+        AtomicInteger loadedCount = new AtomicInteger(0);
 
-    private void startTrimActivityWithDialog(String videoPath) {
-        // Inflate the custom layout
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.custom_alert_dialog, null);
+        for (int i = 0; i < videos.size(); i++) {
+            final int position = i;
+            executorService.execute(() -> {
+                Video video = videos.get(position);
+                try {
+                    Bitmap thumbnail = generateThumbnail(new File(video.getPath()));
+                    mainHandler.post(() -> {
+                        video.setThumbnail(thumbnail);
+                        videoAdapter.notifyItemChanged(position);
 
-        // Find views in the custom layout
-        EditText fileNameEditText = dialogView.findViewById(R.id.fileNameEditText);
-        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
-        Button saveButton = dialogView.findViewById(R.id.saveButton);
+                        // Track progress
+                        int progress = loadedCount.incrementAndGet();
+                        if (progress == videos.size()) {
+                            // All thumbnails loaded
+                            System.out.println("All videos loaded");
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
 
-        // Create the AlertDialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(dialogView);
-        AlertDialog alertDialog = builder.create();
+    private Bitmap generateThumbnail(File videoFile) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(videoFile.getPath());
 
-        cancelButton.setOnClickListener(v -> {
-            Toast.makeText(VideoListActivity.this, "Trimming cancelled", Toast.LENGTH_SHORT).show();
-            alertDialog.dismiss();
-        });
+            // Get a lower quality frame first
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 4;  // Reduce image size by factor of 4
 
-        saveButton.setOnClickListener(v -> {
-            gestureName = fileNameEditText.getText().toString();
-            if (!gestureName.isEmpty()) {
-                startTrimActivity(videoPath);
-                alertDialog.dismiss();
-            } else {
-                Toast.makeText(VideoListActivity.this, "Gesture name is required", Toast.LENGTH_SHORT).show();
+            Bitmap originalThumbnail = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+
+            if (originalThumbnail != null) {
+                int screenWidth = getResources().getDisplayMetrics().widthPixels;
+                int targetWidth = screenWidth / 2;
+                float aspectRatio = (float) originalThumbnail.getHeight() / originalThumbnail.getWidth();
+                int targetHeight = (int) (targetWidth * aspectRatio);
+
+                return Bitmap.createScaledBitmap(originalThumbnail, targetWidth, targetHeight, false);  // false for faster scaling
             }
-        });
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                retriever.release();
+            } catch (Exception ignored) {}
+        }
+    }
+    private void updateEmptyView(boolean isEmpty) {
+        emptyTextView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+    }
 
-        alertDialog.show();
+    private void showError(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    private void playVideo(String videoPath) {
+        Intent intent = new Intent(this, VideoPlayer.class);
+        intent.putExtra("videoPath", videoPath);
+        startActivity(intent);
+    }
+
+    private boolean isVideoFile(File file) {
+        return file.getName().toLowerCase().endsWith(".mp4");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
     }
 
     private void startTrimActivity(String videoPath) {
@@ -134,25 +191,8 @@ public class VideoListActivity extends AppCompatActivity {
         finish();
     }
 
-    private boolean isVideoFile(File file) {
-        return file.getName().toLowerCase().endsWith(".mp4");
-    }
-
-    private Bitmap generateThumbnail(File videoFile) throws IOException {
-        Bitmap thumbnail = null;
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        try {
-            retriever.setDataSource(videoFile.getPath());
-            thumbnail = retriever.getFrameAtTime();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            retriever.release();
-        }
-        return thumbnail;
-    }
-
     public void backButtonClicked(View view) {
+        executorService.shutdown();
         finish();
     }
 }

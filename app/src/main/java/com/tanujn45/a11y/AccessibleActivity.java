@@ -266,6 +266,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
                 if (connectedSerial == null || BluetoothActivity.mMds == null) {
                     Toast.makeText(this, "Connect to a bluetooth device", Toast.LENGTH_SHORT).show();
                     toggleRecognition.setChecked(false);
+                    return;
                 }
                 if (noModels) {
                     Toast.makeText(this, "No models found", Toast.LENGTH_SHORT).show();
@@ -305,6 +306,11 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
             noModels = true;
         }
 
+        // Remove the .csv extension from the model names
+        for (i = 0; i < modelNames.size(); i++) {
+            modelNames.set(i, modelNames.get(i).replace(".csv", ""));
+        }
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, modelNames);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelSpinner.setAdapter(adapter);
@@ -312,7 +318,7 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 unsubscribe();
-                String selectedModel = modelSpinner.getSelectedItem().toString();
+                String selectedModel = modelSpinner.getSelectedItem().toString() + ".csv";
                 kMeans.setModel(selectedModel);
                 if (toggleRecognition.isChecked()) {
                     subscribeToSensor(connectedSerial);

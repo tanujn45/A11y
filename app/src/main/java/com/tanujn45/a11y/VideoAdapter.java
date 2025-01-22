@@ -1,5 +1,6 @@
 package com.tanujn45.a11y;
 
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import java.util.List;
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHolder> {
     private List<Video> videoList;
+    private Drawable placeholder;
     private OnItemClickListener listener;
     private OnEditClickListener editListener;
     private OnPlayClickListener playListener;
@@ -29,13 +31,22 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         void onPlayClick(Video video);
     }
 
-    public VideoAdapter(List<Video> videoList, OnItemClickListener listener) {
+    public VideoAdapter(List<Video> videoList, Drawable placeholder, OnItemClickListener listener) {
         this.videoList = videoList;
         this.listener = listener;
     }
 
-    public VideoAdapter(List<Video> videoList, OnItemClickListener listener, OnEditClickListener editListener, OnPlayClickListener playListener) {
+    public VideoAdapter(List<Video> videoList, Drawable placeholder, OnItemClickListener listener, OnEditClickListener editListener, OnPlayClickListener playListener) {
         this.videoList = videoList;
+        this.placeholder = placeholder;
+        this.listener = listener;
+        this.editListener = editListener;
+        this.playListener = playListener;
+    }
+
+    public VideoAdapter(List<Video> videoList, Drawable placeholder, OnEditClickListener editListener, OnPlayClickListener playListener) {
+        this.videoList = videoList;
+        this.placeholder = placeholder;
         this.listener = listener;
         this.editListener = editListener;
         this.playListener = playListener;
@@ -61,8 +72,11 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         } else {
             holder.playButton.setVisibility(View.GONE);
         }
-        // Bind thumbnail image to ImageView
-        holder.thumbnailImageView.setImageBitmap(video.getThumbnail());
+        if (video.getThumbnail() != null) {
+            holder.thumbnailImageView.setImageBitmap(video.getThumbnail());
+        } else {
+            holder.thumbnailImageView.setImageDrawable(placeholder);
+        }
         // Bind title to TextView
         holder.titleTextView.setText(video.getTitle());
     }
@@ -116,5 +130,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
                 }
             });
         }
+    }
+
+    public void updateVideos(List<Video> newVideos) {
+        this.videoList = newVideos;
+        notifyDataSetChanged();
     }
 }

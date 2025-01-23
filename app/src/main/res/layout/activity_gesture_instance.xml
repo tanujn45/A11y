@@ -28,7 +28,7 @@
                 android:background="@color/transparent"
                 android:onClick="backButtonClicked"
                 android:paddingStart="0dp"
-                android:paddingEnd="15dp"
+                android:paddingEnd="20dp"
                 android:src="@drawable/back" />
 
             <TextView

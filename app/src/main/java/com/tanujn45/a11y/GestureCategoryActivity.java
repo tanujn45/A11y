@@ -5,17 +5,22 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
 
 import com.tanujn45.a11y.CSVEditor.CSVFile;
 
@@ -24,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GestureCategoryActivity extends AppCompatActivity {
-
     private File directory;
     private CSVFile master;
     private List<String> categoryList = new ArrayList<>();
@@ -40,6 +44,7 @@ public class GestureCategoryActivity extends AppCompatActivity {
                     readMaster();
                     categoryList.clear();
                     setGestureList();
+                    makeRestCategory();
                 }
             }
         }
@@ -108,7 +113,16 @@ public class GestureCategoryActivity extends AppCompatActivity {
 
             categoryList.add(row[0]);
         }
-        categoryAdapter = new ArrayAdapter<>( this, android.R.layout.simple_list_item_1, categoryList);
+        categoryAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, categoryList) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView textView = view.findViewById(android.R.id.text1);
+                textView.setTextColor(ContextCompat.getColor(GestureCategoryActivity.this, R.color.off_white));
+                return view;
+            }
+        };
         gestureCategoryListView.setAdapter(categoryAdapter);
 
         gestureCategoryListView.setOnItemClickListener((parent, view, position, id) -> {
@@ -138,6 +152,10 @@ public class GestureCategoryActivity extends AppCompatActivity {
                 return;
             }
             String gestureCategoryName = gestureCategoryNameEditText.getText().toString().trim();
+            if (gestureCategoryName.contains(", ")) {
+                Toast.makeText(this, "Gesture Category Name cannot contain commas", Toast.LENGTH_SHORT).show();
+                return;
+            }
             String speakableText = speakableTextEditText.getText().toString().trim().replace(",", "|");
 
             if (master.checkIfDataExistsInARow(gestureCategoryName)) {

@@ -166,6 +166,9 @@ public class VideoTrimmer extends FrameLayout {
         findViewById(R.id.btSave).setOnClickListener(view -> {
             try {
                 onSaveClicked();
+                findViewById(R.id.btSave).setEnabled(false);
+                findViewById(R.id.overlayView).setVisibility(View.VISIBLE);
+                findViewById(R.id.progress).setVisibility(View.VISIBLE);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

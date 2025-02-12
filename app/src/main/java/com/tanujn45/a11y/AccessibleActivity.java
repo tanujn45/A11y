@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 //Todo: Fix and optimize AAC activity
@@ -314,15 +315,44 @@ public class AccessibleActivity extends AppCompatActivity implements CardAdapter
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, modelNames);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelSpinner.setAdapter(adapter);
+        final AtomicBoolean isLoading = new AtomicBoolean(false);
+
         modelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                unsubscribe();
-                String selectedModel = modelSpinner.getSelectedItem().toString() + ".csv";
-                kMeans.setModel(selectedModel);
-                if (toggleRecognition.isChecked()) {
-                    subscribeToSensor(connectedSerial);
+                // If already loading, skip this request
+                Toast.makeText(AccessibleActivity.this, "Loading model! This may take a moment", Toast.LENGTH_SHORT).show();
+                if (isLoading.get()) {
+                    return;
                 }
+
+                // Set loading flag
+                isLoading.set(true);
+
+                // Unsubscribe first
+                unsubscribe();
+
+                new Thread(() -> {
+                    try {
+                        String selectedModel = modelSpinner.getSelectedItem().toString() + ".csv";
+                        kMeans.setModel(selectedModel);
+
+                        runOnUiThread(() -> {
+                            if (toggleRecognition.isChecked()) {
+                                subscribeToSensor(connectedSerial);
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        runOnUiThread(() -> {
+                            Toast.makeText(AccessibleActivity.this,
+                                    "Error loading model", Toast.LENGTH_SHORT).show();
+                        });
+                    } finally {
+                        // Reset loading flag
+                        isLoading.set(false);
+                    }
+                }).start();
             }
 
             @Override

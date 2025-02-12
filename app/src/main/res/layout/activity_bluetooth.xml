@@ -123,5 +123,4 @@
             android:text="Disconnect" />
     </LinearLayout>
 
-
 </androidx.constraintlayout.widget.ConstraintLayout>

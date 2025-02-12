@@ -521,6 +521,11 @@ public class Filters extends ConstraintLayout {
         createModelFile("tempModelCacheA11y");
     }
 
+    // Add these as class fields
+    private double[][] cachedHeatmap;
+    private String lastSelectedModel = "";
+    private Map<String, Integer> gestureIndices = new HashMap<>();
+
     private void getSimilarity() {
         if (value != 100.0) {
             Toast.makeText(this.getContext(), "Total value should be 100", Toast.LENGTH_SHORT).show();
@@ -528,32 +533,39 @@ public class Filters extends ConstraintLayout {
             return;
         }
 
-        if (modelSpinner.getSelectedItem().toString().equals("Choose a model")) {
+        String currentModel = modelSpinner.getSelectedItem().toString();
+        if (currentModel.equals("Choose a model")) {
             createTempModelFile();
         }
 
-        getHeatmapData();
+        // Only regenerate heatmap if model changed
+        if (!currentModel.equals(lastSelectedModel) || cachedHeatmap == null) {
+            getHeatmapData();
+            lastSelectedModel = currentModel;
 
-        gesture1 = gesture1 + ".csv";
-        gesture2 = gesture2 + ".csv";
+            // Cache gesture indices
+            gestureIndices.clear();
+            for (int i = 0; i < csvFileNames.length; i++) {
+                gestureIndices.put(csvFileNames[i], i);
+            }
+        }
 
-        int x = 0, y = 0;
-        for (int i = 0; i < csvFileNames.length; i++) {
-            if (csvFileNames[i].equals(gesture1)) {
-                x = i;
-            }
-            if (csvFileNames[i].equals(gesture2)) {
-                y = i;
-            }
+        // Use cached indices for lookup
+        String g1 = gesture1 + ".csv";
+        String g2 = gesture2 + ".csv";
+
+        Integer x = gestureIndices.get(g1);
+        Integer y = gestureIndices.get(g2);
+
+        if (x == null || y == null) {
+            threshold.setText("N/A");
+            return;
         }
 
         double similarity = heatmap[x][y];
         similarity = Math.round(similarity * 100.0);
-        String text = similarity + "%";
-        threshold.setText(text);
+        threshold.setText(similarity + "%");
     }
-
-
     private void generateHeatmap() {
         if (value != 100.0) {
             Toast.makeText(this.getContext(), "Total value should be 100", Toast.LENGTH_SHORT).show();

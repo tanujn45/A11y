@@ -7,15 +7,15 @@
     android:paddingHorizontal="@dimen/margin"
     tools:context=".GestureCategoryActivity">
 
+    <!-- Header Section -->
     <LinearLayout
         android:id="@+id/homeWelcomeText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/marginTop"
+        android:orientation="horizontal"
         android:paddingBottom="28dp"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="@dimen/marginTop"
-        android:gravity="center"
-        android:orientation="horizontal"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
@@ -27,37 +27,32 @@
             android:onClick="backButtonClicked"
             android:src="@drawable/back" />
 
-<!--        <ImageView-->
-<!--            android:id="@+id/homeProfileImage"-->
-<!--            android:layout_width="30dp"-->
-<!--            android:layout_height="30dp"-->
-<!--            android:layout_marginEnd="15dp"-->
-<!--            android:src="@drawable/hand" />-->
-
         <TextView
             style="@style/HeaderFont"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Gesture Categories" />
-
     </LinearLayout>
 
+    <!-- Add Gesture Category Button -->
     <Button
         android:id="@+id/addGestureCategoryButton"
+        style="@style/ButtonStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="+ NEW GESTURE CATEGORY"
         android:onClick="addGestureCategory"
-        style="@style/ButtonStyle"
         app:layout_constraintTop_toBottomOf="@+id/homeWelcomeText" />
 
+    <!-- Scrollable ListView -->
     <ListView
         android:id="@+id/gestureCategoryListView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/addGestureCategoryButton"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/addGestureCategoryButton" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

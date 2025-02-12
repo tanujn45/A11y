@@ -6,6 +6,7 @@ import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,6 +17,8 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -159,7 +162,16 @@ public class GestureInstanceActivity extends AppCompatActivity {
             instanceList.add(row[0]);
         }
 
-        instanceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, instanceList);
+        instanceAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, instanceList) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView textView = view.findViewById(android.R.id.text1);
+                textView.setTextColor(ContextCompat.getColor(GestureInstanceActivity.this, R.color.off_white));
+                return view;
+            }
+        };
         gestureInstanceListView.setAdapter(instanceAdapter);
 
         gestureInstanceListView.setOnItemClickListener((parent, view, position, id) -> {
@@ -211,6 +223,12 @@ public class GestureInstanceActivity extends AppCompatActivity {
 
         saveButton.setOnClickListener(v -> {
             // Change the name of the files inside the instances folder
+            if (gestureCategoryNameEditText.getText().toString().isEmpty()) {
+                progressBar.setVisibility(View.GONE);
+                overlay.setVisibility(View.GONE);
+                alertDialog.dismiss();
+                return;
+            }
             List<String[]> subMasterData = subMaster.getCSVData();
             String newInstanceSubstring = gestureCategoryNameEditText.getText().toString().toLowerCase().replace(" ", "_").trim();
 

@@ -301,7 +301,7 @@ public class BluetoothActivity extends AppCompatActivity implements AdapterView.
                 float newSizeInSP = 23;
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, newSizeInSP);
                 textView.setPadding(20, 30, 20, 30); // Set padding in pixels (left, top, right, bottom)
-
+                textView.setTextColor(ContextCompat.getColor(BluetoothActivity.this, R.color.off_white));
                 return view;
             }
         };
@@ -330,7 +330,7 @@ public class BluetoothActivity extends AppCompatActivity implements AdapterView.
                 float newSizeInSP = 23;
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, newSizeInSP);
                 textView.setPadding(20, 30, 20, 30); // Set padding in pixels (left, top, right, bottom)
-
+                textView.setTextColor(ContextCompat.getColor(BluetoothActivity.this, R.color.off_white));
                 return view;
             }
         };

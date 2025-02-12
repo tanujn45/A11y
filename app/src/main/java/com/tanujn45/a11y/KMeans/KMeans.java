@@ -594,6 +594,8 @@ public class KMeans {
         for (int i = 0; i < csvFilesLength; i++) {
             for (int j = 0; j < csvFilesLength; j++) {
                 List<Integer> cluster1 = new ArrayList<>();
+                assert this.csvFileNameToGestureId != null;
+                assert this.csvFileNames != null;
                 int gestureId = this.csvFileNameToGestureId.get(this.csvFileNames[i]);
                 for (int k = 0; k < this.combinedGesturesData.numInstances(); k++) {
                     Attribute gestureIdAtt = this.combinedGesturesData.attribute("gesture_id");

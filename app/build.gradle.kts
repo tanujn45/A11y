@@ -12,8 +12,8 @@ android {
     defaultConfig {
         applicationId = "com.tanujn45.a11y"
         minSdk = 31
-        targetSdk = 33
-        versionCode = 3
+        targetSdk = 35
+        versionCode = 4
         versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
